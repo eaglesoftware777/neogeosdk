@@ -124,15 +124,44 @@ struct NGCharacter {
     uint8_t anim_timer;
     /* Row-major absolute palette banks, starting at sprite_tile. */
     const uint8_t *sprite_palette_map;
+    uint8_t vram_prio;   /* NG_SG_PRIO_* for its sprite group (ng_char_set_vram_priority) */
 };
 
 void NEOGEO_USER ng_chars_init(void);
+/* Default 1 sorts each priority band by Y. Use 0 for stable side-view order. */
+void NEOGEO_USER ng_chars_set_depth_sort(uint8_t enabled);
 NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y);
+/* How soon its sprite changes reach the screen when a blank is short
+ * (NG_SG_PRIO_*, ng_sprite_group.h): the player is HIGH. */
+void NEOGEO_USER ng_char_set_vram_priority(NGCharacter *c, uint8_t prio);
+/* C engine opt-in for fixed-art objects. Position, offsets, camera, visibility
+ * and VRAM priority remain live. Sprite setters invalidate the cached model.
+ * After ANY direct change to tile/stride/palette/map/rows/scale/flip, set
+ * c->sprite_dirty = 1. Default FULL detects direct changes as before.
+ * Slot reuse resets FULL; this does not change NGCharacter's layout. */
+#define NG_CHAR_RENDER_FULL 0u
+#define NG_CHAR_RENDER_MOVE_ONLY 1u
+void NEOGEO_USER ng_char_set_render_mode(NGCharacter *c, uint8_t mode);
+#ifdef NG_VRAM_DEFER
+/* Consume its existing published small sprite group before bulk/fade work.
+ * No model changes or slot allocation occur here. Same consumer-only contract
+ * and bounded footprint as ng_sprite_group_commit_small(). */
+uint8_t NEOGEO_USER ng_char_commit_small(NGCharacter *c);
+#endif
+/* Keep its sprite_strips hardware slots from firstSprite (inside
+ * NG_SPR_CHAR_FIRST..NG_SPR_CHAR_LAST) instead of the depth sorter's: the
+ * others are placed below the lowest pinned slot, and the pinned char draws
+ * in front of them. Its slots then never move, so it never waits a frame
+ * unwritten because something ahead of it in the draw order came or went.
+ * Call after ng_char_set_sprite; 0xffff unpins. */
+void NEOGEO_USER ng_char_pin_sprite(NGCharacter *c, uint16_t firstSprite);
 void NEOGEO_USER ng_chars_remove(NGCharacter *c);
 void NEOGEO_USER ng_chars_clear_kind(uint8_t kind);
 NGCharacter* NEOGEO_USER chars_find(uint8_t kind);
 NGCharacter* NEOGEO_USER chars_at(uint8_t index);
 uint8_t NEOGEO_USER ng_chars_count(void);
+/* One past the highest slot in use: a loop over the characters can stop there. */
+uint8_t NEOGEO_USER ng_chars_slots_used(void);
 uint8_t NEOGEO_USER ng_chars_index(NGCharacter *c);
 void NEOGEO_USER ng_chars_set_game_interupt(uint8_t kind, NGCharInterupt fn);
 void NEOGEO_USER ng_chars_reset_slot(uint8_t index);

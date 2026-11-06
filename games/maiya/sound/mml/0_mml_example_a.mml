@@ -1,0 +1,22 @@
+; Title / Attract Mode: Valley of the Rose
+; Suspenseful melodic opening leading into heroic arcade theme
+T26
+@p1
+@b0
+V13
+O5
+L8
+
+; Phrase 1: The Valley at Dawn
+E G B > D < B G E4
+< B > E G B G E < B4
+; Phrase 2: The Blight Approaches
+> C E G B G E C4
+< A > C E A E C < A4
+; Phrase 3: Maiya Steps Forward
+> D F# A > C < A F# D4
+< B > D F# B F# D < B4
+; Phrase 4: The Heroic Resolve
+> E G B > E < B G E4
+< A > C E A > C4 R4
+~

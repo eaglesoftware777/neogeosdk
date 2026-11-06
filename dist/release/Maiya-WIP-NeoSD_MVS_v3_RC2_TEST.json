@@ -1,0 +1,38 @@
+{
+  "image": "Maiya-WIP-NeoSD_MVS_v3_RC2_TEST.neo",
+  "base": "Maiya-WIP-NeoSD_MVS_SOUND_FIX_PROTOCOL_PRERELEASE_v1.neo",
+  "sha256": "6174fdd28b2c6a5f7d7d26c5b99139a6305649cafda1452626da00374bc67768",
+  "hardware_test": "pending",
+  "regions": {
+    "p1": {
+      "size": 524288,
+      "sha256": "85eca793e050c24ae90ac4a03965a73a6a1d943be6af64253b39649810f67acf",
+      "unchanged_from_base": false
+    },
+    "s1": {
+      "size": 131072,
+      "sha256": "bd32f8a66d6dde5a555ae66b99d1ee083d42075169dcc030ec3aad9ae8b64fd2",
+      "unchanged_from_base": false
+    },
+    "m1": {
+      "size": 131072,
+      "sha256": "e7d130680b970a6c483032df1f1d3a60db79980084358f4bcbaa9bb998381c60",
+      "unchanged_from_base": true
+    },
+    "v1": {
+      "size": 8388608,
+      "sha256": "ea1f4bd3acbe1105f3eb5741ab0ab930e70980bedeaa2d48874e458c60fb0792",
+      "unchanged_from_base": true
+    },
+    "v2": {
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "unchanged_from_base": true
+    },
+    "c": {
+      "size": 8388608,
+      "sha256": "2201cf6703e09696deb9084e0433a4511765e1648988d98e31e872008014dafa",
+      "unchanged_from_base": false
+    }
+  }
+}

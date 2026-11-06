@@ -23,6 +23,13 @@ hundreds of cycles.  Use `NGFixed` (16.16) or 8.8 fixed-point from `ng_defs.h`.
 
 ## Rule 3: Avoid Division in the Frame Loop
 
+A 32-bit multiply or divide is a library call on the 68000 (`__mulsi3`,
+`__divsi3`, `__udivsi3`): several hundred cycles. C promotes `uint8_t` and
+`uint16_t` operands to `int`, so `a * b` and `a / b` on small types still
+become 32-bit operations. Cast both sides to `uint16_t` for a 16-bit multiply
+(one `mulu.w`), and use `divu.w` through inline assembly when the quotient
+fits a word; see `ng_chars_index()` and `docs/FRAMEWORK_V1.md`.
+
 Integer division on the 68000 (`DIVS/DIVU`) is 76-158 cycles per call.
 In a 60 Hz frame with ~200,000 available cycles, 10 divisions = 1,580 cycles
 wasted.  Use:
@@ -52,16 +59,21 @@ wasted.  Use:
 Only set bits get written to VRAM.  A static sprite costs zero VRAM writes
 per frame after initial upload.
 
-## Rule 7: VBlank-Safe Queues
+## Rule 7: Schedule VRAM and Palette Writes
 
-All VRAM and palette writes go through `ng_render_queue`.
-Game logic posts commands; `ng_render_queue_flush()` applies them at VBlank.
-Never write directly to `VRAM_ADDR`/`VRAM_RW` in game logic.
+The render queue batches queued commands, but sprite-group flushes also write
+VRAM directly. Keep those writes together in the draw phase, avoid duplicate
+full uploads, and measure whether the work fits the frame budget. Palette
+changes should use the palette API so their upload occurs at the intended
+sync point.
 
 ## Rule 8: Do Not Update Unchanged Sprites
 
-The dirty-flag system in `NGSpriteGroup` and the render queue enforce this.
-The Y-depth sorter in `ng_chars.c` re-assigns slots only when sort order changes.
+`NGSpriteGroup` retains its uploaded map footprint and skips unchanged fields.
+The character manager retains a group per character. Avoid needless tile or
+palette invalidation in scene code; those fields trigger SCB1 uploads. Use
+`ng_chars_set_depth_sort(0)` where fixed priority bands are sufficient, so
+changing Y positions do not cause slot reassignment.
 
 ## Rule 9: Prefer Pre-Baked ROM Assets
 
@@ -84,6 +96,38 @@ Never write sticky-strip SCB3 without bit 6 set.
 Monitor `VertBlank` at 0x100000: if the flag is not set when your game logic
 finishes, VBlank was missed.  Set `ng_dbg_vblank_overflow = 1` in the debug HUD.
 Target: game logic + VRAM writes < 60% of the inter-VBlank window.
+
+## Rule 13: Build a Busy Game With GAME_OPTIMIZE
+
+The tree builds at -O0.  A game whose frame doesn't fit sets, in its
+`game.mk`:
+
+```makefile
+GAME_OPTIMIZE = -O2
+```
+
+The engine, the on-demand SDK library and the game's scene files are then
+built at that level; the start-up sources (cart header, `user.c`, `main.c`,
+`eyecatcher.c`, `neogeolib.c`) stay at -O0.  Maiya measured, in MAME, a walk
+and fight through stages 1, 2, 4 and 6: at -O0 22-24 frames a second; with
+`-O2` 28-30; with `-O2` and the streamed sprite writes below 43-49; and with
+her per-frame library divisions gone (see the next rule) 52-55.
+
+## Rule 14: Divide in 16 Bits
+
+The 68000 divides 32 bits by 16 in one `divu.w`; a division GCC can't prove
+fits that calls the library instead, several times slower.  GCC uses
+`divu.w` only when it sees both operands are 16-bit, so cast a product
+first: `(uint16_t)(t * 255u) / (uint16_t)d`, not `(t * 255u) / d`.  A
+signed or 32-bit `%` or `/` in a frame's work (an animation phase, a wrap)
+is worth a look in the listing for `__divsi3`, `__modsi3`, `__udivsi3` and
+`__umodsi3`.
+
+`ng_sprite_group` (built at -O2 in every game) writes the video RAM itself:
+a map is streamed a strip at a time with the tile stepped a row at a time
+(no multiply per row), and the SCB2/3/4 words of a group's strips go out as
+one run each, the auto-increment at 1.  Every write to the data port lands
+at least 12 clocks after the one before.
 
 ## Sprite Budget Allocation Guide
 

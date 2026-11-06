@@ -25,6 +25,21 @@ void NEOGEO_USER ng_fix_blank_cell(uint8_t x, uint8_t y)
     ng_fix_pals[y][x] = 0;
 }
 
+/* Rows y0..y1, all 40 cells, blank as ng_fix_blank_cell() leaves them; a
+ * cell that is already blank is not written again. */
+void NEOGEO_USER ng_fix_blank_rows(uint8_t y0, uint8_t y1)
+{
+    uint8_t x;
+    uint8_t y;
+
+    if (y1 >= NG_FIX_HEIGHT) y1 = NG_FIX_HEIGHT - 1;
+    for (y = y0; y <= y1; y++) {
+        for (x = 0; x < NG_FIX_WIDTH; x++) {
+            if (ng_fix_chars[y][x] != ' ' || ng_fix_pals[y][x] != 0) ng_fix_blank_cell(x, y);
+        }
+    }
+}
+
 static void NEOGEO_USER ng_fix_mark_blank(uint8_t x, uint8_t y)
 {
     if (x >= NG_FIX_WIDTH || y >= NG_FIX_HEIGHT) return;

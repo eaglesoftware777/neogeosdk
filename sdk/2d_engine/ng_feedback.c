@@ -1,18 +1,24 @@
 /*
  * ng_feedback.c — Hitstop, timing, and feedback helpers (Stage 9)
+ *
+ * Built for size whatever the engine's own optimisation level: every game
+ * links this module, and at this size it also carries the pause freeze
+ * (ng_pause.h) for less ROM than it took without it.
  */
+#pragma GCC optimize ("Os")
 
 #include "ng_feedback.h"
 #include "ng_palette_fx.h"
+#include "ng_pause.h"
 
-static uint8_t           ng_fb_hitstop;
-static uint8_t           ng_fb_slow_motion;
+/* Pause, hitstop and slow motion: one freeze (ng_pause.h). It is kept
+ * here because every game links this module. */
+NGFreeze ng_freeze;
 static NGFeedbackSfxHook ng_fb_sfx_hook;
 
 void NEOGEO_USER ng_feedback_init(void)
 {
-    ng_fb_hitstop    = 0;
-    ng_fb_slow_motion = 0;
+    ng_freeze.paused = ng_freeze.hitstop = ng_freeze.slow = ng_freeze.music = 0;
     ng_fb_sfx_hook   = 0;
 }
 
@@ -23,20 +29,21 @@ void NEOGEO_USER ng_feedback_set_sfx_hook(NGFeedbackSfxHook hook)
 
 void NEOGEO_USER ng_feedback_update(void)
 {
-    if (ng_fb_hitstop > 0)     ng_fb_hitstop--;
-    if (ng_fb_slow_motion > 0) ng_fb_slow_motion--;
+    if (ng_freeze.paused) return;   /* a pause holds these too */
+    if (ng_freeze.hitstop > 0) ng_freeze.hitstop--;
+    if (ng_freeze.slow > 0)    ng_freeze.slow--;
 
     /* Palette FX is updated separately in ng_palette_fx_update() */
 }
 
 void NEOGEO_USER ng_feedback_hitstop(uint8_t frames)
 {
-    if (frames > ng_fb_hitstop) ng_fb_hitstop = frames;
+    if (frames > ng_freeze.hitstop) ng_freeze.hitstop = frames;
 }
 
 uint8_t NEOGEO_USER ng_feedback_is_hitstop(void)
 {
-    return ng_fb_hitstop > 0 ? 1 : 0;
+    return ng_freeze.hitstop > 0 ? 1 : 0;
 }
 
 void NEOGEO_USER ng_feedback_shake(NGCamera *cam, uint8_t amp, uint8_t frames)
@@ -56,12 +63,12 @@ void NEOGEO_USER ng_feedback_flash_red(uint8_t palette_slot, const uint16_t *bas
 
 void NEOGEO_USER ng_feedback_slow_motion(uint8_t frames)
 {
-    if (frames > ng_fb_slow_motion) ng_fb_slow_motion = frames;
+    if (frames > ng_freeze.slow) ng_freeze.slow = frames;
 }
 
 uint8_t NEOGEO_USER ng_feedback_is_slow_motion(void)
 {
-    return ng_fb_slow_motion > 0 ? 1 : 0;
+    return ng_freeze.slow > 0 ? 1 : 0;
 }
 
 void NEOGEO_USER ng_impact_event(uint8_t impact_kind,
@@ -143,10 +150,10 @@ void NEOGEO_USER ng_impact_event(uint8_t impact_kind,
 
 uint8_t NEOGEO_USER ng_feedback_hitstop_remaining(void)
 {
-    return ng_fb_hitstop;
+    return ng_freeze.hitstop;
 }
 
 uint8_t NEOGEO_USER ng_feedback_slow_motion_remaining(void)
 {
-    return ng_fb_slow_motion;
+    return ng_freeze.slow;
 }

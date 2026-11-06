@@ -1,0 +1,12 @@
+# SkyLance v2.1.1: dist/release, made by tools/make_release.py
+# size  crc32     sha256  file
+ 17567744  1f6f0d15  6750157d91c4d124213a29fdcb13bd57853ffc2f588cd12d6ea33b554ca468b3  SkyLance-WIP-NeoSD_MVS_v2.1.1.neo
+ 17567744  b1612d85  9b84bd37623f0399fb3079204ec2c9a2299dc4e19eff22fe8a1c3fa9c3f58cc1  SkyLance-WIP-NeoSD_AES_v2.1.1.neo
+  5358871  172261ba  7e5719cc938b6454dcaf95a21d459cc7320bd56e8b5eeb156d2e143d83c86341  SkyLance-Darksoft-MVS_v2.1.1.zip
+  5358869  78eaf96a  f07fab12056aa9305f66ebb8cc51998378a089425fbec589a71dfa4d8ced6840  SkyLance-Darksoft-AES_v2.1.1.zip
+  5344665  f7d9a4e5  377335bb57f7ab9f2f4a1f161de24f2fb23ad11ddfba818b8609f938c4151df8  SkyLance-BackBit-MVS_v2.1.1.zip
+  5344749  3a7c10f9  11efecd59397f1d4d9cfccb421cd8943c0ac3a5b7b13d5962356d33bfc31ae64  SkyLance-BackBit-AES_v2.1.1.zip
+  5395036  fa234c34  d15410d5333538d1bb402cd3770058b0b7ee825a58eb7a212ab79f68095a0aeb  SkyLance-WIP-EagleBIOS_v2.1.1.zip
+  5373515  83705418  f3a4e7ed85be49322cdb1bcf96e41944ad7c3e9192f8696490f33cf766f7c570  SkyLance-WIP-AES-EagleBIOS_v2.1.1.zip
+     7509  727359f8  be79c6a13cc9d14151aa37f2d2f659530a323abc9408c1bfe31a303da9fff698  SkyLance-README_v2.1.1.txt
+     8247  7238eae4  a0a074eec7f764d052557901f752f8d7659b9b363a44aa9394fbf3422d9d4ef3  SkyLance-CHANGELOG_v2.1.1.txt

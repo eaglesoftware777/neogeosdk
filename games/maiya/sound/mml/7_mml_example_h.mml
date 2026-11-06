@@ -1,0 +1,18 @@
+; Boss Battle: Wrath of the Syndicate
+; Furious arcade boss tempo, pounding battle drums, intense brass
+T16
+@p8
+@b7
+V15
+O4
+L8
+
+E G A# B  A# G E < B
+> E E G E  A# A# B4
+> E8 E8 G8 E8  A#8 A#8 B4
+> D8 C8 < B8 A#8  G8 F8 E4
+; Dramatic clash
+< A# > C# E G  E C# < A#4
+< B > D# F# A  F# D# < B4
+> E8 G8 A#8 > C#8  < B8 G8 E4
+~

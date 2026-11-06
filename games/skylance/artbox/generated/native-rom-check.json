@@ -1,0 +1,953 @@
+{
+  "passed": true,
+  "assets_checked": 86,
+  "assets": [
+    {
+      "id": 10,
+      "name": "bomber",
+      "tile_base": 1547,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "id": 18,
+      "name": "drone",
+      "tile_base": 1906,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "id": 19,
+      "name": "fighter",
+      "tile_base": 1910,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 20,
+      "name": "heli",
+      "tile_base": 1919,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 25,
+      "name": "tank",
+      "tile_base": 1950,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 106,
+      "name": "sam",
+      "tile_base": 11303,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 110,
+      "name": "radar_site",
+      "tile_base": 11325,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 207,
+      "name": "native_shadow_0_0",
+      "tile_base": 27186,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 208,
+      "name": "native_shadow_0_1",
+      "tile_base": 27195,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 209,
+      "name": "native_shadow_0_2",
+      "tile_base": 27204,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 210,
+      "name": "native_shadow_0_3",
+      "tile_base": 27213,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 211,
+      "name": "native_shadow_0_4",
+      "tile_base": 27222,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 212,
+      "name": "native_shadow_0_5",
+      "tile_base": 27231,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 213,
+      "name": "native_shadow_0_6",
+      "tile_base": 27240,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 227,
+      "name": "native_shadow_1_0",
+      "tile_base": 27457,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 228,
+      "name": "native_shadow_1_1",
+      "tile_base": 27466,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 229,
+      "name": "native_shadow_1_2",
+      "tile_base": 27475,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 230,
+      "name": "native_shadow_1_3",
+      "tile_base": 27484,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 231,
+      "name": "native_shadow_1_4",
+      "tile_base": 27493,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 232,
+      "name": "native_shadow_1_5",
+      "tile_base": 27502,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 233,
+      "name": "native_shadow_1_6",
+      "tile_base": 27511,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 247,
+      "name": "native_shadow_2_0",
+      "tile_base": 27728,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 248,
+      "name": "native_shadow_2_1",
+      "tile_base": 27737,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 249,
+      "name": "native_shadow_2_2",
+      "tile_base": 27746,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 250,
+      "name": "native_shadow_2_3",
+      "tile_base": 27755,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 251,
+      "name": "native_shadow_2_4",
+      "tile_base": 27764,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 252,
+      "name": "native_shadow_2_5",
+      "tile_base": 27773,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 253,
+      "name": "native_shadow_2_6",
+      "tile_base": 27782,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 254,
+      "name": "native_unit_shadow_drone",
+      "tile_base": 27791,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "id": 255,
+      "name": "drone_1",
+      "tile_base": 27795,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "id": 256,
+      "name": "drone_2",
+      "tile_base": 27799,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "id": 257,
+      "name": "drone_3",
+      "tile_base": 27803,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "id": 258,
+      "name": "drone_4",
+      "tile_base": 27807,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "id": 259,
+      "name": "drone_5",
+      "tile_base": 27811,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "id": 260,
+      "name": "drone_6",
+      "tile_base": 27815,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "id": 261,
+      "name": "drone_7",
+      "tile_base": 27819,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "id": 262,
+      "name": "native_unit_shadow_fighter",
+      "tile_base": 27823,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 263,
+      "name": "fighter_1",
+      "tile_base": 27832,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 264,
+      "name": "fighter_2",
+      "tile_base": 27841,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 265,
+      "name": "fighter_3",
+      "tile_base": 27850,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 266,
+      "name": "fighter_4",
+      "tile_base": 27859,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 267,
+      "name": "fighter_5",
+      "tile_base": 27868,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 268,
+      "name": "fighter_6",
+      "tile_base": 27877,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 269,
+      "name": "fighter_7",
+      "tile_base": 27886,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 270,
+      "name": "native_unit_shadow_heli",
+      "tile_base": 27895,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 271,
+      "name": "heli_1",
+      "tile_base": 27904,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 272,
+      "name": "heli_2",
+      "tile_base": 27913,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 273,
+      "name": "heli_3",
+      "tile_base": 27922,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 274,
+      "name": "heli_4",
+      "tile_base": 27931,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 275,
+      "name": "heli_5",
+      "tile_base": 27940,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 276,
+      "name": "heli_6",
+      "tile_base": 27949,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 277,
+      "name": "heli_7",
+      "tile_base": 27958,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": 278,
+      "name": "native_unit_shadow_tank",
+      "tile_base": 27967,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 279,
+      "name": "tank_1",
+      "tile_base": 27973,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 280,
+      "name": "tank_2",
+      "tile_base": 27979,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 281,
+      "name": "tank_3",
+      "tile_base": 27985,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 282,
+      "name": "tank_4",
+      "tile_base": 27991,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 283,
+      "name": "tank_5",
+      "tile_base": 27997,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 284,
+      "name": "tank_6",
+      "tile_base": 28003,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 285,
+      "name": "tank_7",
+      "tile_base": 28009,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 286,
+      "name": "native_unit_shadow_bomber",
+      "tile_base": 28015,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "id": 287,
+      "name": "bomber_1",
+      "tile_base": 28031,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "id": 288,
+      "name": "bomber_2",
+      "tile_base": 28047,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "id": 289,
+      "name": "bomber_3",
+      "tile_base": 28063,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "id": 290,
+      "name": "bomber_4",
+      "tile_base": 28079,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "id": 291,
+      "name": "bomber_5",
+      "tile_base": 28095,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "id": 292,
+      "name": "bomber_6",
+      "tile_base": 28111,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "id": 293,
+      "name": "bomber_7",
+      "tile_base": 28127,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "id": 294,
+      "name": "native_unit_shadow_sam",
+      "tile_base": 28143,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 295,
+      "name": "sam_1",
+      "tile_base": 28149,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 296,
+      "name": "sam_2",
+      "tile_base": 28155,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 297,
+      "name": "sam_3",
+      "tile_base": 28161,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 298,
+      "name": "sam_4",
+      "tile_base": 28167,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 299,
+      "name": "sam_5",
+      "tile_base": 28173,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 300,
+      "name": "sam_6",
+      "tile_base": 28179,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 301,
+      "name": "sam_7",
+      "tile_base": 28185,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 302,
+      "name": "native_unit_shadow_radar_site",
+      "tile_base": 28191,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 303,
+      "name": "radar_site_1",
+      "tile_base": 28197,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 304,
+      "name": "radar_site_2",
+      "tile_base": 28203,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 305,
+      "name": "radar_site_3",
+      "tile_base": 28209,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 306,
+      "name": "radar_site_4",
+      "tile_base": 28215,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 307,
+      "name": "radar_site_5",
+      "tile_base": 28221,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 308,
+      "name": "radar_site_6",
+      "tile_base": 28227,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 309,
+      "name": "radar_site_7",
+      "tile_base": 28233,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "id": 310,
+      "name": "native_unit_shadow_miniboss_0",
+      "tile_base": 28239,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        40,
+        32
+      ]
+    },
+    {
+      "id": 318,
+      "name": "native_unit_shadow_red_fortress",
+      "tile_base": 28399,
+      "native_indices_exact": true,
+      "palette_words_exact": true,
+      "pivot": [
+        56,
+        56
+      ]
+    }
+  ],
+  "tile_high_water": 32449
+}

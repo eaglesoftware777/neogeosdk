@@ -1,0 +1,12 @@
+# ShadowLeague v3.2.1: dist/release, made by tools/make_release.py
+# size  crc32     sha256  file
+ 28577792  ded10900  72e3fd5007bb7767cc252dda576ca1b1cb8b19bb9c5a940cd57c380d5a2c89df  ShadowLeague-WIP-NeoSD_MVS_v3.2.1.neo
+ 28577792  fc23267b  b0e5df8e0b4e9cd188354c22f338a04c241b6974a29621dea89009a58b857acb  ShadowLeague-WIP-NeoSD_AES_v3.2.1.neo
+ 12279099  bc9daa0e  50d0efe67eece11309d1b352632075ed624d5aa519e1d20cb223806226bde1db  ShadowLeague-Darksoft-MVS_v3.2.1.zip
+ 12279099  9b5eed70  7722acbb3225ccdfef46c1a78af2bfe9cc12697a517ca5d106ec22a1115c9eef  ShadowLeague-Darksoft-AES_v3.2.1.zip
+ 12425246  99990bf4  cd1828237e4b2b763ca76015a75378449bd45d2e5362721c6536dd89778379da  ShadowLeague-BackBit-MVS_v3.2.1.zip
+ 12425333  0fe82ea4  5b86d54d1ced06846621d6cd72a5e1b38b64e3ebeb7796257d9321c794e762c3  ShadowLeague-BackBit-AES_v3.2.1.zip
+ 12475544  c0e99021  ed4b9e7c34fe7020bc7e8e59f27575dac362af958915fb3c7cc3eae738f52166  ShadowLeague-WIP-EagleBIOS_v3.2.1.zip
+ 12454024  be0ff651  a2c08bddde1baf45bb6b2bd38ebb007ac42ba739522b423e2b91cd9f48f44830  ShadowLeague-WIP-AES-EagleBIOS_v3.2.1.zip
+     5943  f3aa6d79  997fbd77de5fb7d396fc6e772e36c7bd0ee77888fbfee5cb29611b0a71272055  ShadowLeague-README_v3.2.1.txt
+    15084  d8e919a3  5cc917470eb350ce24c0950d52cd76a6bbe6bebd81254fb5f197fb9452b7b8ad  ShadowLeague-CHANGELOG_v3.2.1.txt

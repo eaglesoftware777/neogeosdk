@@ -1,0 +1,1030 @@
+{
+  "method": "compose_gait.py: the redrawn walk and run accepted as drawn; no colour patches since",
+  "layers": [
+    {
+      "file": "walk_contact_a__far_arm.txt",
+      "before": "77d7bc644295ae718ef4c82ae2b07c595cc2c49c44ba19876fbb4b0ba69649a2",
+      "after": "77d7bc644295ae718ef4c82ae2b07c595cc2c49c44ba19876fbb4b0ba69649a2",
+      "silhouette": "e04e07cbe49a00db547cdcf84bb8d9101d76eb66443ace501af855e2880a7673"
+    },
+    {
+      "file": "walk_contact_a__far_leg.txt",
+      "before": "9d688405b4c875c41eeb26552f2eea808ce7b7463eb2e4be5efdee59d9f9ad69",
+      "after": "9d688405b4c875c41eeb26552f2eea808ce7b7463eb2e4be5efdee59d9f9ad69",
+      "silhouette": "9b6d32f36c8a4af21ad8be7685484ad54531d49deea5553703fa39700b55d8c6"
+    },
+    {
+      "file": "walk_contact_a__near_leg.txt",
+      "before": "15fcff0bdb47e312c31a74f96d4a587b9237806b172713922e50c25d5ef55677",
+      "after": "15fcff0bdb47e312c31a74f96d4a587b9237806b172713922e50c25d5ef55677",
+      "silhouette": "7101a8e718d638e4363c90b7df606a7a456a5ad04eafdb9fe37393842922d0a4"
+    },
+    {
+      "file": "walk_contact_a__torso.txt",
+      "before": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "after": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "silhouette": "d63ec0475a7b71595ca14aec3256999b10659bd84edebeddee3d49c6760e5163"
+    },
+    {
+      "file": "walk_contact_a__head_hair.txt",
+      "before": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "after": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "silhouette": "7867bc4a7467e4d5ce1fb5265b2122162aa7a32df1277517c03d3088b6d342ba"
+    },
+    {
+      "file": "walk_contact_a__near_arm.txt",
+      "before": "974cc2d1e5f711376bb0133947e42e30e983f61d8e254d57a204f2ec95f9b3f2",
+      "after": "974cc2d1e5f711376bb0133947e42e30e983f61d8e254d57a204f2ec95f9b3f2",
+      "silhouette": "fdb13782c7472c5366d263119d85297c19b41ab576906795c6f57d08b855b53e"
+    },
+    {
+      "file": "walk_down_a__far_arm.txt",
+      "before": "e824fafb6f55229798080368a834486b7d83a7bc3cbe16f5d6a1f52489dc6c41",
+      "after": "e824fafb6f55229798080368a834486b7d83a7bc3cbe16f5d6a1f52489dc6c41",
+      "silhouette": "139c5a279ac97e10310c29d012fb763509522f1e3823e361498923aa3e9513ed"
+    },
+    {
+      "file": "walk_down_a__far_leg.txt",
+      "before": "b9240e9b3aab9662ff626656e9023c4b166d23dcae06ce7f9f410ecac27ac8b2",
+      "after": "b9240e9b3aab9662ff626656e9023c4b166d23dcae06ce7f9f410ecac27ac8b2",
+      "silhouette": "7edfd908493abead61c2e68b7851713c820df3456fe1954e354a1c03b2abf913"
+    },
+    {
+      "file": "walk_down_a__near_leg.txt",
+      "before": "c3edefb50fabcb51a4865d5836d05aea224b469b94a83a56c3ccfec028643831",
+      "after": "c3edefb50fabcb51a4865d5836d05aea224b469b94a83a56c3ccfec028643831",
+      "silhouette": "b75886d41c736c33805d4846098bc8e1b23ba08c212b92d5f79d482d30a1baba"
+    },
+    {
+      "file": "walk_down_a__torso.txt",
+      "before": "86530d8c8ed59756cfcad17d87b1514afcefe0ae481b9e33b63084264a601362",
+      "after": "86530d8c8ed59756cfcad17d87b1514afcefe0ae481b9e33b63084264a601362",
+      "silhouette": "598fdc27050dfa16489a75f97e41bc1ef75236a2d894200a42e323dcfd9f6bd9"
+    },
+    {
+      "file": "walk_down_a__head_hair.txt",
+      "before": "ebff3a1fcd923e151199415d818711777f0b2e8b8fb4eec34282293613bf7c69",
+      "after": "ebff3a1fcd923e151199415d818711777f0b2e8b8fb4eec34282293613bf7c69",
+      "silhouette": "3aba684203fcec27686b8e1b4ee698201b0056bd8cb88bfd192857ee1f1d0ff7"
+    },
+    {
+      "file": "walk_down_a__near_arm.txt",
+      "before": "a4fc11c60b6a5deda139351d0adf1d90e503bfc963305e995d497d4e45fd5a3c",
+      "after": "a4fc11c60b6a5deda139351d0adf1d90e503bfc963305e995d497d4e45fd5a3c",
+      "silhouette": "1c0abdae37cdbfd8bc2a355ae4f9fe93bfe755e28bfb6c186763adac13950428"
+    },
+    {
+      "file": "walk_passing_a__far_arm.txt",
+      "before": "fc1359fc7d51d98677ea5a3a66b56709564bed7f4bafb072d979c8f446a7b95f",
+      "after": "fc1359fc7d51d98677ea5a3a66b56709564bed7f4bafb072d979c8f446a7b95f",
+      "silhouette": "1cdff1060d061bb1baa8ee4379f9e3e9c0954fa3b99fdc8719dcb082b6d93300"
+    },
+    {
+      "file": "walk_passing_a__far_leg.txt",
+      "before": "37568596e05bc80c516604b4b2c2655e2f4cab7343212e37b99964679f153a00",
+      "after": "37568596e05bc80c516604b4b2c2655e2f4cab7343212e37b99964679f153a00",
+      "silhouette": "7ec1f2233878b915b5c3b640dc4d7bb2d3ced77f06d8ccb1f4d80da327006dbd"
+    },
+    {
+      "file": "walk_passing_a__near_leg.txt",
+      "before": "8e64ae93d6ff8f780fac17d73d974d31b988bdcfd3e4f9417f534375f9918491",
+      "after": "8e64ae93d6ff8f780fac17d73d974d31b988bdcfd3e4f9417f534375f9918491",
+      "silhouette": "86134753a624a5ab4482f5d5e946e60cb3f427745017294300ebf2c479f47684"
+    },
+    {
+      "file": "walk_passing_a__torso.txt",
+      "before": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "after": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "silhouette": "d63ec0475a7b71595ca14aec3256999b10659bd84edebeddee3d49c6760e5163"
+    },
+    {
+      "file": "walk_passing_a__head_hair.txt",
+      "before": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "after": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "silhouette": "7867bc4a7467e4d5ce1fb5265b2122162aa7a32df1277517c03d3088b6d342ba"
+    },
+    {
+      "file": "walk_passing_a__near_arm.txt",
+      "before": "b7cd320b62349b70dc126a26e7d8be67529710e2d69bddef0d4a4b369b00842a",
+      "after": "b7cd320b62349b70dc126a26e7d8be67529710e2d69bddef0d4a4b369b00842a",
+      "silhouette": "057ad20e49676c3e0a9455d86ab4eb9342b7c3ad0d70f5d5f551de6dca5ad874"
+    },
+    {
+      "file": "walk_up_a__far_arm.txt",
+      "before": "ae880bb533cd1e8dd0d3305528c2bd216c6189c02158cad26bc0323721262ce4",
+      "after": "ae880bb533cd1e8dd0d3305528c2bd216c6189c02158cad26bc0323721262ce4",
+      "silhouette": "7a902ef7f6e0e83ee4ca598eea4dc6e57a7479cad354c4c678e146ed499bbe3c"
+    },
+    {
+      "file": "walk_up_a__far_leg.txt",
+      "before": "9c14c89d982e0474762a2a183a1e287c937c6fea9f3641b1520309be90886326",
+      "after": "9c14c89d982e0474762a2a183a1e287c937c6fea9f3641b1520309be90886326",
+      "silhouette": "9313edb092e78e9f5431c3baefc9374f57bf423a776ad1392889fe098ce20a48"
+    },
+    {
+      "file": "walk_up_a__near_leg.txt",
+      "before": "14b0e2f1bfafa97f83ab6eab6e8f3b588129af97701248168e719c00b5221413",
+      "after": "14b0e2f1bfafa97f83ab6eab6e8f3b588129af97701248168e719c00b5221413",
+      "silhouette": "44b107835f595d4c396336a97e37b36a0ad83114ec2f9d51fb42912f72351367"
+    },
+    {
+      "file": "walk_up_a__torso.txt",
+      "before": "fc827512501870241f359fee9a7f8b83ad8481a08b23247d7b1b0c8862387f35",
+      "after": "fc827512501870241f359fee9a7f8b83ad8481a08b23247d7b1b0c8862387f35",
+      "silhouette": "1b690f793fe0882f76b03adbf7a8036a8c9f092d5e0cf5501f815ffda9cbea98"
+    },
+    {
+      "file": "walk_up_a__head_hair.txt",
+      "before": "1b9fc0b6d977b983b5f88ff1219de28a16c4e7c4bb45c2bf5362874226ed4840",
+      "after": "1b9fc0b6d977b983b5f88ff1219de28a16c4e7c4bb45c2bf5362874226ed4840",
+      "silhouette": "7a7d4f396673480a23752fd8f42586ac92333aa828c53fbd3364bee5c8f189ec"
+    },
+    {
+      "file": "walk_up_a__near_arm.txt",
+      "before": "de68c8aafaa6c29ba33d9b2dcc51d119bfd39813b7953b3b89d172e0441763fa",
+      "after": "de68c8aafaa6c29ba33d9b2dcc51d119bfd39813b7953b3b89d172e0441763fa",
+      "silhouette": "ef5ec26307c7f1db498cb978e3da574c196d47a3126479ef5e0dab3ecd669e0a"
+    },
+    {
+      "file": "walk_contact_b__far_arm.txt",
+      "before": "f25bee7a5c400be955d5ab63502265cce36bf8c906d8d96022dd1765306d560b",
+      "after": "f25bee7a5c400be955d5ab63502265cce36bf8c906d8d96022dd1765306d560b",
+      "silhouette": "06171d458f4da2f77934049d8ba8461492ff8c45752fd8da72fda06c26fe4037"
+    },
+    {
+      "file": "walk_contact_b__far_leg.txt",
+      "before": "15fcff0bdb47e312c31a74f96d4a587b9237806b172713922e50c25d5ef55677",
+      "after": "15fcff0bdb47e312c31a74f96d4a587b9237806b172713922e50c25d5ef55677",
+      "silhouette": "7101a8e718d638e4363c90b7df606a7a456a5ad04eafdb9fe37393842922d0a4"
+    },
+    {
+      "file": "walk_contact_b__near_leg.txt",
+      "before": "9d688405b4c875c41eeb26552f2eea808ce7b7463eb2e4be5efdee59d9f9ad69",
+      "after": "9d688405b4c875c41eeb26552f2eea808ce7b7463eb2e4be5efdee59d9f9ad69",
+      "silhouette": "9b6d32f36c8a4af21ad8be7685484ad54531d49deea5553703fa39700b55d8c6"
+    },
+    {
+      "file": "walk_contact_b__torso.txt",
+      "before": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "after": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "silhouette": "d63ec0475a7b71595ca14aec3256999b10659bd84edebeddee3d49c6760e5163"
+    },
+    {
+      "file": "walk_contact_b__head_hair.txt",
+      "before": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "after": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "silhouette": "7867bc4a7467e4d5ce1fb5265b2122162aa7a32df1277517c03d3088b6d342ba"
+    },
+    {
+      "file": "walk_contact_b__near_arm.txt",
+      "before": "1a24178b52638651774ba323c6fbb89f4dabf05ee48aadeacfb58256986f68bf",
+      "after": "1a24178b52638651774ba323c6fbb89f4dabf05ee48aadeacfb58256986f68bf",
+      "silhouette": "f082a5ffbc790a845c35602b5192d87131dd18a9c795a83827a189de35057379"
+    },
+    {
+      "file": "walk_down_b__far_arm.txt",
+      "before": "93f904cf5fc399a1a788a344796e25bc42b4e10b7fdfc40c807c13cbc52a35ab",
+      "after": "93f904cf5fc399a1a788a344796e25bc42b4e10b7fdfc40c807c13cbc52a35ab",
+      "silhouette": "0b3a9261fbc7a6cba68be8f7641de718065fc54c6beca3e6d2b0592123f06cdb"
+    },
+    {
+      "file": "walk_down_b__far_leg.txt",
+      "before": "c3edefb50fabcb51a4865d5836d05aea224b469b94a83a56c3ccfec028643831",
+      "after": "c3edefb50fabcb51a4865d5836d05aea224b469b94a83a56c3ccfec028643831",
+      "silhouette": "b75886d41c736c33805d4846098bc8e1b23ba08c212b92d5f79d482d30a1baba"
+    },
+    {
+      "file": "walk_down_b__near_leg.txt",
+      "before": "b9240e9b3aab9662ff626656e9023c4b166d23dcae06ce7f9f410ecac27ac8b2",
+      "after": "b9240e9b3aab9662ff626656e9023c4b166d23dcae06ce7f9f410ecac27ac8b2",
+      "silhouette": "7edfd908493abead61c2e68b7851713c820df3456fe1954e354a1c03b2abf913"
+    },
+    {
+      "file": "walk_down_b__torso.txt",
+      "before": "86530d8c8ed59756cfcad17d87b1514afcefe0ae481b9e33b63084264a601362",
+      "after": "86530d8c8ed59756cfcad17d87b1514afcefe0ae481b9e33b63084264a601362",
+      "silhouette": "598fdc27050dfa16489a75f97e41bc1ef75236a2d894200a42e323dcfd9f6bd9"
+    },
+    {
+      "file": "walk_down_b__head_hair.txt",
+      "before": "ebff3a1fcd923e151199415d818711777f0b2e8b8fb4eec34282293613bf7c69",
+      "after": "ebff3a1fcd923e151199415d818711777f0b2e8b8fb4eec34282293613bf7c69",
+      "silhouette": "3aba684203fcec27686b8e1b4ee698201b0056bd8cb88bfd192857ee1f1d0ff7"
+    },
+    {
+      "file": "walk_down_b__near_arm.txt",
+      "before": "aa3673617d23635a107ebc05141e87decd788515924dff6204f1869d537a2e86",
+      "after": "aa3673617d23635a107ebc05141e87decd788515924dff6204f1869d537a2e86",
+      "silhouette": "4137576b201b7677d28214fad5f672c464fc1a52c1c32827294478f3176444ef"
+    },
+    {
+      "file": "walk_passing_b__far_arm.txt",
+      "before": "fc1359fc7d51d98677ea5a3a66b56709564bed7f4bafb072d979c8f446a7b95f",
+      "after": "fc1359fc7d51d98677ea5a3a66b56709564bed7f4bafb072d979c8f446a7b95f",
+      "silhouette": "1cdff1060d061bb1baa8ee4379f9e3e9c0954fa3b99fdc8719dcb082b6d93300"
+    },
+    {
+      "file": "walk_passing_b__far_leg.txt",
+      "before": "8e64ae93d6ff8f780fac17d73d974d31b988bdcfd3e4f9417f534375f9918491",
+      "after": "8e64ae93d6ff8f780fac17d73d974d31b988bdcfd3e4f9417f534375f9918491",
+      "silhouette": "86134753a624a5ab4482f5d5e946e60cb3f427745017294300ebf2c479f47684"
+    },
+    {
+      "file": "walk_passing_b__near_leg.txt",
+      "before": "37568596e05bc80c516604b4b2c2655e2f4cab7343212e37b99964679f153a00",
+      "after": "37568596e05bc80c516604b4b2c2655e2f4cab7343212e37b99964679f153a00",
+      "silhouette": "7ec1f2233878b915b5c3b640dc4d7bb2d3ced77f06d8ccb1f4d80da327006dbd"
+    },
+    {
+      "file": "walk_passing_b__torso.txt",
+      "before": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "after": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "silhouette": "d63ec0475a7b71595ca14aec3256999b10659bd84edebeddee3d49c6760e5163"
+    },
+    {
+      "file": "walk_passing_b__head_hair.txt",
+      "before": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "after": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "silhouette": "7867bc4a7467e4d5ce1fb5265b2122162aa7a32df1277517c03d3088b6d342ba"
+    },
+    {
+      "file": "walk_passing_b__near_arm.txt",
+      "before": "b7cd320b62349b70dc126a26e7d8be67529710e2d69bddef0d4a4b369b00842a",
+      "after": "b7cd320b62349b70dc126a26e7d8be67529710e2d69bddef0d4a4b369b00842a",
+      "silhouette": "057ad20e49676c3e0a9455d86ab4eb9342b7c3ad0d70f5d5f551de6dca5ad874"
+    },
+    {
+      "file": "walk_up_b__far_arm.txt",
+      "before": "cb3b9ee7559765d1a05c89497d3b904ded166b3d6361634b8456596d06993211",
+      "after": "cb3b9ee7559765d1a05c89497d3b904ded166b3d6361634b8456596d06993211",
+      "silhouette": "876a1aa34e6cb9dcf06fd81cb56c2b92a09fb531715c853931e4c32076f664e3"
+    },
+    {
+      "file": "walk_up_b__far_leg.txt",
+      "before": "14b0e2f1bfafa97f83ab6eab6e8f3b588129af97701248168e719c00b5221413",
+      "after": "14b0e2f1bfafa97f83ab6eab6e8f3b588129af97701248168e719c00b5221413",
+      "silhouette": "44b107835f595d4c396336a97e37b36a0ad83114ec2f9d51fb42912f72351367"
+    },
+    {
+      "file": "walk_up_b__near_leg.txt",
+      "before": "9c14c89d982e0474762a2a183a1e287c937c6fea9f3641b1520309be90886326",
+      "after": "9c14c89d982e0474762a2a183a1e287c937c6fea9f3641b1520309be90886326",
+      "silhouette": "9313edb092e78e9f5431c3baefc9374f57bf423a776ad1392889fe098ce20a48"
+    },
+    {
+      "file": "walk_up_b__torso.txt",
+      "before": "fc827512501870241f359fee9a7f8b83ad8481a08b23247d7b1b0c8862387f35",
+      "after": "fc827512501870241f359fee9a7f8b83ad8481a08b23247d7b1b0c8862387f35",
+      "silhouette": "1b690f793fe0882f76b03adbf7a8036a8c9f092d5e0cf5501f815ffda9cbea98"
+    },
+    {
+      "file": "walk_up_b__head_hair.txt",
+      "before": "1b9fc0b6d977b983b5f88ff1219de28a16c4e7c4bb45c2bf5362874226ed4840",
+      "after": "1b9fc0b6d977b983b5f88ff1219de28a16c4e7c4bb45c2bf5362874226ed4840",
+      "silhouette": "7a7d4f396673480a23752fd8f42586ac92333aa828c53fbd3364bee5c8f189ec"
+    },
+    {
+      "file": "walk_up_b__near_arm.txt",
+      "before": "ef8afa2063fe4355aa5ef0855ca978635cdf74513154b5feb55337ab0562e398",
+      "after": "ef8afa2063fe4355aa5ef0855ca978635cdf74513154b5feb55337ab0562e398",
+      "silhouette": "5943053afd2a53d60ce4b907ea5820512b4eba2f080892fed7274e93d66ac218"
+    },
+    {
+      "file": "run_contact_a__far_arm.txt",
+      "before": "cae928a32c09351840b5bf95442169ace3f277a6ffdcb44bba37930fde662909",
+      "after": "cae928a32c09351840b5bf95442169ace3f277a6ffdcb44bba37930fde662909",
+      "silhouette": "15ba9cb89ab0badecaca191d9d9c02b4c769bbedba82e8641820b2697da26db3"
+    },
+    {
+      "file": "run_contact_a__far_leg.txt",
+      "before": "48c373d660654f50af9f11752393a9bf918b957d867065b545fe0f592fd1dc6e",
+      "after": "48c373d660654f50af9f11752393a9bf918b957d867065b545fe0f592fd1dc6e",
+      "silhouette": "b9d87cef4f03a94be9863f5393110ca34bd75f92b655cef34895ce6fa40178e4"
+    },
+    {
+      "file": "run_contact_a__near_leg.txt",
+      "before": "efd613404f65769ecff7e784096ee37ed1cd652c78207857812eb11c2f87855c",
+      "after": "efd613404f65769ecff7e784096ee37ed1cd652c78207857812eb11c2f87855c",
+      "silhouette": "f462829e596358795b0fddcd28fbadfedaea047005252d836a88e6e3f4eb6331"
+    },
+    {
+      "file": "run_contact_a__torso.txt",
+      "before": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "after": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "silhouette": "d63ec0475a7b71595ca14aec3256999b10659bd84edebeddee3d49c6760e5163"
+    },
+    {
+      "file": "run_contact_a__head_hair.txt",
+      "before": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "after": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "silhouette": "7867bc4a7467e4d5ce1fb5265b2122162aa7a32df1277517c03d3088b6d342ba"
+    },
+    {
+      "file": "run_contact_a__near_arm.txt",
+      "before": "84f40de619f6f6fba9fe83005cfa90b60ca42a57ecef65b24710ffa199cff94e",
+      "after": "84f40de619f6f6fba9fe83005cfa90b60ca42a57ecef65b24710ffa199cff94e",
+      "silhouette": "8a30a588a2bfd6a0eb69190a5476caa381f6b94b74ab90edec57d0865f91a0a1"
+    },
+    {
+      "file": "run_down_a__far_arm.txt",
+      "before": "224518f84fe5410224250ad1ec9391a63ed537fa679786724cae17a4120c30f3",
+      "after": "224518f84fe5410224250ad1ec9391a63ed537fa679786724cae17a4120c30f3",
+      "silhouette": "e26b463c342d171bf0e2560355cc7f5473265af2970c8154b4e1f417170cabe5"
+    },
+    {
+      "file": "run_down_a__far_leg.txt",
+      "before": "ec65d15b34273d289e09008c426b7895aa2c19e7453b0356dba42b1fccf32f7e",
+      "after": "ec65d15b34273d289e09008c426b7895aa2c19e7453b0356dba42b1fccf32f7e",
+      "silhouette": "6b694e6cb4e348ebd40a51d448603cddc9820b3f45a8addd56582dc2d1091ab4"
+    },
+    {
+      "file": "run_down_a__near_leg.txt",
+      "before": "5050d1136049748e9b26dc599eedfe8de6f97feac3c767ff1f09a7eb637bd427",
+      "after": "5050d1136049748e9b26dc599eedfe8de6f97feac3c767ff1f09a7eb637bd427",
+      "silhouette": "109e17447c28708d2f7fb80634211b7ab86b9b2359615fd50a390faa4dbff9c3"
+    },
+    {
+      "file": "run_down_a__torso.txt",
+      "before": "5a1509f25f0021123885f109b7912ec4b190fd09b93578f87fc0968bdf06fcd8",
+      "after": "5a1509f25f0021123885f109b7912ec4b190fd09b93578f87fc0968bdf06fcd8",
+      "silhouette": "3c6ea62c5303302601871eaff62c32797e1666e4ed1c045e27573f91dfd510ea"
+    },
+    {
+      "file": "run_down_a__head_hair.txt",
+      "before": "dd72586d98632e4a210caa4ba4e9defc699f0a57ae82b59656f6821e1dd093ef",
+      "after": "dd72586d98632e4a210caa4ba4e9defc699f0a57ae82b59656f6821e1dd093ef",
+      "silhouette": "a4fe828b7a361d3eb44d7f72b5901d5acd60a4d9154ed6182cf50e3c2bc50d93"
+    },
+    {
+      "file": "run_down_a__near_arm.txt",
+      "before": "f2b7c69baff1017ef730146ed77e0e4fa14f465ddf8684eab4d59101085aa0ac",
+      "after": "f2b7c69baff1017ef730146ed77e0e4fa14f465ddf8684eab4d59101085aa0ac",
+      "silhouette": "c4b71f6c55863d00f1310c347a6e27ca7f6193eedd34e0c3f2a22afbbb407eb2"
+    },
+    {
+      "file": "run_push_a__far_arm.txt",
+      "before": "02f51c2108b24d8c2c2787ecaf3673646e44ca36476e55de49bf2bda83af33d8",
+      "after": "02f51c2108b24d8c2c2787ecaf3673646e44ca36476e55de49bf2bda83af33d8",
+      "silhouette": "c86ea70bb530118a2283b3f32b023e7fc875e80e7d73a51ff59ee359d00f50d8"
+    },
+    {
+      "file": "run_push_a__far_leg.txt",
+      "before": "5dc75b4649012d10efa6a17c0c33b73836dca5308faad17824761573d7cb8cdf",
+      "after": "5dc75b4649012d10efa6a17c0c33b73836dca5308faad17824761573d7cb8cdf",
+      "silhouette": "bc6cfd4b40b9bb881ce90d59e2f6f8d5eeae084f02f73de35d8f513368bcadbe"
+    },
+    {
+      "file": "run_push_a__near_leg.txt",
+      "before": "bb6af6d3203839c2e1c3eba4647f75ad579cc11bc1c2fc40a2128e66b3812bff",
+      "after": "bb6af6d3203839c2e1c3eba4647f75ad579cc11bc1c2fc40a2128e66b3812bff",
+      "silhouette": "3c75b728e0132f10052cfabf4d78cd5c4ad0658ad550a5d3b6af7e9329f4a443"
+    },
+    {
+      "file": "run_push_a__torso.txt",
+      "before": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "after": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "silhouette": "d63ec0475a7b71595ca14aec3256999b10659bd84edebeddee3d49c6760e5163"
+    },
+    {
+      "file": "run_push_a__head_hair.txt",
+      "before": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "after": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "silhouette": "7867bc4a7467e4d5ce1fb5265b2122162aa7a32df1277517c03d3088b6d342ba"
+    },
+    {
+      "file": "run_push_a__near_arm.txt",
+      "before": "915909ed1bbb2cec3694be64579ef90e6adde8a9c09ac9d27787fbfb81f193ee",
+      "after": "915909ed1bbb2cec3694be64579ef90e6adde8a9c09ac9d27787fbfb81f193ee",
+      "silhouette": "225a60c332ba9841bb81f8e8afc821a776ce5d58a0e9e588339c1974f72ecb56"
+    },
+    {
+      "file": "run_flight_a__far_arm.txt",
+      "before": "53a2acc7ea18ad5b9aa1a231cd83bbe9c627a0e675ed7441b76522517e6ec059",
+      "after": "53a2acc7ea18ad5b9aa1a231cd83bbe9c627a0e675ed7441b76522517e6ec059",
+      "silhouette": "4a58eee02ad89628dfb81341ca6265c45b2c12b5a2ee885153ceab7090643c1a"
+    },
+    {
+      "file": "run_flight_a__far_leg.txt",
+      "before": "1f061fb8c9e12c11435aa3487ae9ccbe8b405a8ef70bee6088f4e5e87bfadde7",
+      "after": "1f061fb8c9e12c11435aa3487ae9ccbe8b405a8ef70bee6088f4e5e87bfadde7",
+      "silhouette": "fc6266fe47149c314207ce0a24ea11f06673abb7c55966e9b04d5d5935cc7be3"
+    },
+    {
+      "file": "run_flight_a__near_leg.txt",
+      "before": "d430a06f0ad34f7285b3274b52d49830622ce1884d93f5bd2bb294434b8a8da3",
+      "after": "d430a06f0ad34f7285b3274b52d49830622ce1884d93f5bd2bb294434b8a8da3",
+      "silhouette": "7a5cd6a36cff0e867ccdb37ffcde6f3cb9b8a8ae96e4d00f2d089a4554f8a9b9"
+    },
+    {
+      "file": "run_flight_a__torso.txt",
+      "before": "b17b939c51111e4150c886758cc15a61b109a08fc72fe4d1829e4d0701d3bd71",
+      "after": "b17b939c51111e4150c886758cc15a61b109a08fc72fe4d1829e4d0701d3bd71",
+      "silhouette": "68d0717ffb8b956546f155690149b960811668bfa98468a858711e50fc81de24"
+    },
+    {
+      "file": "run_flight_a__head_hair.txt",
+      "before": "2a72e24a01692a8de8e2b8fbb1fc44eab4b749c6a5e5e3e32f9f5b4b1ad79cc6",
+      "after": "2a72e24a01692a8de8e2b8fbb1fc44eab4b749c6a5e5e3e32f9f5b4b1ad79cc6",
+      "silhouette": "15a8c78f8ba2c847fdb284e5f0fe193ba04d106da9b68dc1c09894406938aea6"
+    },
+    {
+      "file": "run_flight_a__near_arm.txt",
+      "before": "7ee6ef6afabd80e885b8ba381aa88fd702baa7e17092316f889cb40103e82dbc",
+      "after": "7ee6ef6afabd80e885b8ba381aa88fd702baa7e17092316f889cb40103e82dbc",
+      "silhouette": "5d2a3e62b870620f1d367d7237e712e09eed607591e633de234cec185b0e4040"
+    },
+    {
+      "file": "run_contact_b__far_arm.txt",
+      "before": "56d7dfcdee2c890bd41cb616f7db2a1a55f312e5741ce2ac5378571e321684a8",
+      "after": "56d7dfcdee2c890bd41cb616f7db2a1a55f312e5741ce2ac5378571e321684a8",
+      "silhouette": "77eb7ec9ef9b7b6f5eb9a000dedbcaac8d1dce975a94317b4e14de4537f4fdfa"
+    },
+    {
+      "file": "run_contact_b__far_leg.txt",
+      "before": "efd613404f65769ecff7e784096ee37ed1cd652c78207857812eb11c2f87855c",
+      "after": "efd613404f65769ecff7e784096ee37ed1cd652c78207857812eb11c2f87855c",
+      "silhouette": "f462829e596358795b0fddcd28fbadfedaea047005252d836a88e6e3f4eb6331"
+    },
+    {
+      "file": "run_contact_b__near_leg.txt",
+      "before": "48c373d660654f50af9f11752393a9bf918b957d867065b545fe0f592fd1dc6e",
+      "after": "48c373d660654f50af9f11752393a9bf918b957d867065b545fe0f592fd1dc6e",
+      "silhouette": "b9d87cef4f03a94be9863f5393110ca34bd75f92b655cef34895ce6fa40178e4"
+    },
+    {
+      "file": "run_contact_b__torso.txt",
+      "before": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "after": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "silhouette": "d63ec0475a7b71595ca14aec3256999b10659bd84edebeddee3d49c6760e5163"
+    },
+    {
+      "file": "run_contact_b__head_hair.txt",
+      "before": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "after": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "silhouette": "7867bc4a7467e4d5ce1fb5265b2122162aa7a32df1277517c03d3088b6d342ba"
+    },
+    {
+      "file": "run_contact_b__near_arm.txt",
+      "before": "34057692e4517a70dae516e1ee2c0928b9028bf05ba0a28da5a6148db6422508",
+      "after": "34057692e4517a70dae516e1ee2c0928b9028bf05ba0a28da5a6148db6422508",
+      "silhouette": "58246d98fb2b7f9af1d8e96701d1e0481ab61843943c04fc872071ec46d83a2e"
+    },
+    {
+      "file": "run_down_b__far_arm.txt",
+      "before": "5ad4977a1df8e9ad59bf8dc373d4696a404c9115f7a02ff0f12daa3c2185d715",
+      "after": "5ad4977a1df8e9ad59bf8dc373d4696a404c9115f7a02ff0f12daa3c2185d715",
+      "silhouette": "a6b63979c0d76509074462d1a87796a47cfb63695c9ea2996c0c38ff5ff806f4"
+    },
+    {
+      "file": "run_down_b__far_leg.txt",
+      "before": "5050d1136049748e9b26dc599eedfe8de6f97feac3c767ff1f09a7eb637bd427",
+      "after": "5050d1136049748e9b26dc599eedfe8de6f97feac3c767ff1f09a7eb637bd427",
+      "silhouette": "109e17447c28708d2f7fb80634211b7ab86b9b2359615fd50a390faa4dbff9c3"
+    },
+    {
+      "file": "run_down_b__near_leg.txt",
+      "before": "ec65d15b34273d289e09008c426b7895aa2c19e7453b0356dba42b1fccf32f7e",
+      "after": "ec65d15b34273d289e09008c426b7895aa2c19e7453b0356dba42b1fccf32f7e",
+      "silhouette": "6b694e6cb4e348ebd40a51d448603cddc9820b3f45a8addd56582dc2d1091ab4"
+    },
+    {
+      "file": "run_down_b__torso.txt",
+      "before": "5a1509f25f0021123885f109b7912ec4b190fd09b93578f87fc0968bdf06fcd8",
+      "after": "5a1509f25f0021123885f109b7912ec4b190fd09b93578f87fc0968bdf06fcd8",
+      "silhouette": "3c6ea62c5303302601871eaff62c32797e1666e4ed1c045e27573f91dfd510ea"
+    },
+    {
+      "file": "run_down_b__head_hair.txt",
+      "before": "dd72586d98632e4a210caa4ba4e9defc699f0a57ae82b59656f6821e1dd093ef",
+      "after": "dd72586d98632e4a210caa4ba4e9defc699f0a57ae82b59656f6821e1dd093ef",
+      "silhouette": "a4fe828b7a361d3eb44d7f72b5901d5acd60a4d9154ed6182cf50e3c2bc50d93"
+    },
+    {
+      "file": "run_down_b__near_arm.txt",
+      "before": "d934da1cde6bf0a6339b84079ad4dd184c45d1004dfd2af26e75255a6e15fc31",
+      "after": "d934da1cde6bf0a6339b84079ad4dd184c45d1004dfd2af26e75255a6e15fc31",
+      "silhouette": "996da6e529c29c11bab32c35a48c62b4047c7292301b270556a8c97c855cd9b0"
+    },
+    {
+      "file": "run_push_b__far_arm.txt",
+      "before": "02f51c2108b24d8c2c2787ecaf3673646e44ca36476e55de49bf2bda83af33d8",
+      "after": "02f51c2108b24d8c2c2787ecaf3673646e44ca36476e55de49bf2bda83af33d8",
+      "silhouette": "c86ea70bb530118a2283b3f32b023e7fc875e80e7d73a51ff59ee359d00f50d8"
+    },
+    {
+      "file": "run_push_b__far_leg.txt",
+      "before": "bb6af6d3203839c2e1c3eba4647f75ad579cc11bc1c2fc40a2128e66b3812bff",
+      "after": "bb6af6d3203839c2e1c3eba4647f75ad579cc11bc1c2fc40a2128e66b3812bff",
+      "silhouette": "3c75b728e0132f10052cfabf4d78cd5c4ad0658ad550a5d3b6af7e9329f4a443"
+    },
+    {
+      "file": "run_push_b__near_leg.txt",
+      "before": "5dc75b4649012d10efa6a17c0c33b73836dca5308faad17824761573d7cb8cdf",
+      "after": "5dc75b4649012d10efa6a17c0c33b73836dca5308faad17824761573d7cb8cdf",
+      "silhouette": "bc6cfd4b40b9bb881ce90d59e2f6f8d5eeae084f02f73de35d8f513368bcadbe"
+    },
+    {
+      "file": "run_push_b__torso.txt",
+      "before": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "after": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "silhouette": "d63ec0475a7b71595ca14aec3256999b10659bd84edebeddee3d49c6760e5163"
+    },
+    {
+      "file": "run_push_b__head_hair.txt",
+      "before": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "after": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "silhouette": "7867bc4a7467e4d5ce1fb5265b2122162aa7a32df1277517c03d3088b6d342ba"
+    },
+    {
+      "file": "run_push_b__near_arm.txt",
+      "before": "915909ed1bbb2cec3694be64579ef90e6adde8a9c09ac9d27787fbfb81f193ee",
+      "after": "915909ed1bbb2cec3694be64579ef90e6adde8a9c09ac9d27787fbfb81f193ee",
+      "silhouette": "225a60c332ba9841bb81f8e8afc821a776ce5d58a0e9e588339c1974f72ecb56"
+    },
+    {
+      "file": "run_flight_b__far_arm.txt",
+      "before": "1cc4baf1c77fe0eb5f6d1d663c23341828c0a0052c633f6a7b080262cc06c950",
+      "after": "1cc4baf1c77fe0eb5f6d1d663c23341828c0a0052c633f6a7b080262cc06c950",
+      "silhouette": "b57c0ae3a6cae5792c583be8a990e9e992f02154a4dc735b75bde5d077cf55e2"
+    },
+    {
+      "file": "run_flight_b__far_leg.txt",
+      "before": "d430a06f0ad34f7285b3274b52d49830622ce1884d93f5bd2bb294434b8a8da3",
+      "after": "d430a06f0ad34f7285b3274b52d49830622ce1884d93f5bd2bb294434b8a8da3",
+      "silhouette": "7a5cd6a36cff0e867ccdb37ffcde6f3cb9b8a8ae96e4d00f2d089a4554f8a9b9"
+    },
+    {
+      "file": "run_flight_b__near_leg.txt",
+      "before": "1f061fb8c9e12c11435aa3487ae9ccbe8b405a8ef70bee6088f4e5e87bfadde7",
+      "after": "1f061fb8c9e12c11435aa3487ae9ccbe8b405a8ef70bee6088f4e5e87bfadde7",
+      "silhouette": "fc6266fe47149c314207ce0a24ea11f06673abb7c55966e9b04d5d5935cc7be3"
+    },
+    {
+      "file": "run_flight_b__torso.txt",
+      "before": "b17b939c51111e4150c886758cc15a61b109a08fc72fe4d1829e4d0701d3bd71",
+      "after": "b17b939c51111e4150c886758cc15a61b109a08fc72fe4d1829e4d0701d3bd71",
+      "silhouette": "68d0717ffb8b956546f155690149b960811668bfa98468a858711e50fc81de24"
+    },
+    {
+      "file": "run_flight_b__head_hair.txt",
+      "before": "2a72e24a01692a8de8e2b8fbb1fc44eab4b749c6a5e5e3e32f9f5b4b1ad79cc6",
+      "after": "2a72e24a01692a8de8e2b8fbb1fc44eab4b749c6a5e5e3e32f9f5b4b1ad79cc6",
+      "silhouette": "15a8c78f8ba2c847fdb284e5f0fe193ba04d106da9b68dc1c09894406938aea6"
+    },
+    {
+      "file": "run_flight_b__near_arm.txt",
+      "before": "fbee48ef8596d47708537a1e5cf03c594b5262afd0566b3d7ca07ce43d9fcbb6",
+      "after": "fbee48ef8596d47708537a1e5cf03c594b5262afd0566b3d7ca07ce43d9fcbb6",
+      "silhouette": "9e4d0674a77075b923e9c6481880948ba716712e612b89eede012ab10a04c14d"
+    },
+    {
+      "file": "stop__far_arm.txt",
+      "before": "a5f59333f77067c617e7c859be3b03f25d3432c13d07949865105ac886b9e83c",
+      "after": "a5f59333f77067c617e7c859be3b03f25d3432c13d07949865105ac886b9e83c",
+      "silhouette": "d46c2ab201ff8623920e6764e11a62f903c93b6a05b56b5caf422f7c6e3d4b1f"
+    },
+    {
+      "file": "stop__far_leg.txt",
+      "before": "0e992bbd92ca77b1e615e6d2e60f2a54c4d76aa674766aedbf69fade66750b3b",
+      "after": "0e992bbd92ca77b1e615e6d2e60f2a54c4d76aa674766aedbf69fade66750b3b",
+      "silhouette": "d53a0919827c6bd95539c1c7f831755037fe330992c772ee1110885cb5b16994"
+    },
+    {
+      "file": "stop__near_leg.txt",
+      "before": "6843bdf663ab4ac4d0860b55eb23354fdc3597b902d3edcbcde660ce3a3822d1",
+      "after": "6843bdf663ab4ac4d0860b55eb23354fdc3597b902d3edcbcde660ce3a3822d1",
+      "silhouette": "137130cd6ab4aa12f9e534a5a0c93ffa2591c2ff0faf03837a261705dba925d4"
+    },
+    {
+      "file": "stop__torso.txt",
+      "before": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "after": "f72e7d5c470562dc40fae4f531d340a2b419006ca0436943bf9ba4dec12cf027",
+      "silhouette": "d63ec0475a7b71595ca14aec3256999b10659bd84edebeddee3d49c6760e5163"
+    },
+    {
+      "file": "stop__head_hair.txt",
+      "before": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "after": "077018c0ecfdf40759d49e59776cb182748db962ad7a6f8929581c101f8b7a0f",
+      "silhouette": "7867bc4a7467e4d5ce1fb5265b2122162aa7a32df1277517c03d3088b6d342ba"
+    },
+    {
+      "file": "stop__near_arm.txt",
+      "before": "b7cd320b62349b70dc126a26e7d8be67529710e2d69bddef0d4a4b369b00842a",
+      "after": "b7cd320b62349b70dc126a26e7d8be67529710e2d69bddef0d4a4b369b00842a",
+      "silhouette": "057ad20e49676c3e0a9455d86ab4eb9342b7c3ad0d70f5d5f551de6dca5ad874"
+    }
+  ],
+  "edits": [
+    {
+      "file": "walk_contact_a__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_a__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_a__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_a__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_a__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_a__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_a__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_a__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_a__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_a__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_a__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_a__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_a__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_a__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_a__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_a__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_a__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_a__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_a__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_a__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_a__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_a__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_a__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_a__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_b__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_b__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_b__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_b__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_b__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_contact_b__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_b__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_b__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_b__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_b__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_b__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_down_b__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_b__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_b__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_b__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_b__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_b__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_passing_b__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_b__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_b__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_b__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_b__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_b__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "walk_up_b__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_a__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_a__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_a__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_a__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_a__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_a__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_a__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_a__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_a__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_a__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_a__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_a__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_a__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_a__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_a__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_a__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_a__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_a__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_a__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_a__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_a__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_a__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_a__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_a__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_b__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_b__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_b__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_b__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_b__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_contact_b__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_b__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_b__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_b__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_b__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_b__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_down_b__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_b__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_b__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_b__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_b__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_b__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_push_b__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_b__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_b__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_b__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_b__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_b__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "run_flight_b__near_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "stop__far_arm.txt",
+      "pixels": []
+    },
+    {
+      "file": "stop__far_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "stop__near_leg.txt",
+      "pixels": []
+    },
+    {
+      "file": "stop__torso.txt",
+      "pixels": []
+    },
+    {
+      "file": "stop__head_hair.txt",
+      "pixels": []
+    },
+    {
+      "file": "stop__near_arm.txt",
+      "pixels": []
+    }
+  ],
+  "poses_sha256": "324d1f97c24cb0c6222bf1fef98f4987b63f8eb0fa9d18d40894c6d266379939",
+  "palette_sha256": "5a387c933a25851544a432a3d8c7b8f0fc699ad6bdbd2a074cb7f456df2608e5",
+  "pixel_changes": 0
+}

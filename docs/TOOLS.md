@@ -138,7 +138,8 @@ Run by the build, and worth running by hand when something looks wrong.
 | `verify_artbox_palettes.py` | Per-game artbox palette output: manifest count, palette bank range, and `neopal.bin` record integrity (136 bytes per record — an int32 index plus sixteen 64-bit palette words). `make art` runs it and fails the build on a mismatch. |
 | `verify_sfix_output.py` | The generated FIX ROM: size, format, and tile layout. |
 | `gen_api_reference.py` | Regenerates `docs/API_2D_ENGINE_C.md` and `docs/API_2D_ENGINE_CPP.md` from the engine headers, so the API reference cannot drift from the code. Run it after adding or changing a public engine call. |
-| `make_manual_pdf.py` | Builds `docs/neogeosdk_v1.7.0_manual.pdf` — the programmer's manual, the SDK library reference, and both 2D engine references — from the markdown in `docs/`. Run `gen_api_reference.py` first if the engine changed. |
+| `make_manual_pdf.py` | Builds `docs/neogeosdk_v1.7.7_manual.pdf` — what is new, the programmer's manual, the SDK library reference, both 2D engine references, the module guides, the genre and fighting cores, sound, graphics and tools — from the markdown in `docs/`. Run `gen_api_reference.py` first if the engine changed. |
+| `make_overview_pdf.py` | Builds `docs/neogeosdk_v1.7.7_overview.pdf`, the illustrated technical overview (landscape slides); the slide text is in the script. |
 
 ```sh
 python3 tools/verify_artbox_palettes.py --root . --game demo

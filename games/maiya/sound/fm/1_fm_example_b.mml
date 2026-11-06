@@ -1,0 +1,21 @@
+; 1_fm_example_b - Maiya's fanfare, played once when she is chosen
+;
+; A bright rising call on the hero lead, C major: up the chord, a quick
+; turn at the top and a held high C. About two seconds, FM only, no loop
+; mark, so it answers the choice and gets out of the way.
+
+T120
+I6
+V13
+O4
+L16
+
+G > C E G
+L8
+> C < G > E
+L16
+D E
+L4
+G
+L2
+> C

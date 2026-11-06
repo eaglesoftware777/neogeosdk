@@ -8,21 +8,22 @@ https://github.com/eaglesoftware777/neogeosdk
  * Sky Lance — BIOS entry points.
  *
  * The interrupt vectors and the POWER_ON / EYE_CATCHER / GAME / TITLE
- * request dispatch below are the SDK's standard MVS handshake, identical
- * to games/demo/user.c.  Only the four game-specific hooks differ:
- * setup_fix_palettes(), showTitleMVS(), GAME_ATTRACT() and START_GAME().
+ * request dispatch use the SDK's BIOS handshake, with board-aware credit
+ * handling and sound initialization after the game's work RAM is cleared.
  */
 
 #include <stdint.h>
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
+#include "sdk/bsp/bsp.h"
+#include "sdk/2d_engine/ng_palette_fx.h"
 #include "games/skylance/scenes/sky.h"
 #include "games/skylance/scenes/sky_draw.h"
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
-#define NGO_START_FLAG  0xD00100
+#define NGO_START_FLAG  SKY_START_FLAG
 
 void NEOGEO_USER soundSceneReset(void);
 void NEOGEO_USER maingame(void);
@@ -31,7 +32,6 @@ void NEOGEO_USER START_GAME(void);
 void NEOGEO_USER GAME_DISPATCH(void);
 void NEOGEO_USER showTitleMVS(void);
 void NEOGEO_USER showEyeCatcherMVS(void);
-void NEOGEO_USER showScreen2(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 
 //ZD_ENTRY interrupt subroutine
 NEOGEO_INTERRUPT void NEOGEO_USER ZD_ENTRY(void) {
@@ -62,6 +62,7 @@ NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
 	ASM_MVEML(%%d0-%%d7/%%a0-%%a6,-(%%sp))
 	ASM_MVW(#4,REG_IRQACK) // Acknowledge the VBlank interrupt
 	ASM_MVB(%%d0,REG_DIPSW)        // Kick watchdog
+	ASM_JSR(sky_palette_vblank)
 	ASM_JSR(SYS_IO)
 	ASM_MVEML((%%sp)+, %%d0-%%d7/%%a0-%%a6)
 	:
@@ -138,6 +139,10 @@ void NEOGEO_USER PLAYER_START (void) {
 
 	uint16_t start_flag = NEO_REGISTER8(BIOS_START_FLAG);
 	uint16_t country_code = NEO_REGISTER8(BIOS_COUNTRY_CODE);
+	if (!(start_flag & 1u) || NEO_REGISTER8(BIOS_PLAYER1_MODE) == 1u) {
+		NEO_REGISTER8(BIOS_START_FLAG) = 0;
+		return;
+	}
 
 	// US BIOS clears BIOS_START_FLAG before calling PLAYER_START (Japan BIOS leaves
 	// the bit set). Setting BIOS_PLAYER1_MODE and BIOS_START_FLAG unconditionally
@@ -153,10 +158,10 @@ void NEOGEO_USER PLAYER_START (void) {
 	}
 	soundSetADPCMAVolume(0x3C);
 	playSFX(SOUND_SFX_3);
-#ifndef NG_AES
-	CALLNEOGEOF(SYS_CREDIT_CHECK);
-	CALLNEOGEOF(SYS_CREDIT_DOWN);
-#endif
+	if (ng_sys_is_mvs()) {
+		CALLNEOGEOF(SYS_CREDIT_CHECK);
+		CALLNEOGEOF(SYS_CREDIT_DOWN);
+	}
 }
 
 // NeoGeo DEMO_END handler
@@ -169,12 +174,9 @@ void NEOGEO_USER DEMO_END (void) {
 void NEOGEO_USER COIN_SOUND (void) {
 
 	isZ80Ready();
-	soundStopAll();
-	isZ80Ready();
 	soundSetADPCMAVolume(0x3C);
 	isZ80Ready();
 	playSFX(SOUND_SFX_1);
-	cyclexms(7);
 }
 
 // NeoGeo POWER_ON handler
@@ -204,13 +206,9 @@ void  NEOGEO_USER POWER_ON (void) {
 // NeoGeo EYE_CATCHER handler — same sprite animation for both AES and MVS
 void  NEOGEO_USER EYE_CATCHER (void) {
 
-	soundCancelFade();
-	soundSceneReset();
-	soundSetADPCMAVolume(0x00);
-	soundSetADPCMBVolume(0xBC);
-	playSFXB(SOUND_TRACK_E);
-	showEyeCatcherMVS();
-	soundStopAll();
+	clearFix();
+	clearSprs();
+	setBACKDROP(BLACK);
 }
 
 // NeoGeo GAME Mode
@@ -223,7 +221,7 @@ void  NEOGEO_USER GAME (void) {
 	ASM_MVW(#7,REG_IRQACK)
 	ASM_ADDQB(#1,BIOS_MESS_BUSY)
 	ASM_BCLRB(#7,BIOS_SYSTEM_MODE)
-	ASM_MVW(#0x2000,%%sr)
+	ASM_MVW(#0x2700,%%sr)
 	ASM_SUBQB(#1,BIOS_MESS_BUSY)
 	ASM_BSETB(#7,BIOS_SYSTEM_MODE)
 	ASM_JSR(INIT_GAME)
@@ -237,24 +235,15 @@ void  NEOGEO_USER GAME (void) {
 
 /* C-based GAME dispatch — avoids inline-asm address read issues */
 void NEOGEO_USER GAME_DISPATCH(void) {
-#ifndef NG_AES
 	if (!NEO_REGISTER8(NGO_START_FLAG)) {
 		NEO_REGISTER8(BIOS_USER_MODE) = 1;
 		GAME_ATTRACT();
 	}
-	if (NEO_REGISTER8(NGO_START_FLAG)) {
+	if (NEO_REGISTER8(NGO_START_FLAG) || (ng_sys_is_mvs() && read_p1credit() > 0)) {
 		NEO_REGISTER8(BIOS_USER_MODE) = 2;
 		showTitleMVS();
 		START_GAME();
 	}
-#else
-	NEO_REGISTER8(BIOS_USER_MODE) = 1;
-	GAME_ATTRACT();
-	if (NEO_REGISTER8(NGO_START_FLAG)) {
-		NEO_REGISTER8(BIOS_USER_MODE) = 2;
-		START_GAME();
-	}
-#endif
 }
 
 /* NeoGeo MVS TITLE mode */
@@ -266,14 +255,15 @@ void NEOGEO_USER TITLE(void) {
 	ASM_MVW(#7,REG_IRQACK)
 	ASM_ADDQB(#1,BIOS_MESS_BUSY)
 	ASM_BCLRB(#7,BIOS_SYSTEM_MODE)
-	ASM_MVW(#0x2000,%%sr)
-	ASM_MVB(#0x03,BIOS_USER_MODE)
+	ASM_MVW(#0x2700,%%sr)
+	ASM_MVB(#0x01,BIOS_USER_MODE)
 	ASM_SUBQB(#1,BIOS_MESS_BUSY)
 	ASM_BSETB(#7,BIOS_SYSTEM_MODE)
 	ASM_JSR(INIT_GAME)
 	ASM_JSR(showTitleMVS)
 	ASM_MVB(#0x02,BIOS_USER_MODE)
-	ASM_JMP(START_GAME)
+	ASM_JSR(START_GAME)
+	ASM_JMP(SYS_RETURN)
 	:
 	:
 	:
@@ -285,54 +275,50 @@ void NEOGEO_USER TITLE(void) {
  * INSERT COIN blinker until a credit lands, then a 15-second auto-start
  * countdown once one has.
  */
+uint8_t NEOGEO_USER sky_start_pending(void) {
+	if (NEO_REGISTER8(NGO_START_FLAG)) return 1u;
+	if (ng_sys_is_mvs()) return (uint8_t)(read_p1credit() > 0);
+	if (NEO_REGISTER8(BIOS_STATCHANGE) & 1u) {
+		NEO_REGISTER8(NGO_START_FLAG) = 1u;
+		NEO_REGISTER8(BIOS_USER_MODE) = 2u;
+		return 1u;
+	}
+	return 0u;
+}
+
 void NEOGEO_USER showTitleMVS(void) {
-	int i;
-	int credit_seen = 0;
-	int auto_frames = 15 * 60;
-
-	clearFix();
-	clearSprs();
-	setBACKDROP(SKY_BG_CLEAR);
-	showScreen2(32, 0, 0xF, 0xFF, 16, SKY_BG_CLEAR, SKY_SHOWSCREEN_BASE);
-	waitVbl();
-
-	mess_out(15,  8, "SKY  LANCE", SKY_PAL_TITLE);
-	mess_out(11, 10, "EAGLE SOFTWARE 2026", SKY_PAL_BODY);
-
-	for (i = 0; ; i++) {
-		if (read_p1credit() > 0) {
-			char timer[18];
-			int secs;
-			if (!credit_seen) {
-				credit_seen = 1;
-				auto_frames = 15 * 60;
-				soundSetADPCMAVolume(0x3C);
-				playSFX(SOUND_SFX_1);
-			}
-			secs = (auto_frames + 59) / 60;
-			timer[0] = 'A'; timer[1] = 'U'; timer[2] = 'T'; timer[3] = 'O';
-			timer[4] = ' '; timer[5] = 'S'; timer[6] = 'O'; timer[7] = 'R';
-			timer[8] = 'T'; timer[9] = 'I'; timer[10] = 'E'; timer[11] = ' ';
-			timer[12] = (char)('0' + (secs / 10));
-			timer[13] = (char)('0' + (secs % 10));
-			timer[14] = 's'; timer[15] = '\0';
-			mess_out(13, 25, timer,       SKY_PAL_WARN);
-			mess_out(15, 26, "HIT START", SKY_PAL_WARN);
-			if (auto_frames > 0) auto_frames--;
+	uint16_t frames = 15u * 60u;
+	sky_scene_begin();
+	sky_title_draw();
+	sky_puts(8u, 27u, "(C) 2026 EAGLE SOFTWARE", SKY_PAL_BODY);
+	for (;;) {
+		if (NEO_REGISTER8(NGO_START_FLAG)) break;
+		if (!ng_sys_is_mvs()) {
+			sky_puts(14u, 25u, "PUSH START", SKY_PAL_SCORE);
+			if (sky_start_pending()) break;
+		} else if (read_p1credit() > 0) {
+			sky_puts(12u, 25u, "PUSH 1P START", SKY_PAL_SCORE);
+			if (frames) frames--;
 			else {
-				NEO_REGISTER8(NGO_START_FLAG) = 1;
-				NEO_REGISTER8(BIOS_USER_MODE) = 2;
-				playSFX(SOUND_SFX_3);
-				break;
+				uint16_t saved_sr;
+				__asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr" : "=d" (saved_sr) : : "memory");
+				if (!NEO_REGISTER8(NGO_START_FLAG)) {
+					NEO_REGISTER8(0x10FDB0) = 1;
+					NEO_REGISTER8(0x10FDB1) = 0;
+					NEO_REGISTER8(0x10FDB2) = 0;
+					NEO_REGISTER8(0x10FDB3) = 0;
+					CALLNEOGEOF(SYS_CREDIT_CHECK);
+					if (NEO_REGISTER8(0x10FDB0)) {
+						CALLNEOGEOF(SYS_CREDIT_DOWN);
+						NEO_REGISTER8(NGO_START_FLAG) = 1;
+						NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
+						NEO_REGISTER8(BIOS_USER_MODE) = 2;
+					}
+				}
+				__asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
 			}
-		} else if ((i >> 4) & 1) {
-			mess_out(13, 25, "  INSERT COIN ", SKY_PAL_WARN);
-		} else {
-			mess_out(13, 25, "              ", SKY_PAL_WARN);
-		}
-		waitVbl();
-		if (NEO_REGISTER8(NGO_START_FLAG) || NEO_REGISTER8(BIOS_USER_MODE) == 2)
-			break;
+		} else sky_puts(14u, 25u, "INSERT COIN", SKY_PAL_BODY);
+		sky_frame();
 	}
 }
 
@@ -341,8 +327,11 @@ void NEOGEO_USER WORK_INIT(void) {
 	int i = 0;
 	/* Clear 0x100000-0x10EFFF (game area, 60 KB). Must stop before
 	   BIOS_WORKRAM at 0x10F300 or the BIOS stack gets corrupted. */
-	for (i = 0; i < 15360; i++)
-		*p1++ = 0;
+	for (i = 0; i < 15360; i++) {
+		if (!(i & 255)) kickWatchDog();
+		if ((uintptr_t)p1 < 0x100400u || (uintptr_t)p1 >= 0x100500u) *p1 = 0;
+		p1++;
+	}
 }
 
 void NEOGEO_USER DISPLAY_INIT(void) {
@@ -362,14 +351,12 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 /*
  * FIX text palettes.
  *
- * Sky Lance draws its HUD over a full-screen background image, not over
- * the backdrop, so unlike a page-coloured demo the glyph plate matters:
- * the BIOS font paints each glyph - and the whole of its space character -
- * as an opaque entry-2 field, and here that is deliberately kept BLACK so
- * the HUD reads as a dark plate over whatever art is behind it.  Entry 1
- * (glyph body) and entry 3 (accent pixels) carry the ink.
+ * Sky Lance's text face (tools/hud_art.py) floats over the art: no plate,
+ * a one-pixel drop shadow in entry 2, the glyph's upper rows in entry 1 and
+ * its lower rows in entry 3, a darker shade of the same ink.
  */
-#define SKY_FIX_PAL(ink)  0x8000u, (ink), BLACK, (ink), \
+#define SKY_FIX_SHADOW    0xC012u
+#define SKY_FIX_PAL(light, dark)  0x8000u, (light), SKY_FIX_SHADOW, (dark), \
                           BLACK, BLACK, BLACK, BLACK, \
                           BLACK, BLACK, BLACK, BLACK, \
                           BLACK, BLACK, BLACK, BLACK
@@ -377,14 +364,14 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 void NEOGEO_USER setup_fix_palettes(void) {
 	uint16_t fix_pal[16];
 
-	setpal(fix_pal, SKY_FIX_PAL(WHITE));           /* SKY_PAL_BODY  */
-	load_palettes(fix_pal, PALETTES);
-	setpal(fix_pal, SKY_FIX_PAL(YELLOW));          /* SKY_PAL_SCORE */
-	load_palettes(fix_pal, PALETTES + PALOFFSET);
-	setpal(fix_pal, SKY_FIX_PAL(CYAN));            /* SKY_PAL_TITLE */
-	load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
-	setpal(fix_pal, SKY_FIX_PAL(RED));             /* SKY_PAL_WARN  */
-	load_palettes(fix_pal, PALETTES + PALOFFSET * 3);
+	setpal(fix_pal, SKY_FIX_PAL(0xDEFFu, 0x39ACu));   /* SKY_PAL_BODY: white to steel */
+	ng_palfx_screen_load(0u, fix_pal);
+	setpal(fix_pal, SKY_FIX_PAL(0x6FEAu, 0x6E92u));   /* SKY_PAL_SCORE: gold */
+	ng_palfx_screen_load(1u, fix_pal);
+	setpal(fix_pal, SKY_FIX_PAL(0x3AEFu, 0xC2AEu));   /* SKY_PAL_TITLE: cyan to blue */
+	ng_palfx_screen_load(2u, fix_pal);
+	setpal(fix_pal, SKY_FIX_PAL(0x6FBAu, 0x0E32u));   /* SKY_PAL_WARN: rose to red */
+	ng_palfx_screen_load(3u, fix_pal);
 
 	/*
 	 * Banks 4 up: the artbox infix art - SCORE / HI labels, the 0-9
@@ -398,10 +385,14 @@ void NEOGEO_USER setup_fix_palettes(void) {
 
 void NEOGEO_USER INIT_GAME(void) {
 	ASM_START
-	ASM_JSR(soundInit)
+	ASM_MVW(#0x2700,%%sr)
 	ASM_JSR(WORK_INIT)
+	ASM_JSR(soundInit)
 	ASM_JSR(DISPLAY_INIT)
+	ASM_JSR(sky_presentation_init)
 	ASM_JSR(setup_fix_palettes)
+	ASM_MVB(#1,BIOS_USER_MODE)
+	ASM_MVW(#0x2000,%%sr)
 	:
 	:
 	:
@@ -424,6 +415,7 @@ void NEOGEO_USER START_GAME(void) {
 	clearSprs();
 	soundSceneReset();
 	sky_run();
+	NEO_REGISTER8(BIOS_PLAYER1_MODE) = 3;
 	NEO_REGISTER8(NGO_START_FLAG) = 0;
 	NEO_REGISTER8(BIOS_USER_MODE) = 1;
 	ASM_START

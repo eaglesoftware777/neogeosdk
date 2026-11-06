@@ -1,0 +1,393 @@
+[
+  {
+    "fighter": "aleksei",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/aleksei/aleksei_s1.png",
+    "figure_box": [
+      71,
+      16,
+      331,
+      355
+    ],
+    "face_box": [
+      104,
+      -7,
+      102,
+      102
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "atlas",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/atlas/atlas_s1.png",
+    "figure_box": [
+      15,
+      81,
+      296,
+      481
+    ],
+    "face_box": [
+      83,
+      -8,
+      120,
+      120
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "echo",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/echo/echo_s1.png",
+    "figure_box": [
+      18,
+      40,
+      250,
+      482
+    ],
+    "face_box": [
+      61,
+      -9,
+      133,
+      133
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "hayato",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/hayato/hayato_s1.png",
+    "figure_box": [
+      43,
+      17,
+      327,
+      364
+    ],
+    "face_box": [
+      77,
+      -7,
+      104,
+      104
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "irina",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/irina/irina_s1.png",
+    "figure_box": [
+      53,
+      23,
+      244,
+      470
+    ],
+    "face_box": [
+      31,
+      -9,
+      134,
+      134
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "jack",
+    "source": "/home/kepler/shadowleague-sdk177-jack-corrected/jack_s1.png",
+    "figure_box": [
+      35,
+      34,
+      285,
+      427
+    ],
+    "face_box": [
+      114,
+      -8,
+      118,
+      118
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "kaimana",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/kaimana/kaimana_s1.png",
+    "figure_box": [
+      22,
+      19,
+      362,
+      375
+    ],
+    "face_box": [
+      131,
+      -7,
+      107,
+      107
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "kofi",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/kofi/kofi_s1.png",
+    "figure_box": [
+      30,
+      32,
+      276,
+      427
+    ],
+    "face_box": [
+      115,
+      -8,
+      118,
+      118
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "leila",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/leila/leila_s1.png",
+    "figure_box": [
+      23,
+      15,
+      260,
+      461
+    ],
+    "face_box": [
+      41,
+      -9,
+      134,
+      134
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "lotus",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/lotus/lotus_s1.png",
+    "figure_box": [
+      43,
+      19,
+      352,
+      335
+    ],
+    "face_box": [
+      104,
+      -6,
+      95,
+      95
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "lucas",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/lucas/lucas_s1.png",
+    "figure_box": [
+      37,
+      32,
+      348,
+      366
+    ],
+    "face_box": [
+      157,
+      -7,
+      100,
+      100
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "maia",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/maia/maia_s1.png",
+    "figure_box": [
+      16,
+      21,
+      269,
+      466
+    ],
+    "face_box": [
+      71,
+      -9,
+      134,
+      134
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "mason",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/mason/mason_s1.png",
+    "figure_box": [
+      22,
+      39,
+      249,
+      456
+    ],
+    "face_box": [
+      94,
+      -8,
+      125,
+      125
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "mirage",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/mirage/mirage_s1.png",
+    "figure_box": [
+      26,
+      18,
+      318,
+      412
+    ],
+    "face_box": [
+      92,
+      -8,
+      118,
+      118
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "noah",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/noah/noah_s1.png",
+    "figure_box": [
+      15,
+      29,
+      270,
+      470
+    ],
+    "face_box": [
+      78,
+      -9,
+      132,
+      132
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "sokha",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/sokha/sokha_s1.png",
+    "figure_box": [
+      51,
+      27,
+      256,
+      478
+    ],
+    "face_box": [
+      42,
+      -8,
+      135,
+      135
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "thabo",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/thabo/thabo_s1.png",
+    "figure_box": [
+      20,
+      22,
+      270,
+      472
+    ],
+    "face_box": [
+      92,
+      -9,
+      135,
+      135
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "tomas",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/tomas/tomas_s1.png",
+    "figure_box": [
+      43,
+      59,
+      304,
+      350
+    ],
+    "face_box": [
+      128,
+      -5,
+      87,
+      87
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "tororojo",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/tororojo/tororojo_s1.png",
+    "figure_box": [
+      37,
+      17,
+      390,
+      374
+    ],
+    "face_box": [
+      160,
+      -7,
+      107,
+      107
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "viper",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/viper/viper_s1.png",
+    "figure_box": [
+      36,
+      29,
+      278,
+      452
+    ],
+    "face_box": [
+      58,
+      -8,
+      127,
+      127
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "xiaomei",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/xiaomei/xiaomei_s1.png",
+    "figure_box": [
+      34,
+      55,
+      266,
+      464
+    ],
+    "face_box": [
+      48,
+      -8,
+      123,
+      123
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "zara",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/zara/zara_s1.png",
+    "figure_box": [
+      17,
+      21,
+      375,
+      398
+    ],
+    "face_box": [
+      161,
+      -7,
+      113,
+      113
+    ],
+    "resampling": "nearest"
+  },
+  {
+    "fighter": "zero",
+    "source": "/home/kepler/shadowleague-sdk177-source-art-20261018/zero/zero_s1.png",
+    "figure_box": [
+      26,
+      43,
+      250,
+      451
+    ],
+    "face_box": [
+      106,
+      -8,
+      122,
+      122
+    ],
+    "resampling": "nearest"
+  }
+]

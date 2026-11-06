@@ -1,0 +1,133 @@
+{
+ "database": "fbneo",
+ "source_file": "src/burn/drv/neogeo/d_neogeo.cpp",
+ "read": "2026-10-28",
+ "sets": {
+  "maiya": {
+   "roms": [
+    {
+     "name": "maiya-p1.p1",
+     "part": "p1",
+     "size": 524288,
+     "crc32": "ecef6baa"
+    },
+    {
+     "name": "maiya-s1.s1",
+     "part": "s1",
+     "size": 131072,
+     "crc32": "5c7951e1"
+    },
+    {
+     "name": "maiya-c1.c1",
+     "part": "c1",
+     "size": 4194304,
+     "crc32": "48638505"
+    },
+    {
+     "name": "maiya-c2.c2",
+     "part": "c2",
+     "size": 4194304,
+     "crc32": "66a5c0e2"
+    },
+    {
+     "name": "maiya-m1.m1",
+     "part": "m1",
+     "size": 131072,
+     "crc32": "ce7717bd"
+    },
+    {
+     "name": "maiya-v1.v1",
+     "part": "v1",
+     "size": 7973632,
+     "crc32": "127b89b4"
+    }
+   ],
+   "block": "static struct BurnRomInfo maiyaRomDesc[] = {\n\t{ \"maiya-p1.p1\",    0x080000, 0xecef6baa, 1 | BRF_ESS | BRF_PRG }, //  0 68K code\n\n\t{ \"maiya-s1.s1\",    0x020000, 0x5c7951e1, 2 | BRF_GRA },           //  1 Text layer tiles\n\n\t{ \"maiya-c1.c1\",    0x400000, 0x48638505, 3 | BRF_GRA },           //  2 Sprite data\n\t{ \"maiya-c2.c2\",    0x400000, 0x66a5c0e2, 3 | BRF_GRA },           //  3\n\n\t{ \"maiya-m1.m1\",    0x020000, 0xce7717bd, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code\n\n\t{ \"maiya-v1.v1\",    0x79ab00, 0x127b89b4, 5 | BRF_SND },           //  5 Sound data\n};",
+   "title": "Maiya: Super Nature Girl (HB, v4)"
+  },
+  "shadowlf": {
+   "roms": [
+    {
+     "name": "shadowlf_p1.p1",
+     "part": "p1",
+     "size": 3145728,
+     "crc32": "127535e0"
+    },
+    {
+     "name": "shadowlf_s1.s1",
+     "part": "s1",
+     "size": 131072,
+     "crc32": "636d9736"
+    },
+    {
+     "name": "shadowlf_c1.c1",
+     "part": "c1",
+     "size": 8388608,
+     "crc32": "ac935b79"
+    },
+    {
+     "name": "shadowlf_c2.c2",
+     "part": "c2",
+     "size": 8388608,
+     "crc32": "d65c95ab"
+    },
+    {
+     "name": "shadowlf_m1.m1",
+     "part": "m1",
+     "size": 131072,
+     "crc32": "ceabdb57"
+    },
+    {
+     "name": "shadowlf_v1.v1",
+     "part": "v1",
+     "size": 7979264,
+     "crc32": "63c1b4e6"
+    }
+   ],
+   "block": "static struct BurnRomInfo shadowlfRomDesc[] = {\n\t{ \"shadowlf_p1.p1\",    0x300000, 0x127535e0, 1 | BRF_ESS | BRF_PRG }, //  0 68K code\n\n\t{ \"shadowlf_s1.s1\",    0x020000, 0x636d9736, 2 | BRF_GRA },           //  1 Text layer tiles\n\n\t{ \"shadowlf_c1.c1\",    0x800000, 0xac935b79, 3 | BRF_GRA },           //  2 Sprite data\n\t{ \"shadowlf_c2.c2\",    0x800000, 0xd65c95ab, 3 | BRF_GRA },           //  3\n\n\t{ \"shadowlf_m1.m1\",    0x020000, 0xceabdb57, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code\n\n\t{ \"shadowlf_v1.v1\",    0x79c100, 0x63c1b4e6, 5 | BRF_SND },           //  5 Sound data\n};",
+   "title": "Shadow League Fighting (HB, v3)"
+  },
+  "skylance": {
+   "roms": [
+    {
+     "name": "skylance-p1.p1",
+     "part": "p1",
+     "size": 524288,
+     "crc32": "ae68c9a1"
+    },
+    {
+     "name": "skylance-s1.s1",
+     "part": "s1",
+     "size": 131072,
+     "crc32": "bd69c9ff"
+    },
+    {
+     "name": "skylance-c1.c1",
+     "part": "c1",
+     "size": 4194304,
+     "crc32": "e80e7df9"
+    },
+    {
+     "name": "skylance-c2.c2",
+     "part": "c2",
+     "size": 4194304,
+     "crc32": "0668da32"
+    },
+    {
+     "name": "skylance-m1.m1",
+     "part": "m1",
+     "size": 131072,
+     "crc32": "cb88d068"
+    },
+    {
+     "name": "skylance-v1.v1",
+     "part": "v1",
+     "size": 4546304,
+     "crc32": "897c1fbc"
+    }
+   ],
+   "block": "static struct BurnRomInfo skylanceRomDesc[] = {\n\t{ \"skylance-p1.p1\",    0x080000, 0xae68c9a1, 1 | BRF_ESS | BRF_PRG }, //  0 68K code\n\n\t{ \"skylance-s1.s1\",    0x020000, 0xbd69c9ff, 2 | BRF_GRA },           //  1 Text layer tiles\n\n\t{ \"skylance-c1.c1\",    0x400000, 0xe80e7df9, 3 | BRF_GRA },           //  2 Sprite data\n\t{ \"skylance-c2.c2\",    0x400000, 0x0668da32, 3 | BRF_GRA },           //  3\n\n\t{ \"skylance-m1.m1\",    0x020000, 0xcb88d068, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code\n\n\t{ \"skylance-v1.v1\",    0x455f00, 0x897c1fbc, 5 | BRF_SND },           //  5 Sound data\n};",
+   "title": "Sky Lance (HB, v2)"
+  }
+ }
+}

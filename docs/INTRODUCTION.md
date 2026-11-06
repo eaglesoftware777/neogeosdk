@@ -1,6 +1,6 @@
 # Introduction to the Neo Geo SDK
 
-**Eagle Software · v1.7.0 · MIT**
+**Eagle Software · v1.7.7 · MIT**
 
 This is the document to read first. It explains what the SDK is, what the
 machine underneath it looks like, what you get in the box, and the order in

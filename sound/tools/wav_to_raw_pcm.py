@@ -118,6 +118,14 @@ def convert_wav_to_raw(input_path, output_path, target_rate):
         source_rate = wav_file.getframerate()
         frames = wav_file.readframes(wav_file.getnframes())
 
+    # Already in the requested wire format: preserve every sample exactly.
+    # A float round-trip otherwise changes many values by one quantization step.
+    if channels == 1 and sample_width == 2 and source_rate == target_rate:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(frames)
+        write_rate(output_path, target_rate)
+        return
+
     samples = decode_pcm_frames(frames, sample_width)
     samples = fold_to_mono(samples, channels)
     samples = resample_bandlimited(samples, source_rate, target_rate)

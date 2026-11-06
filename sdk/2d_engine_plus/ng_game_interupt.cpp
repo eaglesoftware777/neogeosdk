@@ -94,10 +94,48 @@ void NEOGEO_USER ng_game_interupt_set_hooks(
     );
 }
 
+static uint8_t ng_hitstop_freeze = 0;
+
+void NEOGEO_USER ng_game_engine_set_hitstop_freeze(uint8_t on)
+{
+    ng_hitstop_freeze = on ? 1u : 0u;
+}
+
+/* Everything that puts the frame on screen, shared by a normal frame and a
+ * frozen hitstop frame. */
+static void NEOGEO_USER ng_game_engine_draw(void)
+{
+    if (ng_before_draw) ng_before_draw();
+
+    {
+        const NGLevelState *_level = level_state();
+        int16_t _cam_x = _level ? _level->scroll_x : 0;
+        int16_t _cam_y = _level ? _level->scroll_y : 0;
+        ng_bg_draw(_cam_x, _cam_y);
+    }
+    ng_chars_draw();
+
+    if (ng_after_draw) ng_after_draw();
+}
+
 void NEOGEO_USER ng_game_engine_frame(void)
 {
     ng_game_time_tick();
     ng_joystick_update();
+
+    /*
+     * Hitstop, for a game that opts in: the world holds still for the few
+     * frames of a heavy blow -- no logic, timers, physics or character
+     * movement -- while the screen keeps drawing (so a shake still shows)
+     * and the hitstop counter runs down.
+     */
+    if (ng_hitstop_freeze && ng_feedback_is_hitstop()) {
+        ng_game_engine_draw();
+        ng_palette_fx_update();
+        ng_feedback_update();
+        ng_render_queue_flush();
+        return;
+    }
 
     if (ng_before_logic) ng_before_logic();
 
@@ -117,17 +155,7 @@ void NEOGEO_USER ng_game_engine_frame(void)
 
     ng_progress_update();
 
-    if (ng_before_draw) ng_before_draw();
-
-    {
-        const NGLevelState *_level = level_state();
-        int16_t _cam_x = _level ? _level->scroll_x : 0;
-        int16_t _cam_y = _level ? _level->scroll_y : 0;
-        ng_bg_draw(_cam_x, _cam_y);
-    }
-    ng_chars_draw();
-
-    if (ng_after_draw) ng_after_draw();
+    ng_game_engine_draw();
 
     ng_particles_update();
     ng_palette_fx_update();

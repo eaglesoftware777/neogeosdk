@@ -1,0 +1,1316 @@
+[
+  {
+    "key": "aisha_sp1",
+    "fighter": "aisha",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "La lance !",
+    "duration": 0.7664020735460878,
+    "peak": 0.97
+  },
+  {
+    "key": "aisha_sp2",
+    "fighter": "aisha",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Crochet !",
+    "duration": 0.6933959717047357,
+    "peak": 0.97
+  },
+  {
+    "key": "aisha_sp3",
+    "fighter": "aisha",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Pas du guerrier !",
+    "duration": 0.8314703817700739,
+    "peak": 0.97
+  },
+  {
+    "key": "aisha_super",
+    "fighter": "aisha",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Écrasement Dambe !",
+    "duration": 1.0184675198444841,
+    "peak": 0.97
+  },
+  {
+    "key": "aisha_v_heavy",
+    "fighter": "aisha",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Prends ça !",
+    "duration": 0.7247691560019439,
+    "peak": 0.97
+  },
+  {
+    "key": "aisha_v_throw",
+    "fighter": "aisha",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Par terre !",
+    "duration": 0.7290890436848642,
+    "peak": 0.97
+  },
+  {
+    "key": "aisha_v_win",
+    "fighter": "aisha",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Mes poings étaient bandés pour la guerre.",
+    "duration": 1.5499757006317836,
+    "peak": 0.97
+  },
+  {
+    "key": "aleksei_sp1",
+    "fighter": "aleksei",
+    "language": "ru",
+    "voice": "dmitri",
+    "text": "Бросок с шагом!",
+    "duration": 0.9183001241967709,
+    "peak": 0.97
+  },
+  {
+    "key": "aleksei_sp2",
+    "fighter": "aleksei",
+    "language": "ru",
+    "voice": "dmitri",
+    "text": "Удар с шага!",
+    "duration": 0.8243965656892921,
+    "peak": 0.97
+  },
+  {
+    "key": "aleksei_sp3",
+    "fighter": "aleksei",
+    "language": "ru",
+    "voice": "dmitri",
+    "text": "Рычаг локтя!",
+    "duration": 0.8481019493493169,
+    "peak": 0.97
+  },
+  {
+    "key": "aleksei_super",
+    "fighter": "aleksei",
+    "language": "ru",
+    "voice": "dmitri",
+    "text": "Титан степи!",
+    "duration": 0.8238025811328905,
+    "peak": 0.97
+  },
+  {
+    "key": "aleksei_v_heavy",
+    "fighter": "aleksei",
+    "language": "ru",
+    "voice": "dmitri",
+    "text": "Получай!",
+    "duration": 0.6315135806469032,
+    "peak": 0.97
+  },
+  {
+    "key": "aleksei_v_throw",
+    "fighter": "aleksei",
+    "language": "ru",
+    "voice": "dmitri",
+    "text": "Через себя!",
+    "duration": 0.8428640855337761,
+    "peak": 0.97
+  },
+  {
+    "key": "aleksei_v_win",
+    "fighter": "aleksei",
+    "language": "ru",
+    "voice": "dmitri",
+    "text": "В горах побеждает холод.",
+    "duration": 1.3138398401641558,
+    "peak": 0.97
+  },
+  {
+    "key": "amara_sp1",
+    "fighter": "amara",
+    "language": "pt-br",
+    "voice": "pf_dora",
+    "text": "Meia lua de compasso!",
+    "duration": 1.3395431718775312,
+    "peak": 0.97
+  },
+  {
+    "key": "amara_sp2",
+    "fighter": "amara",
+    "language": "pt-br",
+    "voice": "pf_dora",
+    "text": "Aú batido!",
+    "duration": 0.938063610346131,
+    "peak": 0.97
+  },
+  {
+    "key": "amara_super",
+    "fighter": "amara",
+    "language": "pt-br",
+    "voice": "pf_dora",
+    "text": "Dança da tempestade!",
+    "duration": 1.4894432744748636,
+    "peak": 0.97
+  },
+  {
+    "key": "amara_v_heavy",
+    "fighter": "amara",
+    "language": "pt-br",
+    "voice": "pf_dora",
+    "text": "Toma!",
+    "duration": 0.5400939575571035,
+    "peak": 0.97
+  },
+  {
+    "key": "amara_v_throw",
+    "fighter": "amara",
+    "language": "pt-br",
+    "voice": "pf_dora",
+    "text": "Vai!",
+    "duration": 0.5015389599870403,
+    "peak": 0.97
+  },
+  {
+    "key": "amara_v_win",
+    "fighter": "amara",
+    "language": "pt-br",
+    "voice": "pf_dora",
+    "text": "Você lutou contra a música, não contra mim.",
+    "duration": 2.2642151304066096,
+    "peak": 0.97
+  },
+  {
+    "key": "arun_sp1",
+    "fighter": "arun",
+    "language": "hi",
+    "voice": "hm_omega",
+    "text": "नाग प्रहार!",
+    "duration": 0.982288460500027,
+    "peak": 0.97
+  },
+  {
+    "key": "arun_sp2",
+    "fighter": "arun",
+    "language": "hi",
+    "voice": "hm_omega",
+    "text": "मंदिर की छलांग!",
+    "duration": 1.3566067282250662,
+    "peak": 0.97
+  },
+  {
+    "key": "arun_sp3",
+    "fighter": "arun",
+    "language": "hi",
+    "voice": "hm_omega",
+    "text": "चक्र वार!",
+    "duration": 0.9281278686754144,
+    "peak": 0.97
+  },
+  {
+    "key": "arun_super",
+    "fighter": "arun",
+    "language": "hi",
+    "voice": "hm_omega",
+    "text": "केरल का नृत्य!",
+    "duration": 1.177547383768022,
+    "peak": 0.97
+  },
+  {
+    "key": "arun_v_heavy",
+    "fighter": "arun",
+    "language": "hi",
+    "voice": "hm_omega",
+    "text": "हा!",
+    "duration": 0.5565635293482369,
+    "peak": 0.97
+  },
+  {
+    "key": "arun_v_throw",
+    "fighter": "arun",
+    "language": "hi",
+    "voice": "hm_omega",
+    "text": "गिरो!",
+    "duration": 0.644257249311518,
+    "peak": 0.97
+  },
+  {
+    "key": "arun_v_win",
+    "fighter": "arun",
+    "language": "hi",
+    "voice": "hm_omega",
+    "text": "हर वार का एक निशाना होता है।",
+    "duration": 2.123440790539446,
+    "peak": 0.97
+  },
+  {
+    "key": "chenbao_sp1",
+    "fighter": "chenbao",
+    "language": "zh",
+    "voice": "zm_yunxi",
+    "text": "铁山靠！",
+    "duration": 0.7077055996544089,
+    "peak": 0.97
+  },
+  {
+    "key": "chenbao_sp2",
+    "fighter": "chenbao",
+    "language": "zh",
+    "voice": "zm_yunxi",
+    "text": "冲天肘！",
+    "duration": 0.750958475079648,
+    "peak": 0.97
+  },
+  {
+    "key": "chenbao_sp3",
+    "fighter": "chenbao",
+    "language": "zh",
+    "voice": "zm_yunxi",
+    "text": "震地！",
+    "duration": 0.5547275770829958,
+    "peak": 0.97
+  },
+  {
+    "key": "chenbao_super",
+    "fighter": "chenbao",
+    "language": "zh",
+    "voice": "zm_yunxi",
+    "text": "八极爆发！",
+    "duration": 0.7837356228738053,
+    "peak": 0.97
+  },
+  {
+    "key": "chenbao_v_heavy",
+    "fighter": "chenbao",
+    "language": "zh",
+    "voice": "zm_yunxi",
+    "text": "哈！",
+    "duration": 0.38689994060154437,
+    "peak": 0.97
+  },
+  {
+    "key": "chenbao_v_throw",
+    "fighter": "chenbao",
+    "language": "zh",
+    "voice": "zm_yunxi",
+    "text": "倒！",
+    "duration": 0.36303256115341004,
+    "peak": 0.97
+  },
+  {
+    "key": "chenbao_v_win",
+    "fighter": "chenbao",
+    "language": "zh",
+    "voice": "zm_yunxi",
+    "text": "一步，一击。",
+    "duration": 0.6852961822992603,
+    "peak": 0.97
+  },
+  {
+    "key": "claire_sp1",
+    "fighter": "claire",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Fouetté chassé !",
+    "duration": 0.8755872347318969,
+    "peak": 0.97
+  },
+  {
+    "key": "claire_sp2",
+    "fighter": "claire",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Revers spirale !",
+    "duration": 1.0286732544953832,
+    "peak": 0.97
+  },
+  {
+    "key": "claire_sp3",
+    "fighter": "claire",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Piétinement !",
+    "duration": 0.7578702953723203,
+    "peak": 0.97
+  },
+  {
+    "key": "claire_super",
+    "fighter": "claire",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Ballet d'acier !",
+    "duration": 0.867757438306604,
+    "peak": 0.97
+  },
+  {
+    "key": "claire_v_heavy",
+    "fighter": "claire",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Tiens !",
+    "duration": 0.5320481667476645,
+    "peak": 0.97
+  },
+  {
+    "key": "claire_v_throw",
+    "fighter": "claire",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Dehors !",
+    "duration": 0.6172039526972298,
+    "peak": 0.97
+  },
+  {
+    "key": "claire_v_win",
+    "fighter": "claire",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "L'élégance n'est pas de la mollesse.",
+    "duration": 1.5186565149306117,
+    "peak": 0.97
+  },
+  {
+    "key": "diego_sp1",
+    "fighter": "diego",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Huracanrana!",
+    "duration": 0.8925427938873589,
+    "peak": 0.97
+  },
+  {
+    "key": "diego_sp2",
+    "fighter": "diego",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Clavado torpedo!",
+    "duration": 1.107133214536422,
+    "peak": 0.97
+  },
+  {
+    "key": "diego_sp3",
+    "fighter": "diego",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Tornado mexicano!",
+    "duration": 1.2382418057130515,
+    "peak": 0.97
+  },
+  {
+    "key": "diego_super",
+    "fighter": "diego",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Eclipse azteca!",
+    "duration": 1.1446622387817917,
+    "peak": 0.97
+  },
+  {
+    "key": "diego_v_heavy",
+    "fighter": "diego",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Ándale!",
+    "duration": 0.646309195960905,
+    "peak": 0.97
+  },
+  {
+    "key": "diego_v_throw",
+    "fighter": "diego",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Vámonos!",
+    "duration": 0.655218964306928,
+    "peak": 0.97
+  },
+  {
+    "key": "diego_v_win",
+    "fighter": "diego",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Toda la arena grita mi nombre!",
+    "duration": 1.6939899562611371,
+    "peak": 0.97
+  },
+  {
+    "key": "hayato_sp1",
+    "fighter": "hayato",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "いちげきで、おわりだ！",
+    "duration": 1.3773421891030833,
+    "peak": 0.97
+  },
+  {
+    "key": "hayato_sp2",
+    "fighter": "hayato",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "こりゅうのうけ！",
+    "duration": 0.9446514390625844,
+    "peak": 0.97
+  },
+  {
+    "key": "hayato_sp3",
+    "fighter": "hayato",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "いにしえのはらい！",
+    "duration": 1.05065068308224,
+    "peak": 0.97
+  },
+  {
+    "key": "hayato_super",
+    "fighter": "hayato",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "しんのごくい！",
+    "duration": 0.9157081915870188,
+    "peak": 0.97
+  },
+  {
+    "key": "hayato_v_heavy",
+    "fighter": "hayato",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "ふんっ！",
+    "duration": 0.6035963064960311,
+    "peak": 0.97
+  },
+  {
+    "key": "hayato_v_throw",
+    "fighter": "hayato",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "まいる！",
+    "duration": 0.594686538150008,
+    "peak": 0.97
+  },
+  {
+    "key": "hayato_v_win",
+    "fighter": "hayato",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "からだは、はやい。",
+    "duration": 0.9790485447378369,
+    "peak": 0.97
+  },
+  {
+    "key": "idris_sp1",
+    "fighter": "idris",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Crochet de l'Atlas !",
+    "duration": 0.9811544899832604,
+    "peak": 0.97
+  },
+  {
+    "key": "idris_sp2",
+    "fighter": "idris",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Croissant du désert !",
+    "duration": 1.0734920892056807,
+    "peak": 0.97
+  },
+  {
+    "key": "idris_sp3",
+    "fighter": "idris",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Genou !",
+    "duration": 0.49603110319131705,
+    "peak": 0.97
+  },
+  {
+    "key": "idris_super",
+    "fighter": "idris",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Fureur de Casablanca !",
+    "duration": 1.16939359576651,
+    "peak": 0.97
+  },
+  {
+    "key": "idris_v_heavy",
+    "fighter": "idris",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Prends ça !",
+    "duration": 0.5471677736378854,
+    "peak": 0.97
+  },
+  {
+    "key": "idris_v_throw",
+    "fighter": "idris",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Par terre !",
+    "duration": 0.5251903450510287,
+    "peak": 0.97
+  },
+  {
+    "key": "idris_v_win",
+    "fighter": "idris",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "La vue de ce toit est belle.",
+    "duration": 1.4298828230466007,
+    "peak": 0.97
+  },
+  {
+    "key": "kenji_sp1",
+    "fighter": "kenji",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "かかとおとし！",
+    "duration": 1.0885036989038286,
+    "peak": 0.97
+  },
+  {
+    "key": "kenji_sp2",
+    "fighter": "kenji",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "れっせんづき！",
+    "duration": 1.0104757276310816,
+    "peak": 0.97
+  },
+  {
+    "key": "kenji_sp3",
+    "fighter": "kenji",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "しんうけ！",
+    "duration": 0.7388087909714347,
+    "peak": 0.97
+  },
+  {
+    "key": "kenji_super",
+    "fighter": "kenji",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "いちげきひっさつ！",
+    "duration": 1.1187969112803067,
+    "peak": 0.97
+  },
+  {
+    "key": "kenji_v_heavy",
+    "fighter": "kenji",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "せいやっ！",
+    "duration": 0.6697985852367838,
+    "peak": 0.97
+  },
+  {
+    "key": "kenji_v_throw",
+    "fighter": "kenji",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "そりゃあ！",
+    "duration": 0.7047896754684378,
+    "peak": 0.97
+  },
+  {
+    "key": "kenji_v_win",
+    "fighter": "kenji",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "まけたゆかに、れいをしろ。",
+    "duration": 1.5716291376424214,
+    "peak": 0.97
+  },
+  {
+    "key": "kiran_sp1",
+    "fighter": "kiran",
+    "language": "en-gb",
+    "voice": "bf_emma",
+    "text": "Cross-knee flow!",
+    "duration": 0.9823424590960635,
+    "peak": 0.97
+  },
+  {
+    "key": "kiran_sp2",
+    "fighter": "kiran",
+    "language": "en-gb",
+    "voice": "bf_emma",
+    "text": "London high!",
+    "duration": 0.9577190993034181,
+    "peak": 0.97
+  },
+  {
+    "key": "kiran_sp3",
+    "fighter": "kiran",
+    "language": "en-gb",
+    "voice": "bf_emma",
+    "text": "Pivot low!",
+    "duration": 0.8794211350504887,
+    "peak": 0.97
+  },
+  {
+    "key": "kiran_super",
+    "fighter": "kiran",
+    "language": "en-gb",
+    "voice": "bf_emma",
+    "text": "Queen's knockout!",
+    "duration": 1.0894756736324855,
+    "peak": 0.97
+  },
+  {
+    "key": "kiran_v_heavy",
+    "fighter": "kiran",
+    "language": "en-gb",
+    "voice": "bf_emma",
+    "text": "Have it!",
+    "duration": 0.6725525136346455,
+    "peak": 0.97
+  },
+  {
+    "key": "kiran_v_throw",
+    "fighter": "kiran",
+    "language": "en-gb",
+    "voice": "bf_emma",
+    "text": "Down you go, mate!",
+    "duration": 1.193314973810681,
+    "peak": 0.97
+  },
+  {
+    "key": "kiran_v_win",
+    "fighter": "kiran",
+    "language": "en-gb",
+    "voice": "bf_emma",
+    "text": "London's cold, mate.",
+    "duration": 1.362924563961337,
+    "peak": 0.97
+  },
+  {
+    "key": "leila_sp1",
+    "fighter": "leila",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Direct !",
+    "duration": 0.7601382364058534,
+    "peak": 0.97
+  },
+  {
+    "key": "leila_sp2",
+    "fighter": "leila",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Genou du Sahara !",
+    "duration": 0.9521572439116583,
+    "peak": 0.97
+  },
+  {
+    "key": "leila_sp3",
+    "fighter": "leila",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Crochet méditerranéen !",
+    "duration": 1.195474917652141,
+    "peak": 0.97
+  },
+  {
+    "key": "leila_super",
+    "fighter": "leila",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Éclipse de Carthage !",
+    "duration": 1.4552081645877206,
+    "peak": 0.97
+  },
+  {
+    "key": "leila_v_heavy",
+    "fighter": "leila",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Trop lent !",
+    "duration": 0.6021383444030455,
+    "peak": 0.97
+  },
+  {
+    "key": "leila_v_throw",
+    "fighter": "leila",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Dégage !",
+    "duration": 0.7387547923753982,
+    "peak": 0.97
+  },
+  {
+    "key": "leila_v_win",
+    "fighter": "leila",
+    "language": "fr-fr",
+    "voice": "ff_siwis",
+    "text": "Trop lent pour la brise de mer.",
+    "duration": 1.468437820616664,
+    "peak": 0.97
+  },
+  {
+    "key": "linwei_sp1",
+    "fighter": "linwei",
+    "language": "zh",
+    "voice": "zm_yunjian",
+    "text": "闪电拳脚！",
+    "duration": 1.0979534532102164,
+    "peak": 0.97
+  },
+  {
+    "key": "linwei_sp2",
+    "fighter": "linwei",
+    "language": "zh",
+    "voice": "zm_yunjian",
+    "text": "擒龙手！",
+    "duration": 0.7767698039850964,
+    "peak": 0.97
+  },
+  {
+    "key": "linwei_sp3",
+    "fighter": "linwei",
+    "language": "zh",
+    "voice": "zm_yunjian",
+    "text": "扫影腿！",
+    "duration": 0.8150008099789405,
+    "peak": 0.97
+  },
+  {
+    "key": "linwei_super",
+    "fighter": "linwei",
+    "language": "zh",
+    "voice": "zm_yunjian",
+    "text": "散打风暴！",
+    "duration": 0.9054484583400831,
+    "peak": 0.97
+  },
+  {
+    "key": "linwei_v_heavy",
+    "fighter": "linwei",
+    "language": "zh",
+    "voice": "zm_yunjian",
+    "text": "喝！",
+    "duration": 0.39100383390031856,
+    "peak": 0.97
+  },
+  {
+    "key": "linwei_v_throw",
+    "fighter": "linwei",
+    "language": "zh",
+    "voice": "zm_yunjian",
+    "text": "摔！",
+    "duration": 0.39580970894756734,
+    "peak": 0.97
+  },
+  {
+    "key": "linwei_v_win",
+    "fighter": "linwei",
+    "language": "zh",
+    "voice": "zm_yunjian",
+    "text": "踢，打，摔。完事。",
+    "duration": 1.166801663156758,
+    "peak": 0.97
+  },
+  {
+    "key": "lucas_sp1",
+    "fighter": "lucas",
+    "language": "pt-br",
+    "voice": "pm_alex",
+    "text": "Puxando pra guarda!",
+    "duration": 1.220908256385334,
+    "peak": 0.97
+  },
+  {
+    "key": "lucas_sp2",
+    "fighter": "lucas",
+    "language": "pt-br",
+    "voice": "pm_alex",
+    "text": "Chave de braço!",
+    "duration": 1.1656676926399914,
+    "peak": 0.97
+  },
+  {
+    "key": "lucas_sp3",
+    "fighter": "lucas",
+    "language": "pt-br",
+    "voice": "pm_alex",
+    "text": "Raspagem borboleta!",
+    "duration": 1.4198390841838113,
+    "peak": 0.97
+  },
+  {
+    "key": "lucas_super",
+    "fighter": "lucas",
+    "language": "pt-br",
+    "voice": "pm_alex",
+    "text": "Finalização!",
+    "duration": 1.0575085047788757,
+    "peak": 0.97
+  },
+  {
+    "key": "lucas_v_heavy",
+    "fighter": "lucas",
+    "language": "pt-br",
+    "voice": "pm_alex",
+    "text": "Toma essa!",
+    "duration": 0.8762892164803715,
+    "peak": 0.97
+  },
+  {
+    "key": "lucas_v_throw",
+    "fighter": "lucas",
+    "language": "pt-br",
+    "voice": "pm_alex",
+    "text": "Peguei!",
+    "duration": 0.6156919920082078,
+    "peak": 0.97
+  },
+  {
+    "key": "lucas_v_win",
+    "fighter": "lucas",
+    "language": "pt-br",
+    "voice": "pm_alex",
+    "text": "Bater não é vergonha.",
+    "duration": 1.2878665154705977,
+    "peak": 0.97
+  },
+  {
+    "key": "malik_sp1",
+    "fighter": "malik",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Charge du Sahara !",
+    "duration": 0.9529672228522058,
+    "peak": 0.97
+  },
+  {
+    "key": "malik_sp2",
+    "fighter": "malik",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Paume du tonnerre !",
+    "duration": 0.8025811328905449,
+    "peak": 0.97
+  },
+  {
+    "key": "malik_sp3",
+    "fighter": "malik",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Le lion frappe !",
+    "duration": 0.9339057184513203,
+    "peak": 0.97
+  },
+  {
+    "key": "malik_super",
+    "fighter": "malik",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Avalanche de Dakar !",
+    "duration": 1.1454182191263027,
+    "peak": 0.97
+  },
+  {
+    "key": "malik_v_heavy",
+    "fighter": "malik",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Tiens !",
+    "duration": 0.4826394513742643,
+    "peak": 0.97
+  },
+  {
+    "key": "malik_v_throw",
+    "fighter": "malik",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Dans le sable !",
+    "duration": 0.876667206652627,
+    "peak": 0.97
+  },
+  {
+    "key": "malik_v_win",
+    "fighter": "malik",
+    "language": "fr",
+    "voice": "pierre",
+    "text": "Le sable se souvient des champions.",
+    "duration": 1.5792969382796047,
+    "peak": 0.97
+  },
+  {
+    "key": "ryuhei_sp1",
+    "fighter": "ryuhei",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "せおいなげ！",
+    "duration": 0.8252605432258762,
+    "peak": 0.97
+  },
+  {
+    "key": "ryuhei_sp2",
+    "fighter": "ryuhei",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "おおそとがり！",
+    "duration": 1.0429828824450564,
+    "peak": 0.97
+  },
+  {
+    "key": "ryuhei_sp3",
+    "fighter": "ryuhei",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "かえしわざ！",
+    "duration": 0.876127220692262,
+    "peak": 0.97
+  },
+  {
+    "key": "ryuhei_super",
+    "fighter": "ryuhei",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "ひっさつのなげ！",
+    "duration": 1.060964414925212,
+    "peak": 0.97
+  },
+  {
+    "key": "ryuhei_v_heavy",
+    "fighter": "ryuhei",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "でやぁっ！",
+    "duration": 0.4943031481181489,
+    "peak": 0.97
+  },
+  {
+    "key": "ryuhei_v_throw",
+    "fighter": "ryuhei",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "いっぽん！",
+    "duration": 0.6932879745126627,
+    "peak": 0.97
+  },
+  {
+    "key": "ryuhei_v_win",
+    "fighter": "ryuhei",
+    "language": "ja",
+    "voice": "jm_kumo",
+    "text": "きれいななげ。いっぽんだ。",
+    "duration": 1.4780495707111616,
+    "peak": 0.97
+  },
+  {
+    "key": "tomas_sp1",
+    "fighter": "tomas",
+    "language": "es",
+    "voice": "em_santa",
+    "text": "¡Puño del toro!",
+    "duration": 0.9890922836006264,
+    "peak": 0.97
+  },
+  {
+    "key": "tomas_sp2",
+    "fighter": "tomas",
+    "language": "es",
+    "voice": "em_santa",
+    "text": "¡Patada trasera!",
+    "duration": 1.1102111345105028,
+    "peak": 0.97
+  },
+  {
+    "key": "tomas_sp3",
+    "fighter": "tomas",
+    "language": "es",
+    "voice": "em_santa",
+    "text": "¡Hacha de fuego!",
+    "duration": 0.9919002105945245,
+    "peak": 0.97
+  },
+  {
+    "key": "tomas_super",
+    "fighter": "tomas",
+    "language": "es",
+    "voice": "em_santa",
+    "text": "¡Tempestad ibérica!",
+    "duration": 1.2982342459096063,
+    "peak": 0.97
+  },
+  {
+    "key": "tomas_v_heavy",
+    "fighter": "tomas",
+    "language": "es",
+    "voice": "em_santa",
+    "text": "¡Olé!",
+    "duration": 0.5079647929153842,
+    "peak": 0.97
+  },
+  {
+    "key": "tomas_v_throw",
+    "fighter": "tomas",
+    "language": "es",
+    "voice": "em_santa",
+    "text": "¡Fuera!",
+    "duration": 0.55775149846104,
+    "peak": 0.97
+  },
+  {
+    "key": "tomas_v_win",
+    "fighter": "tomas",
+    "language": "es",
+    "voice": "em_santa",
+    "text": "Barcelona vino a ver un espectáculo.",
+    "duration": 2.028295264323128,
+    "peak": 0.97
+  },
+  {
+    "key": "tororojo_sp1",
+    "fighter": "tororojo",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Prensa del toro!",
+    "duration": 1.0846157999892003,
+    "peak": 0.97
+  },
+  {
+    "key": "tororojo_sp2",
+    "fighter": "tororojo",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Bomba del toro!",
+    "duration": 1.0122576813002861,
+    "peak": 0.97
+  },
+  {
+    "key": "tororojo_sp3",
+    "fighter": "tororojo",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Toro volador!",
+    "duration": 0.8864409525352341,
+    "peak": 0.97
+  },
+  {
+    "key": "tororojo_super",
+    "fighter": "tororojo",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Rojo Megaplex!",
+    "duration": 1.0923915978184566,
+    "peak": 0.97
+  },
+  {
+    "key": "tororojo_v_heavy",
+    "fighter": "tororojo",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Toro!",
+    "duration": 0.5247043576867001,
+    "peak": 0.97
+  },
+  {
+    "key": "tororojo_v_throw",
+    "fighter": "tororojo",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡Al suelo!",
+    "duration": 0.7118094929531832,
+    "peak": 0.97
+  },
+  {
+    "key": "tororojo_v_win",
+    "fighter": "tororojo",
+    "language": "es",
+    "voice": "em_alex",
+    "text": "¡El Toro Rojo nunca se detiene!",
+    "duration": 1.8633835520276474,
+    "peak": 0.97
+  },
+  {
+    "key": "viktor_sp1",
+    "fighter": "viktor",
+    "language": "uk",
+    "voice": "mykyta",
+    "text": "Тактичний прохід!",
+    "duration": 1.2804147092175604,
+    "peak": 0.97
+  },
+  {
+    "key": "viktor_sp2",
+    "fighter": "viktor",
+    "language": "uk",
+    "voice": "mykyta",
+    "text": "Підсічка!",
+    "duration": 0.8455640153356013,
+    "peak": 0.97
+  },
+  {
+    "key": "viktor_sp3",
+    "fighter": "viktor",
+    "language": "uk",
+    "voice": "mykyta",
+    "text": "Залізна контратака!",
+    "duration": 1.4999730007019818,
+    "peak": 0.97
+  },
+  {
+    "key": "viktor_super",
+    "fighter": "viktor",
+    "language": "uk",
+    "voice": "mykyta",
+    "text": "Удар командос!",
+    "duration": 1.3474809654948972,
+    "peak": 0.97
+  },
+  {
+    "key": "viktor_v_heavy",
+    "fighter": "viktor",
+    "language": "uk",
+    "voice": "mykyta",
+    "text": "Тримай!",
+    "duration": 0.6258977266591068,
+    "peak": 0.97
+  },
+  {
+    "key": "viktor_v_throw",
+    "fighter": "viktor",
+    "language": "uk",
+    "voice": "mykyta",
+    "text": "На землю!",
+    "duration": 0.9112803067120255,
+    "peak": 0.97
+  },
+  {
+    "key": "viktor_v_win",
+    "fighter": "viktor",
+    "language": "uk",
+    "voice": "mykyta",
+    "text": "Цей склад — мій дім.",
+    "duration": 1.514498623035801,
+    "peak": 0.97
+  },
+  {
+    "key": "xiaomei_sp1",
+    "fighter": "xiaomei",
+    "language": "zh",
+    "voice": "zf_xiaobei",
+    "text": "连环拳！",
+    "duration": 1.0722501214968412,
+    "peak": 0.97
+  },
+  {
+    "key": "xiaomei_sp2",
+    "fighter": "xiaomei",
+    "language": "zh",
+    "voice": "zf_xiaobei",
+    "text": "拍手！",
+    "duration": 0.769965980884497,
+    "peak": 0.97
+  },
+  {
+    "key": "xiaomei_sp3",
+    "fighter": "xiaomei",
+    "language": "zh",
+    "voice": "zf_xiaobei",
+    "text": "正踢！",
+    "duration": 0.8312003887898914,
+    "peak": 0.97
+  },
+  {
+    "key": "xiaomei_super",
+    "fighter": "xiaomei",
+    "language": "zh",
+    "voice": "zf_xiaobei",
+    "text": "咏春连打！",
+    "duration": 1.141044332847346,
+    "peak": 0.97
+  },
+  {
+    "key": "xiaomei_v_heavy",
+    "fighter": "xiaomei",
+    "language": "zh",
+    "voice": "zf_xiaobei",
+    "text": "嘿！",
+    "duration": 0.5736810842918084,
+    "peak": 0.97
+  },
+  {
+    "key": "xiaomei_v_throw",
+    "fighter": "xiaomei",
+    "language": "zh",
+    "voice": "zf_xiaobei",
+    "text": "走！",
+    "duration": 0.5336141260327232,
+    "peak": 0.97
+  },
+  {
+    "key": "xiaomei_v_win",
+    "fighter": "xiaomei",
+    "language": "zh",
+    "voice": "zf_xiaobei",
+    "text": "短，直，简单。",
+    "duration": 1.1812192882985042,
+    "peak": 0.97
+  },
+  {
+    "key": "zara_sp1",
+    "fighter": "zara",
+    "language": "hi",
+    "voice": "hf_alpha",
+    "text": "कुश्ती का उठान!",
+    "duration": 1.3915978184567201,
+    "peak": 0.97
+  },
+  {
+    "key": "zara_sp2",
+    "fighter": "zara",
+    "language": "hi",
+    "voice": "hf_alpha",
+    "text": "गदा का वार!",
+    "duration": 1.1370484367406448,
+    "peak": 0.97
+  },
+  {
+    "key": "zara_sp3",
+    "fighter": "zara",
+    "language": "hi",
+    "voice": "hf_alpha",
+    "text": "पकड़ो और फेंको!",
+    "duration": 1.3816620767860035,
+    "peak": 0.97
+  },
+  {
+    "key": "zara_super",
+    "fighter": "zara",
+    "language": "hi",
+    "voice": "hf_alpha",
+    "text": "लाहौर का तूफ़ान!",
+    "duration": 1.3676224418165128,
+    "peak": 0.97
+  },
+  {
+    "key": "zara_v_heavy",
+    "fighter": "zara",
+    "language": "hi",
+    "voice": "hf_alpha",
+    "text": "शाबाश!",
+    "duration": 0.831902370538366,
+    "peak": 0.97
+  },
+  {
+    "key": "zara_v_throw",
+    "fighter": "zara",
+    "language": "hi",
+    "voice": "hf_alpha",
+    "text": "मिट्टी में!",
+    "duration": 0.8613316053782601,
+    "peak": 0.97
+  },
+  {
+    "key": "zara_v_win",
+    "fighter": "zara",
+    "language": "hi",
+    "voice": "hf_alpha",
+    "text": "अखाड़े की मिट्टी सच्ची है।",
+    "duration": 1.7537664020735462,
+    "peak": 0.97
+  }
+]

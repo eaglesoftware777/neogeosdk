@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "errors": [],
+  "native_pixel_changes": 0,
+  "unchanged_silhouettes": 102,
+  "accepted_head_torso_pose_order_and_holds_unchanged": true,
+  "shared_luna_indices": true
+}

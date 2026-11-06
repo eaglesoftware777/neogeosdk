@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "legacy_frames_byte_identical": 60,
+  "unchanged_palettes": [
+    "mg_hero_pal",
+    "mg_hero_alt_pal",
+    "mg_hero_sun_pal"
+  ],
+  "authored_frames_roundtripped": [
+    "gait_walk0",
+    "gait_walk1",
+    "gait_walk2",
+    "gait_walk3",
+    "gait_walk4",
+    "gait_walk5",
+    "gait_walk6",
+    "gait_walk7",
+    "gait_run0",
+    "gait_run1",
+    "gait_run2",
+    "gait_run3",
+    "gait_run4",
+    "gait_run5",
+    "gait_run6",
+    "gait_run7",
+    "gait_stop0"
+  ]
+}

@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maiya: Super Nature Girl - Eagle Software Setup Wizard</title>
+<style>
+  :root {
+    --bg-dark: #0a0e14;
+    --panel-bg: #141b24;
+    --panel-border: #233142;
+    --accent-gold: #f5a623;
+    --accent-blue: #00bcd4;
+    --accent-green: #4caf50;
+    --accent-red: #f44336;
+    --text-main: #e0e6ed;
+    --text-dim: #8b9bb4;
+    --button-bg: #1e293b;
+    --button-primary: #f5a623;
+    --button-primary-hover: #ffb74d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background-image: radial-gradient(circle at 50% 10%, #1c2738 0%, #0a0e14 90%);
+  }
+  .wizard-card {
+    width: 860px;
+    max-width: 100%;
+    background: var(--panel-bg);
+    border: 2px solid var(--panel-border);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.8), 0 0 24px rgba(245,166,35,0.18);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .wizard-header {
+    background: linear-gradient(90deg, #101620 0%, #1a2332 50%, #101620 100%);
+    padding: 16px 24px;
+    border-bottom: 2px solid var(--accent-gold);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .eagle-logo {
+    height: 48px;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 0 8px rgba(245, 166, 35, 0.6));
+  }
+  .header-title h1 {
+    font-size: 1.3rem;
+    color: #fff;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .header-title p {
+    font-size: 0.82rem;
+    color: var(--accent-gold);
+    font-weight: 600;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .lang-select {
+    background: #0d121a;
+    border: 1px solid var(--accent-gold);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+  }
+  .header-badge {
+    background: rgba(245,166,35,0.15);
+    border: 1px solid var(--accent-gold);
+    color: var(--accent-gold);
+    padding: 5px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .btn-check-update {
+    background: rgba(0, 188, 212, 0.15);
+    border: 1px solid var(--accent-blue);
+    color: var(--accent-blue);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+  .btn-check-update:hover {
+    background: var(--accent-blue);
+    color: #0a0e14;
+    box-shadow: 0 0 10px rgba(0, 188, 212, 0.5);
+  }
+  .btn-uninstall {
+    background: rgba(244, 67, 54, 0.15);
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+  .btn-uninstall:hover {
+    background: var(--accent-red);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+  }
+  .btn-flashcart {
+    background: rgba(156, 39, 176, 0.15);
+    border: 1px solid #ab47bc;
+    color: #ce93d8;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+  .btn-flashcart:hover {
+    background: #ab47bc;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(171, 71, 188, 0.5);
+  }
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.78);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-window {
+    background: var(--panel-bg);
+    border: 1px solid var(--accent-blue);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.85);
+    width: 620px;
+    max-width: 92%;
+    padding: 24px;
+    color: var(--text-color);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+  }
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #fff;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .modal-close:hover { color: #fff; }
+  .wizard-body {
+    padding: 24px 30px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+  }
+  .step-pane {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeIn 0.25s ease-in-out;
+  }
+  .step-pane.active {
+    display: flex;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .pane-title {
+    font-size: 1.35rem;
+    color: #fff;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+  }
+  .pane-desc {
+    font-size: 0.92rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .title-banner {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0;
+  }
+  .title-banner img {
+    max-height: 140px;
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  }
+  .hero-row {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    margin-top: 4px;
+  }
+  .hero-col {
+    flex: 1;
+    background: #0f141d;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #1e293b;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .hero-col img {
+    width: 60px;
+    height: 60px;
+    image-rendering: pixelated;
+    border-radius: 6px;
+    border: 2px solid var(--accent-gold);
+    flex-shrink: 0;
+  }
+  .hero-text h4 {
+    color: var(--accent-gold);
+    font-size: 0.95rem;
+    margin-bottom: 3px;
+  }
+  .hero-text p {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.3;
+  }
+  .story-reader-container {
+    background: #0b0f16;
+    border: 1px solid #233142;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .story-nav-bar {
+    background: #111822;
+    padding: 8px 12px;
+    border-bottom: 1px solid #1f2a3a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .story-nav-bar label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent-gold);
+  }
+  .chapter-select {
+    flex: 1;
+    max-width: 380px;
+    background: #080c12;
+    border: 1px solid #28374d;
+    color: #fff;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    outline: none;
+  }
+  .chapter-nav-btn {
+    background: #1a2332;
+    border: 1px solid #33445c;
+    color: #cbd5e1;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .chapter-nav-btn:hover:not(:disabled) {
+    background: #2b3a52;
+    color: #fff;
+  }
+  .chapter-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .story-viewport {
+    padding: 14px 18px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #cbd5e1;
+  }
+  .story-viewport h3 {
+    color: var(--accent-gold);
+    font-size: 1rem;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed rgba(245,166,35,0.3);
+    padding-bottom: 4px;
+  }
+  .story-viewport p {
+    margin-bottom: 10px;
+  }
+  .story-viewport strong {
+    color: #fff;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .form-group label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--accent-gold);
+  }
+  .input-row {
+    display: flex;
+    gap: 10px;
+  }
+  .input-text {
+    flex: 1;
+    background: #0d121a;
+    border: 1px solid #2b394e;
+    color: #fff;
+    padding: 9px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    outline: none;
+  }
+  .input-text:focus {
+    border-color: var(--accent-gold);
+  }
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #0f1520;
+    padding: 9px 12px;
+    border-radius: 6px;
+    border: 1px solid #1f2b3c;
+    cursor: pointer;
+  }
+  .checkbox-item input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--accent-gold);
+    cursor: pointer;
+  }
+  .checkbox-item label {
+    font-size: 0.88rem;
+    cursor: pointer;
+    flex: 1;
+  }
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+  .status-badge.ok {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+    border: 1px solid #4caf50;
+  }
+  .status-badge.missing {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+    border: 1px solid #f44336;
+  }
+  .progress-wrap {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 16px;
+    background: #0d121a;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #233142;
+  }
+  .progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-gold), #ffca28);
+    transition: width 0.3s ease;
+  }
+  .progress-text {
+    font-size: 0.83rem;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+  .log-console {
+    background: #080b10;
+    border: 1px solid #1e2838;
+    border-radius: 6px;
+    padding: 10px 12px;
+    height: 170px;
+    overflow-y: auto;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #a0aec0;
+    white-space: pre-wrap;
+  }
+  .notice-box {
+    background: rgba(245, 166, 35, 0.08);
+    border-left: 4px solid var(--accent-gold);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    color: #e2e8f0;
+  }
+  .wizard-footer {
+    background: #0f1520;
+    padding: 14px 28px;
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .copyright-tag {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+  .btn-group {
+    display: flex;
+    gap: 10px;
+  }
+  .btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-secondary {
+    background: #1e293b;
+    color: #cbd5e1;
+    border: 1px solid #334155;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: #334155;
+    color: #fff;
+  }
+  .btn-primary {
+    background: var(--button-primary);
+    color: #101620;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--button-primary-hover);
+    box-shadow: 0 0 12px rgba(245,166,35,0.4);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .icon-preview-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--accent-gold);
+    margin-left: 8px;
+  }
+  .icon-preview-tag img {
+    width: 18px;
+    height: 18px;
+    image-rendering: pixelated;
+  }
+</style>
+</head>
+<body>
+
+<div class="wizard-card">
+  <!-- Header -->
+  <div class="wizard-header">
+    <div class="header-left">
+      <img id="eagleLogo" class="eagle-logo" alt="Eagle Software">
+      <div class="header-title">
+        <h1 id="appTitle">Maiya: Super Nature Girl</h1>
+        <p id="appSubtitle">Eagle Software Official Release</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <select id="langSelect" class="lang-select" onchange="switchLanguage(this.value)">
+        <option value="en_US">🇺🇸 English (US)</option>
+        <option value="en_GB">🇬🇧 English (GB)</option>
+        <option value="fr_FR">🇫🇷 Français</option>
+        <option value="es_ES">🇪🇸 Español</option>
+        <option value="pt_PT">🇵🇹 Português</option>
+        <option value="de_DE">🇩🇪 Deutsch</option>
+        <option value="it_IT">🇮🇹 Italiano</option>
+        <option value="ja_JP">🇯🇵 日本語</option>
+        <option value="zh_CN">🇨🇳 简体中文</option>
+        <option value="ko_KR">🇰🇷 한국어</option>
+        <option value="sv_SE">🇸🇪 Svenska</option>
+        <option value="nb_NO">🇳🇴 Norsk</option>
+      </select>
+      <button id="btnCheckUpdate" class="btn-check-update" onclick="checkOnlineUpdate()" title="Check GitHub for Latest Releases">
+        🔄 Check Updates
+      </button>
+      <button id="btnFlashcart" class="btn-flashcart" onclick="openFlashcartModal()" title="Download NeoSD, Darksoft, and BackBit Flashcart Images">
+        💾 Flashcart / SD
+      </button>
+      <button id="btnUninstall" class="btn-uninstall" onclick="uninstallFromWizard()" title="Uninstall Maiya from your system">
+        🗑️ Uninstall
+      </button>
+      <div class="header-badge" id="stepBadge">Step 1 of 5</div>
+    </div>
+  </div>
+
+  <!-- Wizard Body -->
+  <div class="wizard-body">
+    
+    <!-- STEP 1: Welcome & Notice -->
+    <div class="step-pane active" id="pane1">
+      <h2 class="pane-title" id="step1Title">Welcome to Maiya: Super Nature Girl Setup</h2>
+      <div class="title-banner">
+        <img id="titleBanner" alt="Maiya Title Art">
+      </div>
+      <p class="pane-desc" id="step1Desc">
+        Welcome to the official installer for Maiya: Super Nature Girl, the arcade platformer built for SNK Neo-Geo MVS and Neo-Geo AES systems, powered by the open-source EagleBIOS architecture.
+      </p>
+      <div class="notice-box">
+        <strong id="step1NoticeTitle">Eagle Software Release Notice:</strong><br>
+        <span id="step1Notice">Neo-Geo MVS and Neo-Geo AES are trademarks of SNK Corporation. This commercial release uses open-source EagleBIOS and runs authentically on original hardware and official MAME.</span>
+      </div>
+    </div>
+
+    <!-- STEP 2: Storyline Reader & Heroes -->
+    <div class="step-pane" id="pane2">
+      <h2 class="pane-title" id="step2Title">Storyline: The Legend of Maiya &amp; Luna</h2>
+      <div class="hero-row">
+        <div class="hero-col">
+          <img id="maiyaPortrait" alt="Maiya">
+          <div class="hero-text">
+            <h4 id="heroMaiyaTitle">Maiya (Guardian of the Sun)</h4>
+            <p id="heroMaiyaDesc">Master of solar leaf attacks, agile double-jumps, and nature martial arts.</p>
+          </div>
+        </div>
+        <div class="hero-col">
+          <img id="lunaPortrait" alt="Luna">
+          <div class="hero-text">
+            <h4 id="heroLunaTitle">Luna (Silver Moon Hunter)</h4>
+            <p id="heroLunaDesc">Deadly blade strikes, nocturnal arts, and high-velocity ninja sprints.</p>
+          </div>
+        </div>
+      </div>
+      <div class="story-reader-container">
+        <div class="story-nav-bar">
+          <label id="lblChapterSelect">Jump to Mission / Chapter:</label>
+          <select id="chapterSelect" class="chapter-select" onchange="displayChapter(parseInt(this.value, 10))"></select>
+          <div style="display:flex; gap:6px;">
+            <button class="chapter-nav-btn" id="btnPrevChapter" onclick="prevChapter()">← Prev</button>
+            <button class="chapter-nav-btn" id="btnNextChapter" onclick="nextChapter()">Next →</button>
+          </div>
+        </div>
+        <div class="story-viewport" id="storyViewport"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: MAME Setup & Release Chooser -->
+    <div class="step-pane" id="pane3">
+      <h2 class="pane-title" id="step3Title">MAME Neo-Geo Emulator Configuration</h2>
+      <p class="pane-desc" id="step3Desc">
+        Maiya runs seamlessly on official MAME. The installer automatically checks your system for an existing MAME installation or downloads the latest official release for you.
+      </p>
+      <div class="form-group">
+        <label id="step3StatusLabel">MAME Status on System:</label>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span id="mameStatusBadge" class="status-badge">Detecting...</span>
+          <span id="mameDetectedPath" style="font-size:0.85rem; color:#cbd5e1;"></span>
+        </div>
+      </div>
+      <div class="checkbox-group">
+        <div class="checkbox-item" id="optUseExistingGroup" onclick="toggleMameOption('existing')">
+          <input type="radio" name="mameSource" id="optUseExisting" value="existing" checked>
+          <label for="optUseExisting" id="lblOptExisting">Use existing MAME installation (Recommended)</label>
+        </div>
+        <div class="checkbox-item" id="optDownloadGroup" onclick="toggleMameOption('download')">
+          <input type="radio" name="mameSource" id="optDownload" value="download">
+          <label for="optDownload" id="lblOptDownload">Download official MAME release (Direct from MAME GitHub)</label>
+        </div>
+      </div>
+      <div class="form-group" id="releaseChooserGroup" style="display:none;">
+        <label id="lblSelectRelease">Select Official MAME Release to Download:</label>
+        <select id="mameReleaseSelect" class="input-text"></select>
+        <span id="releaseAssetInfo" style="font-size:0.78rem; color:#8b9bb4; margin-top:2px;"></span>
+      </div>
+      <div class="form-group" id="customPathGroup">
+        <label id="lblCustomPath">Custom MAME Path (if not auto-detected):</label>
+        <input type="text" id="mamePathInput" class="input-text" placeholder="e.g. C:\mame\mame.exe or /usr/games/mame">
+      </div>
+    </div>
+
+    <!-- STEP 4: Destination & Components -->
+    <div class="step-pane" id="pane4">
+      <h2 class="pane-title" id="step4Title">Select Installation Directory &amp; Editions</h2>
+      <p class="pane-desc" id="step4Desc">
+        Select where to install Maiya and choose which Neo-Geo formats and shortcuts to generate.
+      </p>
+      <div class="form-group">
+        <label id="lblTargetDir">Install Destination Directory:</label>
+        <div class="input-row">
+          <input type="text" id="targetDirInput" class="input-text" value="">
+        </div>
+      </div>
+      <div class="form-group">
+        <label id="lblGameSource">Game Edition Source:</label>
+        <select id="gameSourceSelect" class="input-text"></select>
+      </div>
+      <div class="form-group">
+        <label id="lblComponents">Components to Install:</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="chkMVS" checked>
+            <label for="chkMVS" id="lblChkMVS">Maiya MVS Edition (Neo-Geo Arcade format + EagleBIOS euro)</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="chkAES" checked>
+            <label for="chkAES" id="lblChkAES">Maiya AES Edition (Neo-Geo Home Console format + EagleBIOS asia + Memory Card)</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="chkShortcuts" checked>
+            <label for="chkShortcuts" id="lblChkShortcuts" style="display:flex; align-items:center;">
+              <span>Desktop Shortcuts (Create Maiya MVS and AES 1-click desktop shortcuts)</span>
+              <span class="icon-preview-tag">
+                <img id="iconPreviewImg" alt="Icon">
+                <span id="lblIconHint">HD Maiya Icon</span>
+              </span>
+            </label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="chkDownloadSD">
+            <label for="chkDownloadSD" id="lblChkDownloadSD">Flashcart / SD Images (Include NeoSD .neo, Darksoft Multi, &amp; BackBit Platinum packs)</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: Installation Progress & Finish -->
+    <div class="step-pane" id="pane5">
+      <h2 class="pane-title" id="step5Title">Installing Maiya: Super Nature Girl...</h2>
+      <p class="pane-desc" id="step5Desc">
+        Please wait while the Eagle Software installer deploys the game ROMs, BIOS packages, and desktop shortcuts.
+      </p>
+      <div class="progress-wrap">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text">
+          <span id="progressStatus">Initializing...</span>
+          <span id="progressPercent">0%</span>
+        </div>
+      </div>
+      <div class="log-console" id="logConsole"></div>
+    </div>
+
+  </div>
+
+  <!-- Wizard Footer -->
+  <div class="wizard-footer">
+    <div class="copyright-tag" id="copyrightTag">&copy; 2026 Eagle Software Studio. All Rights Reserved.</div>
+    <div class="btn-group">
+      <button class="btn btn-secondary" id="btnBack" onclick="goBack()" disabled>Back</button>
+      <button class="btn btn-primary" id="btnNext" onclick="goNext()">Next &gt;</button>
+      <button class="btn btn-primary" id="btnFinish" onclick="finishSetup()" style="display:none;">Finish &amp; Play</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 5;
+let currentLanguage = 'en_US';
+let localesData = {};
+let mameReleases = [];
+let gameReleases = [];
+let sysInfo = { os: 'linux', default_target: '', mame_found: false, mame_path: '' };
+let currentChapterIndex = 0;
+
+function t(key) {
+  if (localesData[currentLanguage] && localesData[currentLanguage][key] !== undefined) {
+    return localesData[currentLanguage][key];
+  }
+  if (localesData['en_US'] && localesData['en_US'][key] !== undefined) {
+    return localesData['en_US'][key];
+  }
+  return key;
+}
+
+function formatMarkdown(text) {
+  if (!text) return '';
+  return text
+    .split('\n\n')
+    .map(p => '<p>' + p.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') + '</p>')
+    .join('');
+}
+
+function updateLocalizedUI() {
+  const loc = localesData[currentLanguage] || localesData['en_US'] || {};
+  document.getElementById('appTitle').textContent = t('app_title');
+  document.getElementById('appSubtitle').textContent = t('app_subtitle');
+  document.getElementById('copyrightTag').textContent = t('copyright');
+
+  const stepTemplate = t('step_badge') || 'Step {step} of {total}';
+  document.getElementById('stepBadge').textContent = stepTemplate.replace('{step}', currentStep).replace('{total}', totalSteps);
+
+  // Buttons
+  document.getElementById('btnBack').textContent = t('btn_back');
+  document.getElementById('btnFinish').textContent = t('btn_finish');
+  if (currentStep === 4) {
+    document.getElementById('btnNext').textContent = t('btn_install');
+  } else {
+    document.getElementById('btnNext').textContent = t('btn_next');
+  }
+
+  // Step 1
+  document.getElementById('step1Title').textContent = t('step1_title');
+  document.getElementById('step1Desc').textContent = t('step1_desc');
+  document.getElementById('step1NoticeTitle').textContent = t('step1_notice_title');
+  document.getElementById('step1Notice').textContent = t('step1_notice');
+
+  // Step 2
+  document.getElementById('step2Title').textContent = t('step2_title');
+  document.getElementById('heroMaiyaTitle').textContent = t('hero_maiya_title');
+  document.getElementById('heroMaiyaDesc').textContent = t('hero_maiya_desc');
+  document.getElementById('heroLunaTitle').textContent = t('hero_luna_title');
+  document.getElementById('heroLunaDesc').textContent = t('hero_luna_desc');
+  document.getElementById('lblChapterSelect').textContent = t('chapter_select_label');
+  document.getElementById('btnPrevChapter').textContent = t('btn_prev_chapter');
+  document.getElementById('btnNextChapter').textContent = t('btn_next_chapter');
+
+  // Step 3
+  document.getElementById('step3Title').textContent = t('step3_title');
+  document.getElementById('step3Desc').textContent = t('step3_desc');
+  document.getElementById('step3StatusLabel').textContent = t('step3_status_label');
+  document.getElementById('lblOptExisting').textContent = t('step3_opt_existing');
+  document.getElementById('lblOptDownload').textContent = t('step3_opt_download');
+  document.getElementById('lblSelectRelease').textContent = t('step3_select_release');
+  document.getElementById('lblCustomPath').textContent = t('step3_custom_path');
+
+  const badge = document.getElementById('mameStatusBadge');
+  if (sysInfo.mame_found) {
+    badge.textContent = t('step3_detected');
+    badge.className = 'status-badge ok';
+  } else {
+    badge.textContent = t('step3_missing');
+    badge.className = 'status-badge missing';
+  }
+
+  // Step 4
+  document.getElementById('step4Title').textContent = t('step4_title');
+  document.getElementById('step4Desc').textContent = t('step4_desc');
+  document.getElementById('lblTargetDir').textContent = t('step4_target_label');
+  document.getElementById('lblGameSource').textContent = t('step4_game_source_label');
+  document.getElementById('lblComponents').textContent = t('step4_components_label');
+  document.getElementById('lblChkMVS').textContent = t('step4_chk_mvs');
+  document.getElementById('lblChkAES').textContent = t('step4_chk_aes');
+  document.getElementById('lblIconHint').textContent = t('desktop_icon_hint');
+
+  // Step 5
+  if (currentStep === 5 && document.getElementById('btnFinish').style.display === 'inline-block') {
+    document.getElementById('step5Title').textContent = t('step5_complete_title');
+    document.getElementById('step5Desc').textContent = t('step5_complete_desc');
+  } else {
+    document.getElementById('step5Title').textContent = t('step5_title');
+    document.getElementById('step5Desc').textContent = t('step5_desc');
+  }
+
+  populateChapterSelector();
+  displayChapter(currentChapterIndex);
+}
+
+function populateChapterSelector() {
+  const loc = localesData[currentLanguage] || localesData['en_US'] || {};
+  const chapters = loc.story_chapters || [];
+  const select = document.getElementById('chapterSelect');
+  select.innerHTML = '';
+  chapters.forEach((ch, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = `${idx + 1}. ${ch.title}`;
+    select.appendChild(opt);
+  });
+  if (chapters.length > 0) {
+    select.value = Math.min(currentChapterIndex, chapters.length - 1);
+  }
+}
+
+function displayChapter(idx) {
+  const loc = localesData[currentLanguage] || localesData['en_US'] || {};
+  const chapters = loc.story_chapters || [];
+  if (!chapters.length) return;
+  idx = Math.max(0, Math.min(idx, chapters.length - 1));
+  currentChapterIndex = idx;
+  document.getElementById('chapterSelect').value = idx;
+  document.getElementById('btnPrevChapter').disabled = (idx === 0);
+  document.getElementById('btnNextChapter').disabled = (idx === chapters.length - 1);
+
+  const ch = chapters[idx];
+  const vp = document.getElementById('storyViewport');
+  vp.innerHTML = `<h3>${ch.title}</h3>` + formatMarkdown(ch.text);
+  vp.scrollTop = 0;
+}
+
+function prevChapter() {
+  if (currentChapterIndex > 0) {
+    displayChapter(currentChapterIndex - 1);
+  }
+}
+
+function nextChapter() {
+  const loc = localesData[currentLanguage] || localesData['en_US'] || {};
+  const chapters = loc.story_chapters || [];
+  if (currentChapterIndex < chapters.length - 1) {
+    displayChapter(currentChapterIndex + 1);
+  }
+}
+
+function switchLanguage(lang) {
+  currentLanguage = lang;
+  updateLocalizedUI();
+}
+
+function toggleMameOption(source) {
+  const isDl = (source === 'download');
+  document.getElementById('optDownload').checked = isDl;
+  document.getElementById('optUseExisting').checked = !isDl;
+  document.getElementById('releaseChooserGroup').style.display = isDl ? 'flex' : 'none';
+  document.getElementById('customPathGroup').style.display = isDl ? 'none' : 'flex';
+}
+
+function updateStepUI() {
+  for (let i = 1; i <= totalSteps; i++) {
+    const pane = document.getElementById('pane' + i);
+    if (pane) pane.classList.toggle('active', i === currentStep);
+  }
+  const stepTemplate = t('step_badge') || 'Step {step} of {total}';
+  document.getElementById('stepBadge').textContent = stepTemplate.replace('{step}', currentStep).replace('{total}', totalSteps);
+  document.getElementById('btnBack').disabled = (currentStep === 1 || currentStep === 5);
+  
+  const btnNext = document.getElementById('btnNext');
+  const btnFinish = document.getElementById('btnFinish');
+
+  if (currentStep < 4) {
+    btnNext.style.display = 'inline-block';
+    btnNext.textContent = t('btn_next');
+    btnFinish.style.display = 'none';
+  } else if (currentStep === 4) {
+    btnNext.style.display = 'inline-block';
+    btnNext.textContent = t('btn_install');
+    btnFinish.style.display = 'none';
+  } else if (currentStep === 5) {
+    btnNext.style.display = 'none';
+  }
+}
+
+function goBack() {
+  if (currentStep > 1 && currentStep < 5) {
+    currentStep--;
+    updateStepUI();
+  }
+}
+
+function goNext() {
+  if (currentStep === 4) {
+    currentStep = 5;
+    updateStepUI();
+    startInstallation();
+  } else if (currentStep < 4) {
+    currentStep++;
+    updateStepUI();
+  }
+}
+
+function appendLog(msg) {
+  const c = document.getElementById('logConsole');
+  c.textContent += msg + '\n';
+  c.scrollTop = c.scrollHeight;
+}
+
+function setProgress(pct, status) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPercent').textContent = pct + '%';
+  if (status) document.getElementById('progressStatus').textContent = status;
+}
+
+// Populate MAME releases dropdown
+function populateMameReleases(releases) {
+  mameReleases = releases;
+  const select = document.getElementById('mameReleaseSelect');
+  select.innerHTML = '';
+  const isWin = (sysInfo.os === 'windows');
+  releases.forEach((rel, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    const asset = isWin ? rel.win_asset : rel.linux_asset;
+    const sizeMb = asset && asset.size ? ` (~${Math.round(asset.size / 1048576)} MB)` : '';
+    opt.textContent = `${rel.name || rel.tag} — ${asset ? asset.name : 'Release'} ${sizeMb}`;
+    select.appendChild(opt);
+  });
+  if (releases.length > 0) {
+    select.selectedIndex = 0;
+    updateMameAssetInfo();
+  }
+  select.onchange = updateMameAssetInfo;
+}
+
+function updateMameAssetInfo() {
+  const select = document.getElementById('mameReleaseSelect');
+  const infoSpan = document.getElementById('releaseAssetInfo');
+  const idx = parseInt(select.value, 10);
+  const rel = mameReleases[idx];
+  if (!rel) return;
+  const isWin = (sysInfo.os === 'windows');
+  const asset = isWin ? rel.win_asset : rel.linux_asset;
+  if (asset) {
+    infoSpan.textContent = `Asset: ${asset.name} | Download: Official GitHub Releases`;
+  } else {
+    infoSpan.textContent = 'Official release asset';
+  }
+}
+
+// Populate Game releases dropdown
+function populateGameReleases(releases) {
+  gameReleases = releases;
+  const select = document.getElementById('gameSourceSelect');
+  select.innerHTML = '';
+  releases.forEach((rel, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = rel.name || rel.tag;
+    select.appendChild(opt);
+  });
+  if (releases.length > 0) {
+    select.selectedIndex = 0;
+  }
+}
+
+// Start Installation
+function startInstallation() {
+  const mameSource = document.querySelector('input[name="mameSource"]:checked').value;
+  const targetDir = document.getElementById('targetDirInput').value.trim();
+  const mamePath = document.getElementById('mamePathInput').value.trim();
+  const installMVS = document.getElementById('chkMVS').checked;
+  const installAES = document.getElementById('chkAES').checked;
+  const createShortcuts = document.getElementById('chkShortcuts').checked;
+
+  let mameReleaseUrl = "";
+  if (mameSource === "download") {
+    const relIdx = parseInt(document.getElementById('mameReleaseSelect').value || 0, 10);
+    const chosenRel = mameReleases[relIdx];
+    if (chosenRel) {
+      const isWin = (sysInfo.os === 'windows');
+      const asset = isWin ? chosenRel.win_asset : chosenRel.linux_asset;
+      if (asset) mameReleaseUrl = asset.url;
+    }
+  }
+
+  const gameRelIdx = parseInt(document.getElementById('gameSourceSelect').value || 0, 10);
+  const chosenGameRel = gameReleases[gameRelIdx] || {};
+  const gameSource = chosenGameRel.is_local ? "local" : "download";
+  const gameMvsUrl = chosenGameRel.mvs_url || "";
+  const gameAesUrl = chosenGameRel.aes_url || "";
+
+  const payload = {
+    target_dir: targetDir,
+    mame_source: mameSource,
+    mame_path: mamePath,
+    mame_release_url: mameReleaseUrl,
+    game_source: gameSource,
+    game_mvs_url: gameMvsUrl,
+    game_aes_url: gameAesUrl,
+    install_mvs: installMVS,
+    install_aes: installAES,
+    create_shortcuts: createShortcuts,
+    download_sd: document.getElementById('chkDownloadSD') ? document.getElementById('chkDownloadSD').checked : false
+  };
+
+  appendLog("[SETUP] Initiating Eagle Software deployment...");
+  setProgress(5, "Verifying parameters...");
+
+  fetch('/api/install', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    function readChunk() {
+      return reader.read().then(({ done, value }) => {
+        if (done) return;
+        const text = decoder.decode(value);
+        const lines = text.split('\n');
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const data = JSON.parse(line);
+            if (data.log) appendLog(data.log);
+            if (data.progress !== undefined) setProgress(data.progress, data.status);
+            if (data.done) {
+              if (data.success) {
+                document.getElementById('step5Title').textContent = t('step5_complete_title');
+                document.getElementById('step5Desc').textContent = t('step5_complete_desc');
+                document.getElementById('btnFinish').style.display = 'inline-block';
+              } else {
+                document.getElementById('step5Title').textContent = "Installation Encountered an Error";
+                document.getElementById('step5Desc').textContent = data.error || "Please review the log console above.";
+              }
+            }
+          } catch(e) {
+            appendLog(line);
+          }
+        }
+        return readChunk();
+      });
+    }
+    return readChunk();
+  })
+  .catch(err => {
+    appendLog("[ERROR] " + err);
+    setProgress(100, "Failed");
+  });
+}
+
+function finishSetup() {
+  fetch('/api/shutdown', { method: 'POST' }).finally(() => {
+    alert("Setup completed successfully! You can now launch Maiya from your Desktop shortcut or installation directory.");
+    window.close();
+  });
+}
+
+function checkOnlineUpdate() {
+  const btn = document.getElementById('btnCheckUpdate');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '⏳ Checking...';
+  btn.disabled = true;
+
+  fetch('/api/check_update')
+    .then(r => r.json())
+    .then(data => {
+      btn.innerHTML = origText;
+      btn.disabled = false;
+      if (data && data.tag) {
+        alert(
+          "🌟 Official GitHub Release Found!\n\n" +
+          "Release Tag: " + data.tag + "\n" +
+          "Release Name: " + (data.name || data.tag) + "\n" +
+          "Published: " + (data.published_at ? data.published_at.slice(0, 10) : "Latest") + "\n\n" +
+          (data.description ? data.description.slice(0, 250) + "...\n\n" : "") +
+          "You can select this release in Step 4 under 'Game Edition Source' or use the installed 'Maiya - Check for Updates' desktop shortcut anytime!"
+        );
+      } else {
+        alert("Unable to fetch latest release from GitHub. Please check your internet connection.");
+      }
+    })
+    .catch(err => {
+      btn.innerHTML = origText;
+      btn.disabled = false;
+      alert("Error checking updates: " + err);
+    });
+}
+
+function uninstallFromWizard() {
+  const targetDir = (document.getElementById('targetDirInput') ? document.getElementById('targetDirInput').value.trim() : "");
+  if (!targetDir) {
+    alert("Please enter or verify the target directory path in Step 4 first.");
+    return;
+  }
+  if (!confirm("Are you sure you want to completely uninstall Maiya from:\n" + targetDir + "\n\nThis will remove all game files, ROMs, BIOS packages, and Desktop shortcuts.")) {
+    return;
+  }
+  const btn = document.getElementById('btnUninstall');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '⏳ Removing...';
+  btn.disabled = true;
+
+  fetch('/api/uninstall', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target_dir: targetDir })
+  })
+  .then(r => r.json())
+  .then(data => {
+    btn.innerHTML = origText;
+    btn.disabled = false;
+    if (data && data.success) {
+      alert("✅ Maiya: Super Nature Girl has been completely uninstalled from:\n" + targetDir);
+    } else {
+      alert("Notice: " + (data.error || "Uninstallation completed."));
+    }
+  })
+  .catch(err => {
+    btn.innerHTML = origText;
+    btn.disabled = false;
+    alert("Error performing uninstall: " + err);
+  });
+}
+
+function openFlashcartModal() {
+  const modal = document.getElementById('modalFlashcart');
+  if (modal) {
+    modal.style.display = 'flex';
+    const targetDir = (document.getElementById('targetDirInput') ? document.getElementById('targetDirInput').value.trim() : "");
+    const txtOut = document.getElementById('txtSdOutDir');
+    if (txtOut && !txtOut.value) {
+      txtOut.value = targetDir ? targetDir + (targetDir.includes('/') ? '/sd_images' : '\\sd_images') : '';
+    }
+  }
+}
+
+function closeFlashcartModal() {
+  const modal = document.getElementById('modalFlashcart');
+  if (modal) modal.style.display = 'none';
+}
+
+function startFlashcartDownload() {
+  const formats = [];
+  if (document.getElementById('chkSdNeosd').checked) formats.push('neosd');
+  if (document.getElementById('chkSdDarksoft').checked) formats.push('darksoft');
+  if (document.getElementById('chkSdBackbit').checked) formats.push('backbit');
+
+  if (formats.length === 0) {
+    alert("Please select at least one flashcart image format to download.");
+    return;
+  }
+
+  const platform = document.getElementById('selSdPlatform').value;
+  let targetDir = document.getElementById('txtSdOutDir').value.trim();
+  if (!targetDir) {
+    const mainTarget = document.getElementById('targetDirInput') ? document.getElementById('targetDirInput').value.trim() : "";
+    targetDir = mainTarget || "sd_images";
+  }
+
+  const btn = document.getElementById('btnStartSdDownload');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Downloading...';
+
+  const progArea = document.getElementById('sdProgressArea');
+  const progFill = document.getElementById('sdProgressFill');
+  const progStatus = document.getElementById('sdProgressStatus');
+  const progPercent = document.getElementById('sdProgressPercent');
+  const logConsole = document.getElementById('sdLogConsole');
+
+  progArea.style.display = 'block';
+  logConsole.innerHTML = '';
+  progFill.style.width = '10%';
+  progPercent.textContent = '10%';
+  progStatus.textContent = 'Querying release packages...';
+
+  function appendSdLog(msg) {
+    const p = document.createElement('p');
+    p.textContent = msg;
+    logConsole.appendChild(p);
+    logConsole.scrollTop = logConsole.scrollHeight;
+  }
+
+  fetch('/api/download_sd', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      target_dir: targetDir,
+      formats: formats,
+      platforms: platform === 'both' ? ['mvs', 'aes'] : [platform]
+    })
+  })
+  .then(res => {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    function readChunk() {
+      return reader.read().then(({ done, value }) => {
+        if (done) return;
+        const text = decoder.decode(value);
+        const lines = text.split('\n');
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const data = JSON.parse(line);
+            if (data.log) appendSdLog(data.log);
+            if (data.progress !== undefined) {
+              progFill.style.width = data.progress + '%';
+              progPercent.textContent = data.progress + '%';
+              progStatus.textContent = data.status || 'Downloading...';
+            }
+            if (data.done) {
+              btn.disabled = false;
+              btn.innerHTML = 'Download Images';
+              if (data.success) {
+                progFill.style.width = '100%';
+                progPercent.textContent = '100%';
+                progStatus.textContent = 'Complete!';
+                alert("✅ Flashcart & SD images downloaded and prepared successfully!\n\nLocation:\n" + (data.out_dir || targetDir));
+              } else {
+                alert("Notice: " + (data.error || "Flashcart download finished."));
+              }
+            }
+          } catch(e) {
+            appendSdLog(line);
+          }
+        }
+        return readChunk();
+      });
+    }
+    return readChunk();
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.innerHTML = 'Download Images';
+    appendSdLog("[ERROR] " + err);
+    alert("Download error: " + err);
+  });
+}
+
+// Initial Data Loading
+Promise.all([
+  fetch('/api/locales').then(r => r.json()).catch(() => ({})),
+  fetch('/api/assets').then(r => r.json()).catch(() => ({})),
+  fetch('/api/sysinfo').then(r => r.json()).catch(() => ({})),
+  fetch('/api/mame_releases').then(r => r.json()).catch(() => ([])),
+  fetch('/api/game_releases').then(r => r.json()).catch(() => ([]))
+]).then(([locales, assets, info, mReleases, gReleases]) => {
+  localesData = locales;
+  sysInfo = info;
+
+  // Assets
+  if (assets.eagle) document.getElementById('eagleLogo').src = assets.eagle;
+  if (assets.title) document.getElementById('titleBanner').src = assets.title;
+  if (assets.maiya) document.getElementById('maiyaPortrait').src = assets.maiya;
+  if (assets.luna) document.getElementById('lunaPortrait').src = assets.luna;
+  if (assets.icon) document.getElementById('iconPreviewImg').src = assets.icon;
+
+  // System Info
+  document.getElementById('targetDirInput').value = info.default_target || '';
+  const pathText = document.getElementById('mameDetectedPath');
+  const mameInput = document.getElementById('mamePathInput');
+  if (info.mame_found) {
+    pathText.textContent = info.mame_path;
+    mameInput.value = info.mame_path;
+    toggleMameOption('existing');
+  } else {
+    pathText.textContent = 'MAME will be downloaded from official release';
+    toggleMameOption('download');
+  }
+
+  // Populate Releases
+  populateMameReleases(mReleases);
+  populateGameReleases(gReleases);
+
+  // Initialize UI text
+  updateLocalizedUI();
+});
+</script>
+
+<!-- Flashcart Modal Dialog -->
+<div id="modalFlashcart" class="modal-overlay" style="display:none;">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3>💾 Flashcart &amp; SD Card Image Downloader</h3>
+      <button class="modal-close" onclick="closeFlashcartModal()">&times;</button>
+    </div>
+    <div class="modal-content">
+      <p style="font-size:0.88rem; color:var(--text-dim); margin-bottom:12px;">
+        Download authentic ROM packages for real SNK Neo-Geo flash cartridges:
+      </p>
+      
+      <div class="checkbox-group" style="margin-bottom:14px; gap:8px;">
+        <div class="checkbox-item">
+          <input type="checkbox" id="chkSdNeosd" checked>
+          <label for="chkSdNeosd"><strong>NeoSD / NeoSD Pro (.neo)</strong> &mdash; Single cartridge file for TerraOnion NeoSD</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="chkSdDarksoft" checked>
+          <label for="chkSdDarksoft"><strong>Darksoft Neo Geo Multi</strong> &mdash; Games folder with 2-byte interleaved crom0</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="chkSdBackbit" checked>
+          <label for="chkSdBackbit"><strong>BackBit Platinum</strong> &mdash; microSD cartridge folder with chip parts</label>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.85rem; color:var(--text-dim); display:block; margin-bottom:4px;">Platform Editions:</label>
+        <select id="selSdPlatform" class="input-text" style="width:100%; padding:6px 10px;">
+          <option value="both">MVS Arcade &amp; AES Console (Both Editions)</option>
+          <option value="mvs">MVS Arcade Edition Only</option>
+          <option value="aes">AES Home Console Edition Only</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:0.85rem; color:var(--text-dim); display:block; margin-bottom:4px;">Target Folder:</label>
+        <input type="text" id="txtSdOutDir" class="input-text" style="width:100%; padding:6px 10px;" placeholder="Leave blank to use default SD folder">
+      </div>
+
+      <div id="sdProgressArea" style="display:none; margin-top:10px;">
+        <div class="progress-wrap" style="margin-bottom:8px;">
+          <div class="progress-bar">
+            <div class="progress-fill" id="sdProgressFill"></div>
+          </div>
+          <div class="progress-text">
+            <span id="sdProgressStatus">Downloading...</span>
+            <span id="sdProgressPercent">0%</span>
+          </div>
+        </div>
+        <div class="log-console" id="sdLogConsole" style="height:120px; font-size:0.75rem;"></div>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+      <button class="btn btn-secondary" onclick="closeFlashcartModal()">Close</button>
+      <button class="btn btn-primary" id="btnStartSdDownload" onclick="startFlashcartDownload()">Download Images</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

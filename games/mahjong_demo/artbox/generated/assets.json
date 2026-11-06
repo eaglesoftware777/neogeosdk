@@ -1,0 +1,55 @@
+{
+ "prefix": "mj",
+ "tiles_used": 670,
+ "banks_used": [
+  16,
+  21
+ ],
+ "assets": [
+  {
+   "id": 1,
+   "name": "felt",
+   "kind": "background",
+   "tile_base": 256,
+   "tiles": 280,
+   "frames": 1,
+   "frame_tiles": 280,
+   "strips": 20,
+   "rows": 14,
+   "bank": 16,
+   "banks": 4,
+   "width": 320,
+   "height": 224
+  },
+  {
+   "id": 2,
+   "name": "tiles",
+   "kind": "sprite",
+   "tile_base": 536,
+   "tiles": 86,
+   "frames": 43,
+   "frame_tiles": 2,
+   "strips": 1,
+   "rows": 2,
+   "bank": 20,
+   "banks": 1,
+   "width": 688,
+   "height": 32
+  },
+  {
+   "id": 3,
+   "name": "logo",
+   "kind": "sprite",
+   "tile_base": 622,
+   "tiles": 48,
+   "frames": 1,
+   "frame_tiles": 48,
+   "strips": 16,
+   "rows": 3,
+   "bank": 21,
+   "banks": 1,
+   "width": 256,
+   "height": 48
+  }
+ ]
+}

@@ -52,7 +52,16 @@ void NEOGEO_USER ng_bg_set_by_id(uint8_t layer, uint16_t screen_id,
 {
     NGShowScreenFn fn = 0;
     if (screen_id > 0 && screen_id <= ng_screen_count) {
+#ifdef __OPTIMIZE__
+        /* The optimiser sees the one-entry weak fallback below and warns
+         * that the id reaches past it; the table the game links is the
+         * real one, so hide the fallback's size from it. */
+        const NGShowScreenFn *table = ng_screen_table;
+        __asm__ ("" : "+a" (table));
+        fn = table[screen_id];
+#else
         fn = ng_screen_table[screen_id];
+#endif
     }
     ng_bg_set(layer, screen_id, fn,
               16, 24, 0x0F, 0xAF, 16, NG_SPR_BG_STRIPS,

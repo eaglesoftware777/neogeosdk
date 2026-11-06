@@ -1,6 +1,9 @@
 #include "ng_progress.h"
 
 static NGProgress ng_progress[NG_MAX_PROGRESS];
+/* 0 when no tracker is active: the frame's update is skipped (set by a
+ * start, worked out again by each update). */
+static uint8_t ng_progress_live;
 
 static uint8_t NEOGEO_USER ng_progress_percent_value(uint16_t current, uint16_t max)
 {
@@ -28,12 +31,14 @@ void NEOGEO_USER ng_progress_init(void)
         ng_progress[i].current = 0;
         ng_progress[i].max = 0;
     }
+    ng_progress_live = 0;
 }
 
 void NEOGEO_USER ng_progress_start(uint8_t id, uint16_t max)
 {
     if (id >= NG_MAX_PROGRESS) return;
     ng_progress[id].active = 1;
+    ng_progress_live = 1;
     ng_progress[id].current = 0;
     ng_progress[id].max = max;
 }
@@ -76,10 +81,12 @@ uint8_t NEOGEO_USER ng_progress_done(uint8_t id)
 
 void NEOGEO_USER ng_progress_update(void)
 {
-    uint8_t i;
+    uint8_t i, live = 0;
+    if (!ng_progress_live) return;
     for (i = 0; i < NG_MAX_PROGRESS; i++) {
-        if (ng_progress[i].active && ng_progress[i].max && ng_progress[i].current >= ng_progress[i].max) {
-            ng_progress[i].active = 0;
-        }
+        if (!ng_progress[i].active) continue;
+        if (ng_progress[i].max && ng_progress[i].current >= ng_progress[i].max) ng_progress[i].active = 0;
+        else live = 1;
     }
+    ng_progress_live = live;
 }

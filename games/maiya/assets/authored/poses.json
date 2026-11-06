@@ -1,0 +1,462 @@
+[
+  {
+    "name": "walk_contact_a",
+    "mode": "walk",
+    "slot": 0,
+    "half": "a",
+    "bob": 0,
+    "swing": 0,
+    "near_arm": "front",
+    "hold_distance": 8,
+    "grounded": true,
+    "far_leg": [
+      "WALK.png",
+      0,
+      "front"
+    ],
+    "near_leg": [
+      "WALK.png",
+      0,
+      "back"
+    ],
+    "bounds": [
+      22,
+      10,
+      60,
+      61
+    ]
+  },
+  {
+    "name": "walk_down_a",
+    "mode": "walk",
+    "slot": 1,
+    "half": "a",
+    "bob": 1,
+    "swing": 1,
+    "near_arm": "front",
+    "hold_distance": 10,
+    "grounded": true,
+    "far_leg": [
+      "WALK.png",
+      2,
+      "front"
+    ],
+    "near_leg": [
+      "WALK.png",
+      2,
+      "back"
+    ],
+    "bounds": [
+      19,
+      11,
+      57,
+      61
+    ]
+  },
+  {
+    "name": "walk_passing_a",
+    "mode": "walk",
+    "slot": 2,
+    "half": "a",
+    "bob": 0,
+    "swing": 2,
+    "near_arm": "front",
+    "hold_distance": 14,
+    "grounded": true,
+    "far_leg": [
+      "WALK.png",
+      1,
+      "front"
+    ],
+    "near_leg": [
+      "WALK.png",
+      1,
+      "back"
+    ],
+    "bounds": [
+      24,
+      10,
+      57,
+      61
+    ]
+  },
+  {
+    "name": "walk_up_a",
+    "mode": "walk",
+    "slot": 3,
+    "half": "a",
+    "bob": -1,
+    "swing": 1,
+    "near_arm": "back",
+    "hold_distance": 8,
+    "grounded": true,
+    "far_leg": [
+      "WALK.png",
+      5,
+      "back"
+    ],
+    "near_leg": [
+      "WALK.png",
+      5,
+      "front"
+    ],
+    "bounds": [
+      24,
+      9,
+      57,
+      61
+    ]
+  },
+  {
+    "name": "walk_contact_b",
+    "mode": "walk",
+    "slot": 4,
+    "half": "b",
+    "bob": 0,
+    "swing": 0,
+    "near_arm": "back",
+    "hold_distance": 8,
+    "grounded": true,
+    "far_leg": [
+      "WALK.png",
+      0,
+      "back"
+    ],
+    "near_leg": [
+      "WALK.png",
+      0,
+      "front"
+    ],
+    "bounds": [
+      22,
+      10,
+      60,
+      61
+    ]
+  },
+  {
+    "name": "walk_down_b",
+    "mode": "walk",
+    "slot": 5,
+    "half": "b",
+    "bob": 1,
+    "swing": 1,
+    "near_arm": "back",
+    "hold_distance": 10,
+    "grounded": true,
+    "far_leg": [
+      "WALK.png",
+      2,
+      "back"
+    ],
+    "near_leg": [
+      "WALK.png",
+      2,
+      "front"
+    ],
+    "bounds": [
+      19,
+      11,
+      57,
+      61
+    ]
+  },
+  {
+    "name": "walk_passing_b",
+    "mode": "walk",
+    "slot": 6,
+    "half": "b",
+    "bob": 0,
+    "swing": 2,
+    "near_arm": "back",
+    "hold_distance": 14,
+    "grounded": true,
+    "far_leg": [
+      "WALK.png",
+      1,
+      "back"
+    ],
+    "near_leg": [
+      "WALK.png",
+      1,
+      "front"
+    ],
+    "bounds": [
+      24,
+      10,
+      57,
+      61
+    ]
+  },
+  {
+    "name": "walk_up_b",
+    "mode": "walk",
+    "slot": 7,
+    "half": "b",
+    "bob": -1,
+    "swing": 1,
+    "near_arm": "front",
+    "hold_distance": 8,
+    "grounded": true,
+    "far_leg": [
+      "WALK.png",
+      5,
+      "front"
+    ],
+    "near_leg": [
+      "WALK.png",
+      5,
+      "back"
+    ],
+    "bounds": [
+      24,
+      9,
+      57,
+      61
+    ]
+  },
+  {
+    "name": "run_contact_a",
+    "mode": "run",
+    "slot": 0,
+    "half": "a",
+    "bob": 0,
+    "swing": 0,
+    "near_arm": "front",
+    "hold_distance": 10,
+    "grounded": true,
+    "far_leg": [
+      "RUN.png",
+      0,
+      "front"
+    ],
+    "near_leg": [
+      "RUN.png",
+      0,
+      "back"
+    ],
+    "bounds": [
+      21,
+      10,
+      58,
+      61
+    ]
+  },
+  {
+    "name": "run_down_a",
+    "mode": "run",
+    "slot": 1,
+    "half": "a",
+    "bob": 2,
+    "swing": 1,
+    "near_arm": "front",
+    "hold_distance": 14,
+    "grounded": true,
+    "far_leg": [
+      "RUN.png",
+      1,
+      "front"
+    ],
+    "near_leg": [
+      "RUN.png",
+      1,
+      "back"
+    ],
+    "bounds": [
+      24,
+      12,
+      57,
+      61
+    ]
+  },
+  {
+    "name": "run_push_a",
+    "mode": "run",
+    "slot": 2,
+    "half": "a",
+    "bob": 0,
+    "swing": 2,
+    "near_arm": "front",
+    "hold_distance": 8,
+    "grounded": true,
+    "far_leg": [
+      "RUN.png",
+      5,
+      "back"
+    ],
+    "near_leg": [
+      "RUN.png",
+      5,
+      "front"
+    ],
+    "bounds": [
+      23,
+      10,
+      57,
+      61
+    ]
+  },
+  {
+    "name": "run_flight_a",
+    "mode": "run",
+    "slot": 3,
+    "half": "a",
+    "bob": -2,
+    "swing": 1,
+    "near_arm": "back",
+    "hold_distance": 8,
+    "grounded": false,
+    "far_leg": [
+      "RUN.png",
+      3,
+      "back"
+    ],
+    "near_leg": [
+      "RUN.png",
+      3,
+      "front"
+    ],
+    "bounds": [
+      21,
+      8,
+      62,
+      57
+    ]
+  },
+  {
+    "name": "run_contact_b",
+    "mode": "run",
+    "slot": 4,
+    "half": "b",
+    "bob": 0,
+    "swing": 0,
+    "near_arm": "back",
+    "hold_distance": 10,
+    "grounded": true,
+    "far_leg": [
+      "RUN.png",
+      0,
+      "back"
+    ],
+    "near_leg": [
+      "RUN.png",
+      0,
+      "front"
+    ],
+    "bounds": [
+      21,
+      10,
+      58,
+      61
+    ]
+  },
+  {
+    "name": "run_down_b",
+    "mode": "run",
+    "slot": 5,
+    "half": "b",
+    "bob": 2,
+    "swing": 1,
+    "near_arm": "back",
+    "hold_distance": 14,
+    "grounded": true,
+    "far_leg": [
+      "RUN.png",
+      1,
+      "back"
+    ],
+    "near_leg": [
+      "RUN.png",
+      1,
+      "front"
+    ],
+    "bounds": [
+      24,
+      12,
+      57,
+      61
+    ]
+  },
+  {
+    "name": "run_push_b",
+    "mode": "run",
+    "slot": 6,
+    "half": "b",
+    "bob": 0,
+    "swing": 2,
+    "near_arm": "back",
+    "hold_distance": 8,
+    "grounded": true,
+    "far_leg": [
+      "RUN.png",
+      5,
+      "front"
+    ],
+    "near_leg": [
+      "RUN.png",
+      5,
+      "back"
+    ],
+    "bounds": [
+      23,
+      10,
+      57,
+      61
+    ]
+  },
+  {
+    "name": "run_flight_b",
+    "mode": "run",
+    "slot": 7,
+    "half": "b",
+    "bob": -2,
+    "swing": 1,
+    "near_arm": "front",
+    "hold_distance": 8,
+    "grounded": false,
+    "far_leg": [
+      "RUN.png",
+      3,
+      "front"
+    ],
+    "near_leg": [
+      "RUN.png",
+      3,
+      "back"
+    ],
+    "bounds": [
+      21,
+      8,
+      62,
+      57
+    ]
+  },
+  {
+    "name": "stop",
+    "mode": "stop",
+    "slot": 0,
+    "half": null,
+    "bob": 0,
+    "swing": 2,
+    "near_arm": "front",
+    "hold_distance": 0,
+    "grounded": true,
+    "far_leg": [
+      "walk_passing",
+      "back",
+      4,
+      1
+    ],
+    "near_leg": [
+      "walk_passing",
+      "front",
+      -1
+    ],
+    "bounds": [
+      24,
+      10,
+      57,
+      61
+    ]
+  }
+]

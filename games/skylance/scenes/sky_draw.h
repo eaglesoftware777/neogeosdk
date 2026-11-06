@@ -1,6 +1,22 @@
 #ifndef SKY_DRAW_H
 #define SKY_DRAW_H
 
+/* Resident critical sprites occupy the upper character-pool slots.
+ * Leave 96..145 for scenery, pickups and optional effects.
+ *
+ * Order matters twice: a higher sprite draws on top, and on a line with
+ * more than 96 sprites the LSPC drops the highest numbers first. Enemy
+ * shots used to sit last (216..223), so a crowded line lost the bullets
+ * before anything else. Now the pilot portrait and the player's own shots
+ * are the first to go; enemy shots still draw over every aircraft, and
+ * the player draws over ground units and the boss. */
+#define SKY_FIXED_ENEMY_FIRST   146u    /* 4 x 8 */
+#define SKY_FIXED_BOSS_FIRST    178u    /* 8 */
+#define SKY_FIXED_PLAYER_FIRST  186u    /* 8 */
+#define SKY_FIXED_ESHOT_FIRST   194u    /* SKY_MAX_ESHOTS = 12 */
+#define SKY_FIXED_PSHOT_FIRST   206u    /* SKY_MAX_PSHOTS = 10 */
+#define SKY_FIXED_FACE_FIRST    216u    /* 8, ends at NG_SPR_CHAR_LAST */
+
 #include <stdint.h>
 #include "sky.h"
 #include "sdk/2d_engine/ng_chars.h"
@@ -20,24 +36,45 @@
  * does not - the centre offset therefore has to be computed at the
  * scale the object will actually be drawn at.
  */
-void NEOGEO_USER sky_bind(NGCharacter *c, uint8_t id, uint8_t scale, uint8_t band);
+void NEOGEO_USER sky_bind(NGCharacter *c, uint16_t id, uint8_t scale, uint8_t band);
+void NEOGEO_USER sky_damage_color(const NGCharacter *c, uint8_t critical);
+void NEOGEO_USER sky_damage_flash(const NGCharacter *c, uint8_t flash);
+void NEOGEO_USER sky_hud_pilot_palette(const NGCharacter *c, uint8_t pilot_idx, uint8_t situation);
+void NEOGEO_USER sky_meter(uint8_t x, uint8_t y, uint8_t width,
+                           uint8_t filled, uint8_t palette);
 
 /* Painted size of an asset once drawn at `scale`, for hitboxes/spacing. */
-int16_t NEOGEO_USER sky_width(uint8_t id, uint8_t scale);
-int16_t NEOGEO_USER sky_height(uint8_t id, uint8_t scale);
+int16_t NEOGEO_USER sky_width(uint16_t id, uint8_t scale);
+int16_t NEOGEO_USER sky_height(uint16_t id, uint8_t scale);
 
 /* Spawn a character already bound, centred and visible.  0 when full. */
-NGCharacter * NEOGEO_USER sky_spawn(uint8_t kind, uint8_t id,
+NGCharacter * NEOGEO_USER sky_spawn(uint8_t kind, uint16_t id,
                                     int16_t cx, int16_t cy,
                                     uint8_t scale, uint8_t band);
 
 /* ------------------------------------------------------------------ */
-/*  Scrolling background (hardware slots 1..32, behind everything)      */
+/*  Shooter terrain/cloud layers (slots 1..88, characters start at 96) */
 /* ------------------------------------------------------------------ */
 void NEOGEO_USER sky_bg_select(uint8_t id);
 void NEOGEO_USER sky_bg_advance(uint8_t pixels);
+uint16_t NEOGEO_USER sky_bg_travel(void);
+uint16_t NEOGEO_USER sky_bg_travel_end(void);
+uint8_t NEOGEO_USER sky_bg_water(int16_t x, int16_t y);
+void NEOGEO_USER sky_bg_follow(int16_t x, int16_t y);
+int16_t NEOGEO_USER sky_bg_camera_x(void);
+void NEOGEO_USER sky_depth_draw(void);
+/* The busiest line's sprite count, as of the last sky_depth_draw. */
+uint16_t NEOGEO_USER sky_depth_line_peak(void);
 void NEOGEO_USER sky_bg_draw(void);
 void NEOGEO_USER sky_bg_hide(void);
+/* Cockpit instrument k (0 attitude, 1 radar, 2 G meter) showing art id,
+ * its top-left corner at (x, y); a repeat of the same id does nothing. */
+void NEOGEO_USER sky_instrument_show(uint8_t k, uint16_t id, int16_t x, int16_t y);
+void NEOGEO_USER sky_instruments_hide(void);
+void NEOGEO_USER sky_title_draw(void);
+void NEOGEO_USER sky_presentation_init(void);
+void NEOGEO_USER sky_palette_vblank(void);
+void NEOGEO_USER sky_fade_out(void);
 
 /* ------------------------------------------------------------------ */
 /*  Frame pump                                                          */
@@ -53,6 +90,8 @@ uint16_t NEOGEO_USER sky_rand(void);
 /*  FIX layer                                                           */
 /* ------------------------------------------------------------------ */
 void NEOGEO_USER sky_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal);
+void NEOGEO_USER sky_text_box(uint8_t x, uint8_t y, uint8_t width,
+                             uint8_t rows, const char *text, uint8_t pal);
 /*
  * Blank `cells` FIX cells.
  *

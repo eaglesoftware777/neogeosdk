@@ -9,6 +9,7 @@ your environment.
 | Ubuntu / Debian                                 | `install-ubuntu.sh` | Apt fast path matching the README's documented commands. |
 | Native Windows 11 (cmd.exe, MSYS-free)          | `install-windows.bat` | Uses `winget` for everything except the m68k compiler. |
 | Windows + WSL (Ubuntu)                          | `install-wsl.bat`   | Sets up WSL, drops into Ubuntu, runs the Ubuntu installer. |
+| Any host, after building games                  | `install-mame.sh` / `install-mame.bat` | Copies a built game into your MAME install; prompts for its path once. |
 
 All installers are idempotent — re-running is safe; already-installed
 components are detected and skipped.
@@ -105,6 +106,37 @@ overrides `SDKHOME` (default `%USERPROFILE%\neogeo`).
 Every installer ends with a smoke-test block that prints `OK` or `MISSING`
 for each required tool.  If anything's `MISSING`, install it by hand and
 re-run the installer — it will only retry the missing pieces.
+
+## Installing built games into MAME
+
+Once a game is built and packaged (`make bios-package GAME=<name>`, or
+`make all-games && make dist-all` for every game), install it into your own
+MAME copy with:
+
+```bash
+./install/install-mame.sh --game maiya
+```
+
+```bat
+install\install-mame.bat --game maiya
+```
+
+The first run asks for your MAME installation folder (the directory that
+holds the `mame`/`mame64` executable) and remembers it in
+`~/.neogeosdk/config.json` (`%USERPROFILE%\.neogeosdk\config.json` on
+Windows), so later runs don't ask again. Run either script with no `--game`
+flag to pick a game from a numbered list interactively, or `--game all` to
+install every game that has already been packaged.
+
+Everything is copied into a `neogeosdk/` folder inside that MAME
+installation — your own rom collection and MAME's ini files are never
+touched. That folder also gets a ready-to-use `run_<game>.sh` /
+`run_<game>.bat` launcher.
+
+To build, package, install, and launch in one step, use
+`python3 tools/mame_launcher.py install-run --game <name>`, the interactive
+`make test-menu`, or the `make gui` desktop panel — see the top-level
+README's "Building, packaging, and testing games" section.
 
 ## Troubleshooting
 

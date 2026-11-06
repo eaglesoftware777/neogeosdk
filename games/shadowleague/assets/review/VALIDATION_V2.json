@@ -1,0 +1,197 @@
+{
+  "date": "2026-10-13",
+  "version": "v2",
+  "fighters": 44,
+  "arenas": 4,
+  "artwork": {
+    "passed": true,
+    "fighters": 44,
+    "frames": 2124,
+    "limb_layers_checked": 8496,
+    "indexed_assets_checked": 88,
+    "ground_contacts_checked": 132,
+    "canvas": [
+      160,
+      160
+    ],
+    "baseline": 141,
+    "C_ROM_round_trip": true,
+    "failures": []
+  },
+  "rom_storage": {
+    "frames": 2124,
+    "unshared_tiles": 212400,
+    "unique_strips": 18653,
+    "shared_tiles": 37306,
+    "pixel_loss": 0,
+    "total_tiles": 41140
+  },
+  "builds": {
+    "mvs": "PASS make all and make neo",
+    "aes": "PASS make neo"
+  },
+  "cartridge_budget_percent": {
+    "P": 81,
+    "C": 52,
+    "S": 24,
+    "M": 15,
+    "V": 9
+  },
+  "host_tests": {
+    "result": "PASS",
+    "tests": 3,
+    "simulated_frames": 28357981,
+    "hits": 226628,
+    "blocks": 115127,
+    "specials": 364340
+  },
+  "linux_mame": {
+    "mvs": {
+      "result": "PASS",
+      "fight_samples": 77,
+      "last": {
+        "t": 89.72,
+        "state": 1,
+        "round": 2,
+        "secs": 55,
+        "life0": 1000,
+        "life1": 830,
+        "x0": 406,
+        "x1": 442,
+        "st0": 3,
+        "st1": 0,
+        "wins0": 1,
+        "wins1": 0,
+        "winner": 255,
+        "frame": 2830
+      }
+    },
+    "aes": {
+      "result": "PASS",
+      "fight_samples": 83,
+      "last": {
+        "t": 89.72,
+        "state": 2,
+        "round": 1,
+        "secs": 26,
+        "life0": 1000,
+        "life1": 0,
+        "x0": 464,
+        "x1": 496,
+        "st0": 0,
+        "st1": 13,
+        "wins0": 0,
+        "wins1": 0,
+        "winner": 255,
+        "frame": 2814
+      }
+    }
+  },
+  "windows_mame": {
+    "mvs": {
+      "result": "PASS",
+      "fight_samples": 65,
+      "last": {
+        "t": 79.58,
+        "state": 4,
+        "round": 1,
+        "secs": 34,
+        "life0": 1000,
+        "life1": 0,
+        "x0": 463,
+        "x1": 496,
+        "st0": 14,
+        "st1": 13,
+        "wins0": 1,
+        "wins1": 0,
+        "winner": 255,
+        "frame": 2233
+      },
+      "installed_launcher_d3d": {
+        "result": "PASS",
+        "return_code": 0,
+        "seconds": 8
+      }
+    },
+    "aes": {
+      "result": "PASS",
+      "fight_samples": 68,
+      "last": {
+        "t": 79.58,
+        "state": 1,
+        "round": 1,
+        "secs": 32,
+        "life0": 1000,
+        "life1": 130,
+        "x0": 460,
+        "x1": 496,
+        "st0": 3,
+        "st1": 4,
+        "wins0": 0,
+        "wins1": 0,
+        "winner": 255,
+        "frame": 2215
+      },
+      "installed_launcher_d3d": {
+        "result": "PASS",
+        "return_code": 0,
+        "seconds": 8
+      }
+    }
+  },
+  "installation": {
+    "location": "C:\\mame\\neogeosdk",
+    "backup": "backups/shadowleague/20261013-133848-before-v2-redraw",
+    "verified_roms": {
+      "tests/shadowleague/mvs/roms/shadowleague/781-c1.c1": {
+        "size": 4194304,
+        "sha256": "0a58c55be30267b69553072c04672f2376ce1e740c2e70975135e1f1986e5836"
+      },
+      "tests/shadowleague/mvs/roms/shadowleague/781-c2.c2": {
+        "size": 4194304,
+        "sha256": "63168e62af229cff84ead1da9ad9734ef0dbdf787db4f9ee6073f9fdcc812c2d"
+      },
+      "tests/shadowleague/mvs/roms/shadowleague/781-m1.m1": {
+        "size": 131072,
+        "sha256": "33fa692a5dd7974057cd87fa917e6f4d10ecf7275e4f8118e6206481e79fa6b5"
+      },
+      "tests/shadowleague/mvs/roms/shadowleague/781-p1.p1": {
+        "size": 524288,
+        "sha256": "7221ced907c54b2eb7732cf819a85134ae95fc92d86dd4d3bbb0738078f26602"
+      },
+      "tests/shadowleague/mvs/roms/shadowleague/781-s1.s1": {
+        "size": 131072,
+        "sha256": "4511c96b92198b815e0d8a3d104cd83d470782ec5ad4f840ba6ebca2e12212ab"
+      },
+      "tests/shadowleague/mvs/roms/shadowleague/781-v1.v1": {
+        "size": 2097152,
+        "sha256": "39c28eb97f1f8b0038244030aad028127c97b6631e81ba9a948a982670f2a597"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-c1.c1": {
+        "size": 4194304,
+        "sha256": "0a58c55be30267b69553072c04672f2376ce1e740c2e70975135e1f1986e5836"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-c2.c2": {
+        "size": 4194304,
+        "sha256": "63168e62af229cff84ead1da9ad9734ef0dbdf787db4f9ee6073f9fdcc812c2d"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-m1.m1": {
+        "size": 131072,
+        "sha256": "33fa692a5dd7974057cd87fa917e6f4d10ecf7275e4f8118e6206481e79fa6b5"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-p1.p1": {
+        "size": 524288,
+        "sha256": "6235cf1d902630986dedae6571985e54600d0231aced532a359cf8b85aebbca1"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-s1.s1": {
+        "size": 131072,
+        "sha256": "4511c96b92198b815e0d8a3d104cd83d470782ec5ad4f840ba6ebca2e12212ab"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-v1.v1": {
+        "size": 2097152,
+        "sha256": "39c28eb97f1f8b0038244030aad028127c97b6631e81ba9a948a982670f2a597"
+      }
+    }
+  },
+  "physical_boards": "not tested"
+}

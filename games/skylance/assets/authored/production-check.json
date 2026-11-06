@@ -1,0 +1,717 @@
+{
+  "passed": true,
+  "assets": [
+    {
+      "asset": "drone",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "drone_1",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "drone_2",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "drone_3",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "drone_4",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "drone_5",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "drone_6",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "drone_7",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "fighter",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "fighter_1",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "fighter_2",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "fighter_3",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "fighter_4",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "fighter_5",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "fighter_6",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "fighter_7",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "heli",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "heli_1",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "heli_2",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "heli_3",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "heli_4",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "heli_5",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "heli_6",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "heli_7",
+      "indexed_exact": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "asset": "tank",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "tank_1",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "tank_2",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "tank_3",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "tank_4",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "tank_5",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "tank_6",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "tank_7",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "bomber",
+      "indexed_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "asset": "bomber_1",
+      "indexed_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "asset": "bomber_2",
+      "indexed_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "asset": "bomber_3",
+      "indexed_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "asset": "bomber_4",
+      "indexed_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "asset": "bomber_5",
+      "indexed_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "asset": "bomber_6",
+      "indexed_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "asset": "bomber_7",
+      "indexed_exact": true,
+      "pivot": [
+        32,
+        32
+      ]
+    },
+    {
+      "asset": "sam",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "sam_1",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "sam_2",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "sam_3",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "sam_4",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "sam_5",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "sam_6",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "sam_7",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "radar_site",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "radar_site_1",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "radar_site_2",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "radar_site_3",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "radar_site_4",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "radar_site_5",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "radar_site_6",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "radar_site_7",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        24
+      ]
+    },
+    {
+      "asset": "miniboss_0",
+      "indexed_exact": true,
+      "pivot": [
+        40,
+        32
+      ]
+    },
+    {
+      "asset": "miniboss_0_1",
+      "indexed_exact": true,
+      "pivot": [
+        40,
+        32
+      ]
+    },
+    {
+      "asset": "miniboss_0_2",
+      "indexed_exact": true,
+      "pivot": [
+        40,
+        32
+      ]
+    },
+    {
+      "asset": "miniboss_0_3",
+      "indexed_exact": true,
+      "pivot": [
+        40,
+        32
+      ]
+    },
+    {
+      "asset": "miniboss_0_4",
+      "indexed_exact": true,
+      "pivot": [
+        40,
+        32
+      ]
+    },
+    {
+      "asset": "miniboss_0_5",
+      "indexed_exact": true,
+      "pivot": [
+        40,
+        32
+      ]
+    },
+    {
+      "asset": "miniboss_0_6",
+      "indexed_exact": true,
+      "pivot": [
+        40,
+        32
+      ]
+    },
+    {
+      "asset": "miniboss_0_7",
+      "indexed_exact": true,
+      "pivot": [
+        40,
+        32
+      ]
+    },
+    {
+      "asset": "red_fortress",
+      "indexed_exact": true,
+      "pivot": [
+        56,
+        56
+      ]
+    },
+    {
+      "asset": "red_fortress_1",
+      "indexed_exact": true,
+      "pivot": [
+        56,
+        56
+      ]
+    },
+    {
+      "asset": "red_fortress_2",
+      "indexed_exact": true,
+      "pivot": [
+        56,
+        56
+      ]
+    },
+    {
+      "asset": "red_fortress_3",
+      "indexed_exact": true,
+      "pivot": [
+        56,
+        56
+      ]
+    },
+    {
+      "asset": "red_fortress_4",
+      "indexed_exact": true,
+      "pivot": [
+        56,
+        56
+      ]
+    },
+    {
+      "asset": "red_fortress_5",
+      "indexed_exact": true,
+      "pivot": [
+        56,
+        56
+      ]
+    },
+    {
+      "asset": "red_fortress_6",
+      "indexed_exact": true,
+      "pivot": [
+        56,
+        56
+      ]
+    },
+    {
+      "asset": "red_fortress_7",
+      "indexed_exact": true,
+      "pivot": [
+        56,
+        56
+      ]
+    },
+    {
+      "asset": "native_keep_turret",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "native_keep_turret_1",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "native_keep_turret_2",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "native_keep_turret_3",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "native_keep_turret_4",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "native_keep_turret_5",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "native_keep_turret_6",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "native_keep_turret_7",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "native_far_cloud",
+      "indexed_exact": true,
+      "pivot": [
+        48,
+        24
+      ]
+    },
+    {
+      "asset": "native_overhead_cloud",
+      "indexed_exact": true,
+      "pivot": [
+        48,
+        24
+      ]
+    },
+    {
+      "asset": "explosion_0",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "explosion_1",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "explosion_2",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "explosion_3",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "explosion_4",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "explosion_5",
+      "indexed_exact": true,
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "asset": "title",
+      "indexed_exact": true,
+      "pivot": [
+        160,
+        112
+      ]
+    }
+  ]
+}

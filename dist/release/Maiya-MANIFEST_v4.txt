@@ -1,0 +1,12 @@
+# Maiya v4: dist/release, made by tools/make_release.py
+# size  crc32     sha256  file
+ 17567744  6d15ebf6  36c4651341a530be49f0ad7370b353341a714bfa680ce0d2bc245be26c02737e  Maiya-WIP-NeoSD_MVS_v4.neo
+ 17567744  c31bcb66  4196d2ec2bdcb2537a773e685efe9ee77341cce47660924be54f0852969b6629  Maiya-WIP-NeoSD_AES_v4.neo
+  9060070  8e1c3e62  7df03f8b341199a504bb8278123e79a2bbb58edf8f2b6197875a6a92f7dafc6b  Maiya-Darksoft-MVS_v4.zip
+  9060074  3beee486  fc8e763346a4a8b042abf583d367a787140cd9b356dc5ba16166acb2b27f7f1d  Maiya-Darksoft-AES_v4.zip
+  9123908  2322d5cc  14f2f025b95bd16c5ff2be81bd769ce6ec07ae1d51ed029dc2322513f95d91ab  Maiya-BackBit-MVS_v4.zip
+  9123994  7b37761e  d0c5d74c02f9a430ded14fa577b792473397ec839b3cb4c63b0584e19bdca235  Maiya-BackBit-AES_v4.zip
+  9174292  156063a0  3e055c86797f7ada0e060c89ed70aacd82066fafadc1ac4db0f94ba45723b348  Maiya-WIP-EagleBIOS_v4.zip
+  9152784  50371c6b  e99b84fa99703d39f6a008e1f752f70c0946bd4702a21853f69fc624dc9394fa  Maiya-WIP-AES-EagleBIOS_v4.zip
+    12978  a2f5b222  64ac1ff9886f60fdf5f0eac00685b7b1d88fd7fc6e149e2626b2ff62b003edbc  Maiya-README_v4.txt
+    26075  5e698df8  7a30c3a3cdf42ae422564dbb2834936b1a2115c4bc064a4bba96c9f1d2c06db7  Maiya-CHANGELOG_v4.txt

@@ -1,0 +1,57 @@
+Sky Lance v2.1.0: build 72ea5e0d13e6 (SkyLance-WIP-EagleBIOS_v2.1.0.zip, packed 2026-10-29T10:09:18)
+Proposed entries for the emulator databases, made by tools/rom_registry.py from the bytes of SkyLance-WIP-EagleBIOS_v2.1.0.zip.
+Each is the database's current entry with the new sizes and hashes; layout and macros are the maintainers' own.
+
+=== hbmame: skylance (now "Sky Lance (v2)") ===
+
+Changed ROMs:
+  779.p1             0x0080000 ae68c9a1  ->  0x0080000 322e027d
+  779.s1             0x0020000 bd69c9ff  ->  0x0020000 bd69c9ff
+  779.m1             0x0020000 cb88d068  ->  0x0020000 cb88d068
+  779.v1             0x0455f00 897c1fbc  ->  0x0455f00 897c1fbc
+  779.c1             0x0400000 e80e7df9  ->  0x0400000 c1a3ebfd
+  779.c2             0x0400000 0668da32  ->  0x0400000 75a51449
+
+ROM_START( skylance )
+	ROM_REGION( 0x100000, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "779.p1", 0, 0x80000, CRC(322e027d) SHA1(d5da1b422e67608c42010b8d969f732b752c2e61) )
+
+	NEO_SFIX_128K( "779.s1", CRC(bd69c9ff) SHA1(e0694292073549d50cbcb1e02f853c3122805bff) )
+
+	NEO_BIOS_AUDIO_128K( "779.m1", CRC(cb88d068) SHA1(074a5a4be1e2bbb296709937053a3bd52b79a4c5) )
+
+	ROM_REGION( 0x800000, "ymsnd:adpcma", ROMREGION_ERASE00 )
+	ROM_LOAD( "779.v1", 0, 0x455f00, CRC(897c1fbc) SHA1(7c539a98a9c95cf4eccda2e5f432a42628af4102) )
+
+	ROM_REGION( 0x800000, "sprites", ROMREGION_ERASE00 )
+	ROM_LOAD16_BYTE( "779.c1", 0, 0x400000, CRC(c1a3ebfd) SHA1(96f152f24e457e2b227560de67ab0ba598c4e060) )
+	ROM_LOAD16_BYTE( "779.c2", 1, 0x400000, CRC(75a51449) SHA1(65fb4f78d942e54f176addcb838a135036fc3728) )
+ROM_END
+
+GAME( 2026, skylance,     neogeo,   neogeo_noslot,   neogeo,  neogeo_state, init_neogeo,   ROT0, "Eagle Software", "Sky Lance (v2.1.0)", MACHINE_SUPPORTS_SAVE )
+
+=== fbneo: skylance (now "Sky Lance (HB, v2)") ===
+
+Changed ROMs:
+  skylance-p1.p1     0x0080000 ae68c9a1  ->  0x0080000 322e027d
+  skylance-s1.s1     0x0020000 bd69c9ff  ->  0x0020000 bd69c9ff
+  skylance-c1.c1     0x0400000 e80e7df9  ->  0x0400000 c1a3ebfd
+  skylance-c2.c2     0x0400000 0668da32  ->  0x0400000 75a51449
+  skylance-m1.m1     0x0020000 cb88d068  ->  0x0020000 cb88d068
+  skylance-v1.v1     0x0455f00 897c1fbc  ->  0x0455f00 897c1fbc
+
+static struct BurnRomInfo skylanceRomDesc[] = {
+	{ "skylance-p1.p1",    0x080000, 0x322e027d, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
+
+	{ "skylance-s1.s1",    0x020000, 0xbd69c9ff, 2 | BRF_GRA },           //  1 Text layer tiles
+
+	{ "skylance-c1.c1",    0x400000, 0xc1a3ebfd, 3 | BRF_GRA },           //  2 Sprite data
+	{ "skylance-c2.c2",    0x400000, 0x75a51449, 3 | BRF_GRA },           //  3
+
+	{ "skylance-m1.m1",    0x020000, 0xcb88d068, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
+
+	{ "skylance-v1.v1",    0x455f00, 0x897c1fbc, 5 | BRF_SND },           //  5 Sound data
+};
+
+Description: Sky Lance (HB, v2.1.0)
+

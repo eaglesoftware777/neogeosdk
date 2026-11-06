@@ -1,0 +1,92 @@
+{
+  "canvas": [
+    352,
+    224
+  ],
+  "title": "title-sdk177.png",
+  "cards": [
+    {
+      "file": "summons.png",
+      "duration": 180,
+      "caption": [
+        "NEO TOKYO. THE YEAR IS 2099.",
+        "FORTY-FOUR INVITES. ONE SECRET."
+      ]
+    },
+    {
+      "file": "kenji-sdk177.png",
+      "duration": 180,
+      "caption": [
+        "KENJI ARATA / KARATE",
+        "A STOLEN LEGACY. A VOW TO RETURN."
+      ]
+    },
+    {
+      "file": "ryuhei-sdk177.png",
+      "duration": 180,
+      "caption": [
+        "RYUHEI GENDA / JUDO",
+        "STRONGEST GRIP. CALMEST MIND."
+      ]
+    },
+    {
+      "file": "jack-sdk177.png",
+      "duration": 180,
+      "caption": [
+        "JACK MERCER / BOXING",
+        "ONE LAST FIGHT. NO FIXED ODDS."
+      ]
+    },
+    {
+      "file": "claire-sdk177.png",
+      "duration": 180,
+      "caption": [
+        "CLAIRE MOREAU / SAVATE",
+        "EVERY STEP SETS THE NEXT STRIKE."
+      ]
+    },
+    {
+      "file": "title-sdk177.png",
+      "duration": 150,
+      "caption": [
+        "SOLO, OR THREE AND A STRIKER.",
+        "ENTER THE SHADOW LEAGUE."
+      ]
+    }
+  ],
+  "palette_source": "Each PNG embeds its own exact indexed palette",
+  "backdrops": [
+    {
+      "file": "mode.png",
+      "duration": 1,
+      "caption": [
+        "",
+        ""
+      ]
+    },
+    {
+      "file": "select.png",
+      "duration": 1,
+      "caption": [
+        "",
+        ""
+      ]
+    },
+    {
+      "file": "vs.png",
+      "duration": 1,
+      "caption": [
+        "",
+        ""
+      ]
+    },
+    {
+      "file": "ending.png",
+      "duration": 1,
+      "caption": [
+        "",
+        ""
+      ]
+    }
+  ]
+}

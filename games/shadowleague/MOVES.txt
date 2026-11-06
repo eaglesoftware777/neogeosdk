@@ -1,0 +1,734 @@
+SHADOW LEAGUE FIGHTING - MOVE LIST
+===================================
+
+Controls: A light punch, B light kick, C heavy punch, D heavy kick.
+Directions are for a fighter facing right: F forward, B back, U up,
+D down, DF down-forward, DB down-back. Turn them round when facing left.
+"A or C" means either button: the heavy one is stronger, the light one faster.
+
+EVERY FIGHTER
+  Walk / guard ...... F / B (hold B or DB to guard high or low)
+  Run / back step ... F, F (hold F to keep running) / B, B
+  Jump / short hop .. U, UF or UB / tap U briefly
+  Long jump ......... UF out of a run
+  Throw ............. close to the opponent, F or B + C or D
+  Throw escape ...... C or D just as you are grabbed
+  Evade roll ........ A + B (B + A + B rolls backwards)
+  Blowback .......... C + D, a knockdown strike
+  Guard cancel ...... while guarding: A + B rolls away (1 power stock),
+                      C + D strikes back (half the spirit gauge)
+  MAX power mode .... B + C (or A + B + C) with 1 power stock: for 12 seconds
+                      hits do a quarter more damage, special moves cancel into
+                      other specials and supers, and one super costs nothing
+                      and hits half as hard again (that ends the mode)
+  Super moves ....... cost 1 power stock (the gauge fills as you hit and get hit)
+
+Buttons pressed together may land a frame or two apart. A special's
+motion may be entered at an easy pace; finish it with the button.
+Light normals chain into each other; most close normals cancel into
+special and super moves when they connect.
+
+FIGHTERS (15 of 44 playable now)
+----------------------------------------
+
+AMARA SILVA  -  BRAZIL, CAPOEIRA
+  Playable
+  Special moves
+    AU BATIDO ..................... F, D, DF + B or D  (overhead, knockdown)
+    MEIA LUA DE COMPASSO .......... D, DF, F + B or D  (low, knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    DANCA DA TEMPESTADE ........... D, DF, F, D, DF, F + B or D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    TESOURA TAKEDOWN .............. close, F or B + C or D
+  Normal attacks
+    standing   A Ginga Slap / B Light Kick / C Heavy Punch / D Martelo
+    crouching  A Crouch Slap / B Crouch Kick (low) / C Rising Strike / D Rasteira Sweep (low)
+    jumping    A Jump Jab / B Jump Kick / C Jump Punch / D Flying Kick
+
+ARUN DEV  -  INDIA, KALARIPAYATTU
+  Playable
+  Special moves
+    TEMPLE LEAP ................... F, D, DF + A or C  (knockdown)
+    SERPENT STRIKE ................ D, DF, F + A or C  (knockdown)
+    COIL SWEEP .................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    KERALA DANCE .................. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Attack / D Flying Kick
+
+BATU TEMUR  -  MONGOLIA, BOKH WRESTLING
+  Playable
+  Special moves
+    STEPPE TORNADO SLAM ........... full circle + A or C  (knockdown, invincible start)
+    IRON BEAR HUG ................. B, DB, D, DF, F + D  (knockdown)
+    BULL TACKLE ................... hold B, then F + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    GRAND KHAN ANNIHILATOR ........ two full circles + A or C  (invincible start)
+    GRAND KHAN ANNIHILATOR ........ full circle + A or C  (invincible start)
+  Command moves and throws
+    IRON HEADBUTT ................. C + D  (knockdown)
+    BOKH THROW .................... close, F or B + C or D
+  Normal attacks
+    standing   A Steppe Chop / B Light Kick / C Heavy Palm / D Heavy Kick
+    crouching  A Crouch Chop / B Crouch Kick (low) / C Crouch Palm / D Sweep (low)
+    jumping    A Jump Chop / B Jump Knee / C Body Press / D Flying Kick
+
+CHEN BAO  -  CHINA, BAJIQUAN
+  Playable
+  Special moves
+    HEAVEN ELBOW .................. F, D, DF + A or C  (knockdown)
+    IRON SHOULDER ................. D, DF, F + A or C  (knockdown)
+    GROUND RUPTURE ................ D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    BAJI EXPLOSION ................ D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Attack / D Flying Kick
+
+CLAIRE MOREAU  -  FRANCE, SAVATE
+  Playable
+  Special moves
+    REVERS SPIRALE ................ F, D, DF + A or C  (knockdown)
+    FOUETTE CHASSE ................ D, DF, F + A or C  (knockdown)
+    PIETINEMENT ................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    BALLET D'ACIER ................ D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Attack / D Flying Kick
+
+DIEGO CRUZ  -  MEXICO, LUCHA LIBRE
+  Playable
+  Special moves
+    MEXICAN TORNADO ............... F, D, DF + A or C  (knockdown)
+    HURRICANRANA .................. D, DF, F + A or C  (knockdown)
+    TORPEDO DIVE .................. D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    AZTEC ECLIPSE ................. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Attack / D Flying Kick
+
+IDRIS ZAHRA  -  MOROCCO, KICKBOXING
+  Playable
+  Special moves
+    DESERT CRESCENT ............... F, D, DF + A or C  (knockdown)
+    ATLAS HOOK .................... D, DF, F + A or C  (knockdown)
+    STEPPING KNEE ................. D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    CASABLANCA FURY ............... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Attack / D Flying Kick
+
+JACK MERCER  -  UNITED STATES, PROFESSIONAL BOXING
+  Playable
+  Special moves
+    RISING BELL ................... F, D, DF + A or C  (knockdown, invincible start)
+    BROOKLYN RUSH ................. D, DF, F + A or C  (knockdown)
+    WEAVE ......................... D, DB, B + B or D  (invincible start)
+  Super moves (1 power stock, or free in MAX mode)
+    FINAL ROUND ................... D, DF, F, D, DF, F + A or C  (invincible start)
+  Command moves and throws
+    HAYMAKER ...................... C + D  (knockdown)
+    CLINCH BREAKER ................ close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Body Jab / C Cross / D Hook
+    crouching  A Low Jab / B Body Blow / C Uppercut / D Liver Dig
+    jumping    A Jump Jab / B Jump Jab / C Overhand / D Hammer
+
+KENJI ARATA  -  JAPAN, TRADITIONAL KARATE
+  Playable
+  Special moves
+    KAKATO OTOSHI ................. F, D, DF + B or D  (overhead, knockdown)
+    RESSEN ZUKI ................... D, DF, F + A or C  (knockdown)
+    KOKORO UKE .................... D, DB, B + A or C  (counter stance)
+  Super moves (1 power stock, or free in MAX mode)
+    ICHIGEKI HISSATSU ............. D, DF, F, D, DF, F + A or C  (invincible start)
+  Command moves and throws
+    YOKO GERI ..................... C + D  (knockdown)
+    ASHI BARAI TSUKI .............. close, F or B + C or D
+  Normal attacks
+    standing   A Kizami Zuki / B Mae Geri / C Gyaku Zuki / D Mawashi Geri
+    crouching  A Crouch Jab / B Low Kick (low) / C Rising Punch / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Punch / D Flying Kick
+
+LIN WEI  -  CHINA, SANDA
+  Playable
+  Special moves
+    DRAGON CATCH .................. F, D, DF + A or C  (knockdown)
+    LIGHTNING JAB-KICK ............ D, DF, F + A or C  (knockdown)
+    SWEEPING SHADOW ............... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    SANDA TYPHOON ................. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Attack / D Flying Kick
+
+MALIK KANE  -  SENEGAL, LAAMB WRESTLING
+  Playable
+  Special moves
+    THUNDER PALM .................. F, D, DF + A or C  (knockdown)
+    SAHARA CHARGE ................. D, DF, F + A or C  (knockdown)
+    LION SLAM ..................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    DAKAR AVALANCHE ............... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Attack / D Flying Kick
+
+MIN-JUN PARK  -  SOUTH KOREA, TAEKWONDO
+  Playable
+  Special moves
+    TWIN CRESCENT KICKS ........... F, D, DF + B or D  (knockdown)
+    BAEKDU AXE KICK ............... D, DB, B + B or D  (overhead, knockdown)
+    FLYING DRAGON KICK ............ D, DF, F + B or D  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    HWARANG TEMPEST ............... D, DF, F, D, DF, F + B or D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    TAEKWON THROW ................. close, F or B + C or D
+  Normal attacks
+    standing   A Lead Jab / B Front Kick / C Heavy Punch / D Hook Kick
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Kick / C Jump Punch / D Flying Kick
+
+RYUHEI GENDA  -  JAPAN, JUDO
+  Playable
+  Special moves
+    DEFENSIVE COUNTER ............. F, D, DF + A or C  (knockdown)
+    SEOI NAGE ..................... D, DF, F + A or C  (knockdown)
+    OSOTO GARI .................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    MASTER JUDO SLAM .............. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Attack / D Flying Kick
+
+SOMCHAI RATTAN  -  THAILAND, MUAY THAI
+  Playable
+  Special moves
+    RISING KNEE ................... F, D, DF + A or C  (knockdown)
+    TIGER ELBOW ................... D, DF, F + A or C  (knockdown)
+    MEKONG SWEEP .................. D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    SIAM BARRAGE .................. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Attack / D Flying Kick
+
+VIKTOR ORLOV  -  UKRAINE, COMBAT SAMBO
+  Playable
+  Special moves
+    IRON COUNTER .................. F, D, DF + A or C  (knockdown)
+    TACTICAL TACKLE ............... D, DF, F + A or C  (knockdown)
+    LEG REAP ...................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    COMMANDO SLAM ................. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  A Crouch Jab / B Crouch Kick (low) / C Rising Strike / D Sweep (low)
+    jumping    A Jump Jab / B Jump Knee / C Jump Attack / D Flying Kick
+
+ADITYA SURYA  -  INDONESIA, PENCAK SILAT
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    SILAT PARRY ................... F, D, DF + A or C  (knockdown)
+    TIGER POUNCE .................. D, DF, F + A or C  (knockdown)
+    HARIMAU SWEEP ................. D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    NUSANTARA WRATH ............... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+AISHA DIALLO  -  GUINEA, DAMBE
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    WARRIOR STEP .................. F, D, DF + A or C  (knockdown)
+    THE SPEAR ..................... D, DF, F + A or C  (knockdown)
+    LEAD HOOK ..................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    DAMBE CRUSH ................... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+ALEKSEI MOROZ  -  KAZAKHSTAN, SAMBO
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    STEPPING ARMLOCK .............. F, D, DF + A or C  (knockdown)
+    STEPPING THROW ................ D, DF, F + A or C  (knockdown)
+    STEP KICK ..................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    STEPPE TITAN .................. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+ATLAS  -  THE VEIL FACILITY, COMBAT ROBOTICS
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    HYDRAULIC PILEDRIVER .......... full circle + A or C  (knockdown, invincible start)
+    TITANIUM SHOCKWAVE ............ D, DF, F + A or C  (knockdown)
+    THRUSTER CHARGE ............... hold B, then F + C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    OVERLOAD CATACLYSM ............ D, DF, F, D, DF, F + A or C  (invincible start)
+  Command moves and throws
+    POWER SLAM .................... close, F or B + C or D
+  Normal attacks
+    standing   A Piston Jab / C Hammer Smash
+    crouching  A Crouch Piston / D Steel Sweep (low)
+    jumping    B Jump Stomp / C Jump Hammer
+
+ECHO  -  PROJECT CHIMERA, IMITATION MATRIX
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    ECHO UPPER .................... F, D, DF + A or C  (knockdown)
+    MIMIC WAVE .................... D, DF, F + A or C  (knockdown)
+    WARP DRIVE .................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    SYNTHETIC REFLECTION .......... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+EL TORO ROJO  -  MEXICO, HEAVY LUCHA LIBRE
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    FLYING BULL ................... F, D, DF + A or C  (knockdown)
+    TORO PRESS .................... D, DF, F + A or C  (knockdown)
+    BULL BOMB ..................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    ROJO MEGAPLEX ................. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+ELENA PETROVA  -  BULGARIA, SPORT WRESTLING
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    ANKLE PICK .................... F, D, DF + A or C  (knockdown)
+    DOUBLE LEG BLAST .............. D, DF, F + A or C  (knockdown)
+    SUPLEX RUSH ................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    GOLD MEDAL COMBO .............. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+FAHRI YILMAZ  -  TURKEY, OIL WRESTLING
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    ANATOLIAN BEAR ................ F, D, DF + A or C  (knockdown)
+    KISBET GRIP ................... D, DF, F + A or C  (knockdown)
+    BULL TACKLE ................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    GRAND OTTOMAN SLAM ............ D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+IRINA VOLKOVA  -  RUSSIA, SYSTEMA
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    BIO-SPIRAL .................... F, D, DF + A or C  (knockdown)
+    WAVE DEFLECTION ............... D, DB, B + A or C  (knockdown)
+    FLOWING PALM .................. D, DF, F + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    SYSTEMA CASCADE ............... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+KAI MANA  -  SAMOA, POLYNESIAN WRESTLING
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    PACIFIC SLAP .................. F, D, DF + A or C  (knockdown)
+    ISLAND TACKLE ................. D, DF, F + A or C  (knockdown)
+    SAMOAN DROP ................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    VOLCANO TSUNAMI ............... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+KIRAN SHAH  -  UNITED KINGDOM, KICKBOXING
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    LONDON HIGH ................... F, D, DF + A or C  (knockdown)
+    CROSS-KNEE FLOW ............... D, DF, F + A or C  (knockdown)
+    PIVOT LOW ..................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    QUEEN'S KNOCKOUT .............. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+KOFI MENSAH  -  GHANA, TRADITIONAL BOXING
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    IRON GUARD .................... F, D, DF + A or C  (knockdown)
+    ACCRA HAMMER .................. D, DF, F + A or C  (knockdown)
+    HEAVY HOOK .................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    GOLD COAST BLAST .............. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+LEILA BEN AMMAR  -  TUNISIA, KICKBOXING
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    SAHARA KNEE ................... F, D, DF + A or C  (knockdown)
+    TIMED JAB ..................... D, DF, F + A or C  (knockdown)
+    MEDITERRANEAN HOOK ............ D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    CARTHAGE ECLIPSE .............. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+LOTUS  -  SOUTHEAST ASIA, ASSASSIN SILAT
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    VIPER CUT ..................... F, D, DF + A or C  (knockdown)
+    SHADOW STEP ................... D, DF, F + A or C  (knockdown)
+    DEFECTION PARRY ............... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    SILENT LOTUS .................. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+LUCAS FERREIRA  -  BRAZIL, BRAZILIAN JIU-JITSU
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    ARMBAR SNAP ................... F, D, DF + A or C  (knockdown)
+    GUARD PULL .................... D, DF, F + A or C  (knockdown)
+    BUTTERFLY SWEEP ............... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    GRACIE FINISHER ............... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+MAD DOG MASON  -  UNITED STATES, BARE-KNUCKLE BRAWLING
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    MAD RUSH ...................... F, D, DF + A or C  (knockdown)
+    HEADBUTT ...................... D, DF, F + A or C  (knockdown)
+    DIRTY LOW ..................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    BRAWL APOCALYPSE .............. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+MAIA KORHONEN  -  FINLAND, COMBAT WRESTLING
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    NORDIC TRAP ................... F, D, DF + A or C  (knockdown)
+    COLD COUNTER .................. D, DB, B + A or C  (knockdown)
+    HIP TOSS ...................... D, DF, F + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    HELSINKI LOCK ................. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+MASTER HAYATO  -  JAPAN, OLD KARATE / JUJUTSU
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    OLD JUJUTSU PARRY ............. F, D, DF + A or C  (knockdown)
+    ONE PUNCH KNOCKOUT ............ D, DF, F + A or C  (knockdown)
+    ANCIENT SWEEP ................. D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    TRUE MASTER ESSENCE ........... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+MAYA SANTOS  -  PHILIPPINES, PANANTUKAN
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    LOW TRAP ...................... F, D, DF + A or C  (knockdown)
+    BICEP DESTRUCTION ............. D, DB, B + A or C  (knockdown)
+    MANILA ELBOW .................. D, DF, F + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    KALI STORM .................... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+MIRAGE  -  PROJECT CHIMERA, ADAPTIVE COMBAT
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    NEURAL LEAP ................... F, D, DF + A or C  (knockdown)
+    ADAPTIVE BLADE ................ D, DF, F + A or C  (knockdown)
+    OPTICAL REFLECTION ............ D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    CHIMERA SIMULATION ............ D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+NIRAN VONG  -  LAOS, MUAY LAO
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    SPEAR KNEE OF VIENTIANE ....... F, D, DF + B or D  (knockdown)
+    SPINNING BACK ELBOW ........... D, DF, F + A or C  (knockdown)
+    MEKONG RIVER PARRY ............ D, DB, B + A or C  (counter stance)
+  Super moves (1 power stock, or free in MAX mode)
+    NAGA AWAKENING STRIKE ......... D, DF, F, D, DF, F + B or D  (invincible start)
+  Command moves and throws
+    CLINCH KNEE THROW ............. close, F or B + C or D
+  Normal attacks
+    standing   A Lead Elbow / B Teep Push Kick
+    crouching  A Crouch Jab / B Low Shin Kick (low) / D Sweep (low)
+    jumping    B Jump Knee / C Jump Elbow
+
+NOAH WILLIAMS  -  CANADA, KYOKUSHIN KARATE
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    ROUGH ROUNDHOUSE .............. F, D, DF + A or C  (knockdown)
+    IRON CHEST .................... D, DF, F + A or C  (knockdown)
+    SEIKEN LOW .................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    MOUNTAIN SPIRIT ............... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+SOKHA VANN  -  CAMBODIA, PRADAL SEREY
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    ANGKOR RISING ................. F, D, DF + A or C  (knockdown)
+    SPINNING ELBOW ................ D, DB, B + A or C  (knockdown)
+    LOW CHOP KICK ................. D, DF, F + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    TEMPLE TEMPEST ................ D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+THABO NKOSI  -  SOUTH AFRICA, BOXING
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    SHUFFLE HOOK .................. F, D, DF + A or C  (knockdown)
+    FLICKER JAB ................... D, DF, F + A or C  (knockdown)
+    PIVOT CROSS ................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    JOBURG LIGHTNING .............. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+TOMAS VEGA  -  SPAIN, FULL-CONTACT KARATE
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    FLAME AXE ..................... F, D, DF + A or C  (knockdown)
+    TORO PUNCH .................... D, DF, F + A or C  (knockdown)
+    USHIRO GERI ................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    IBERIAN TEMPEST ............... D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+VIPER  -  PROJECT CHIMERA, COMBAT DROID SPEED
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    CYBER SPIRAL .................. F, D, DF + A or C  (knockdown)
+    VIPER FLASH ................... D, DF, F + A or C  (knockdown)
+    PREDICTIVE EVADE .............. D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    ALGORITHM VELOCITY ............ D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+XIAO MEI  -  CHINA, WING CHUN
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    PAK SAO PARRY ................. F, D, DF + A or C  (knockdown)
+    CHAIN PUNCH ................... D, DF, F + A or C  (knockdown)
+    CENTER KICK ................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    WING CHUN FLURRY .............. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+ZARA KHAN  -  PAKISTAN, PEHLWANI
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    GADA CRUSH .................... F, D, DF + A or C  (knockdown)
+    KUSTHI LIFT ................... D, DF, F + A or C  (knockdown)
+    CLINCH TOSS ................... D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    LAHORE AVALANCHE .............. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack
+
+ZERO  -  UNKNOWN, CONDITIONED HYBRID
+  Locked: shown on the select screen once the painted set is in
+  Special moves
+    MEMORY SURGE .................. F, D, DF + A or C  (knockdown)
+    FRACTURED STRIKE .............. D, DF, F + A or C  (knockdown)
+    UNSTABLE WARP ................. D, DB, B + A or C  (knockdown)
+  Super moves (1 power stock, or free in MAX mode)
+    PROJECT OVERLOAD .............. D, DF, F, D, DF, F + C or C + D  (invincible start)
+  Command moves and throws
+    BLOWBACK ...................... C + D  (knockdown)
+    THROW ......................... close, F or B + C or D
+  Normal attacks
+    standing   A Jab / B Low Kick (low) / C Straight / D High Roundhouse
+    crouching  D Sweep (low)
+    jumping    C Jump Attack

@@ -1,0 +1,33 @@
+; 3_fm_example_d - In the Hall of the Mountain King (Grieg, A minor)
+; The arcade chase tune: a four-bar creep, answered a fifth higher, both
+; played twice.  FM 4 in the sound tour and the lead of MML track D,
+; whose SSG bass walks the same sixteen bars.
+
+T150
+I7
+V12
+O3
+L8
+
+; first strain, twice
+a b > c d e c e4
+d+ < b > d+4 d < b > d4
+< a b > c d e c e a
+g e c e g2
+< a b > c d e c e4
+d+ < b > d+4 d < b > d4
+< a b > c d e c e a
+g e c e g2
+
+; the answer a fifth up, twice
+O4
+e f+ g a b g b4
+a+ f+ a+4 a f+ a4
+e f+ g a b g b > e
+d < b g b > e2 <
+e f+ g a b g b4
+a+ f+ a+4 a f+ a4
+e f+ g a b g b > e
+d < b g b > e2 <
+
+~

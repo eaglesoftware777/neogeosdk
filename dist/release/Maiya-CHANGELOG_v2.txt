@@ -1,0 +1,230 @@
+# Maiya: Super Nature Girl — changelog
+
+The ROM sets shared with the NeoGeoSDK v1.7.1 pre-release. The SDK keeps its
+own version; Maiya's ROMs are numbered on their own (`_v1`, `_v2`, ...).
+
+## v2 (2026-10-03) — everything since v1
+
+v1 was built on 2026-09-29. v2 is that game made smoother, cleaner and
+safer to boot, on every system it targets.
+
+### Smoother play
+
+- **A steady frame rate.** Every stage now runs at about 59 frames a
+  second. Measured before this work, the game overran its frame on 24–89%
+  of frames (50–59 fps, with visible slowdowns). In v2 that is 0–4%, and in
+  play nearly none. Measured over every stage's road and every guardian's
+  arena: 23 scenarios of 3,600 frames each.
+- **No half-drawn frames.** Sprites and HUD text are written to video
+  memory during the vertical blank, all at once. The screen is never drawn
+  from sprite tables halfway through an update, which removes tearing and
+  one-frame glitches when many things move.
+- **Sound never holds the game up.** Sound commands queue and go out while
+  the game keeps running. In v1 each one waited for the sound driver's
+  reply, up to 38,000 cycles when the reply was missed (as in MAME). All
+  341 bytes of a test run were checked arriving at the Z80, none lost.
+- **Characters keep their sprites between frames.** Only what changed
+  (position, frame, palette, flip, size) reaches video memory, instead of
+  the whole character every frame.
+- **No sprite flicker between equal-height characters.** Two characters at
+  the same height used to swap drawing order; now they keep it.
+- **At most 78 sprites on a line,** measured on every stage, so no
+  sprite drops out (the hardware draws 96).
+- **HUD text** writes only the characters that changed.
+- **Faster fades:** a fade's colour costs 78 cycles instead of 200.
+- **Creature animations** use the 68000's own division instead of slow
+  library calls (20 a frame on the Sunken Reef).
+- No library multiply or divide is left in a frame's work.
+
+### Clean scene changes
+
+- **No glitches between screens.** Every scene change now happens behind a
+  fade. The old screen fades to black (white for the chooser), the new one
+  is built while nothing shows, and it fades up whole. This covers:
+  - Start to the chooser;
+  - the chooser to the reminders, and on to the first mission;
+  - each mission start, and a retry;
+  - a guardian's defeat to the flight over the healed valley;
+  - the bonus round and the elder's briefing;
+  - the ending.
+
+  This removes, among others:
+  - a torn half-white frame after Start;
+  - the chooser's title left on a black frame;
+  - a leftover sprite under the reminders;
+  - a mission's painting and HUD appearing piece by piece;
+  - a few frames of scrambled tiles before the flight over the healed
+    valley.
+- **A beaten guardian** lies grey, then goes in a puff of dust and sparks.
+  It no longer darkens into a black shape on the road.
+- **The chooser has a clock:** 15 seconds to choose (shown top right),
+  then the girl picked answers the call.
+- **The reminders move on by themselves.** "How to play" and the story
+  each stay 10 seconds, or until a button.
+- **See their moves.** On "how to play", A and B together brings out Maiya
+  and Luna face to face over the forest. Both play each move, with its
+  name and keys: run, jump, whip, thorn, dash, Rose Blossom Surge, Rising
+  Bloom, the high leap and the Secret Art. Any button goes back.
+
+### Living backgrounds
+
+- **No more seam.** Each valley's far painting used to wrap every 512
+  pixels with a hard line where its two ends met, cross-faded into a
+  doubled image. It now wraps along a cut that follows where its ends look
+  alike, so the join can't be seen and nothing is doubled.
+- **Longer paintings, less repetition.**
+  - Five valleys show their whole painted band, about 1,100-1,200 pixels
+    of scenery, before it comes round again: the forest, the World Tree's
+    marsh, the works, the Sky Road and the citadel.
+  - The other seven are twice as long as before, their painting followed
+    by its mirror image, which meets it edge to edge.
+  - The far layer streams the painting a column at a time as she travels.
+- **Ground to walk on.** The road is the painting's own ground, wrapping
+  without a seam, wherever the far painting goes.
+
+### Guardians
+
+- **The health bar tells the truth.** It closes a quarter of the gap each
+  frame instead of a pixel at a time, and keeps moving after the last
+  blow. Before, a big hit could leave it a second behind, and it froze
+  where it was when the guardian fell, so guardians seemed to die with
+  health left.
+- **The fliers fall sooner:**
+  - the Smog Dreadnought on the Sky Road takes 6 stomps' worth, down
+    from 10;
+  - the Blizzard Owl and the Iron Vulture take 5, down from 6.
+
+### Her movement
+
+- **A real run.** The sheet's four sprint poses all had the same leg in
+  front and both fists up: she glided in one frozen stride. The run is now
+  two strides — contact, legs passing under her, push-off, flight — with
+  two more poses cut from her sheet. Her arms change with her legs, and she
+  is the same size in every frame. She dips as a foot lands and while her
+  legs pass, and rises in the flight between strides.
+- **Starting and turning.** From a standstill she starts on a push-off.
+  Turning at speed, she brakes low for a moment before running the other
+  way, instead of running backwards.
+- **The whole jump.** Push-off, rising, the top of the arc, falling —
+  four poses where there were two.
+- **No shadows.** The checkered shadows under Maiya, Luna, the creatures
+  and the guardians are gone.
+
+### New effects and feel
+
+- **Heat haze** over the Golden Savanna: the horizon shimmers in 8-line
+  bands, a raster effect on the display timer, at no cost to the frame
+  rate.
+- **Squash and stretch.** On landing Maiya squashes to 80% of her height
+  and recovers over six frames. Springing up, she stretches tall and thin.
+  Struck, both; striking, a little shorter. Her feet and her middle stay
+  in place throughout.
+- **Her run has weight:** on each footfall she dips a little (97% walking,
+  95% running), so the run bobs twice a stride.
+- **Living water and sky:** where a stage has a sky or waterfall pair of
+  blues, they trade places every 16 frames, which reads as flowing water.
+  It is off in guardian arenas.
+- **Waterfall colours** stay in the falls' own palettes and no longer tint
+  other scenery.
+- **Cleaner small art:** flowers, mushrooms, coins and beetles were touched
+  up at native resolution.
+
+### Gameplay
+
+- **The flying guardian is smaller,** with its hit regions scaled to match.
+- **The flight's arena** begins earlier, so entering it no longer snaps
+  Maiya backward.
+- **Character select** updates only what changes on screen.
+
+### Saves
+
+- **Memory card saves on the AES.** Scores, names and progress go to the
+  card, in a file called "MAIYA SCORES" (two card blocks).
+  - The game reads the card at power-on and writes it when something is
+    worth keeping: a game started, a name entered, the journey finished.
+  - A blank card is formatted before the first save, never otherwise.
+  - With no card, the game simply runs on.
+  - Arcade boards keep their backup RAM as before.
+- **Card saves under EagleBIOS too.** EagleBIOS now has a memory card
+  routine that uses the same card layout as the console BIOS. One card
+  carries its saves between EagleBIOS, the original AES BIOS and the
+  Universe BIOS.
+- **The MAME AES launchers insert a memory card** (tests\aes\memcard.bin),
+  so console saves outlast MAME.
+
+### Booting and sound on every system
+
+- **MVS sound fix.** Sound on MVS boards, including after a multi-slot
+  switch, and the coin and start sounds now work. In v1 they could go
+  silent.
+  - The sound driver keeps the system ROM's commands apart from the game's
+    ($01 slot-switch wait, $02 eye-catcher, $03 reset, $09 game start).
+  - A game byte that looks like a system command is sent escaped, so the
+    two can never be confused.
+  - A newly selected cartridge restarts its sound cleanly.
+  - This first shipped as separate v1.7.1 test images; v2 has it in both
+    builds.
+- **Clean Universe BIOS splash.** The splash shows the Maiya logo on AES
+  and on MVS. On MVS, v1 drew stray tiles there.
+- **A simple AES boot:** one logo, no jingle, the same under EagleBIOS,
+  the Universe BIOS and the original console BIOS. The game's own "Eagle
+  Software presents" intro follows.
+- **No garbled boot screens.** The system boot area and the game's font
+  and HUD are kept apart:
+  - The game's font and HUD sit in their own FIX banks.
+  - The boot logo has its own sprite bank ($49).
+  - The system ROM's tiles are left alone, so its screens and menus read
+    correctly.
+- **The Universe BIOS in-game menu** opens during play:
+  - MVS: Start + Coin, or Start + A + B + C.
+  - AES: Start + Select, or Start + A + B + C.
+
+### Files and packaging
+
+- **NeoSD images** are packed with the hardware alignment fixed after v1:
+  P, S and M padded to 64 KiB, V padded to 8 MiB, C to 256 KiB. They have
+  the same layout and size as v1 (P 512 KiB, S/M 128 KiB, V 8 MiB,
+  C 8 MiB).
+- **Darksoft folders** for both builds use the v1 layout. They are checked
+  to turn back into the exact MAME ROMs.
+- **MAME zips with EagleBIOS** for both builds, MVS and AES (v1 had
+  only the AES one).
+- **No original or third-party BIOS in any package.** v1's AES zips held
+  the Universe BIOS or SNK's console BIOS. v2 carries only EagleBIOS, the
+  open NeoGeoSDK system ROM; the .neo and Darksoft files carry no BIOS at
+  all.
+- Every v2 file is listed with its size, CRC32 and SHA-256 in
+  `Maiya-MANIFEST_v2.txt`.
+
+### Behind the scenes
+
+- **The engine's public interface is frozen** (Framework 1.0), so later
+  engine work can't break the game's calls.
+- **One command, `make neo`,** builds the MAME sets and NeoSD images for
+  both platforms.
+- **Builds and tests run on EagleBIOS.**
+- **Regression scenarios** (walking, climbing, guardians, continues, the
+  tray, pits, flight) pass on it.
+- **Checked in MAME** on MVS and AES, under EagleBIOS, the Universe BIOS
+  4.0 and the original system ROMs: boot, title, play, sound and the
+  in-game menu.
+
+### Still open
+
+- Real NeoSD, Darksoft, MVS and AES hardware: reports welcome.
+- A run drawn frame by frame (eight poses of her own) would move better
+  still than the cycle made from her sheet. Deeper parallax needs layered
+  paintings, and the seven mirrored valleys would gain from paintings
+  as long as the others'.
+
+## v1 (2026-09-28/29)
+
+The first preview:
+- twelve valleys, two heroines, guardians, bonus rounds and the attract
+  mode;
+- MAME packages with EagleBIOS and with other BIOSes;
+- NeoSD images for MVS and AES;
+- Darksoft folders.
+
+Later v1.7.1 test images (MVS sound fix, AES Universe BIOS fix, v3 tests)
+were stepping stones to v2.

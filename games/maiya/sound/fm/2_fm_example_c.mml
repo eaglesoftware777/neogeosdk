@@ -1,0 +1,21 @@
+; 2_fm_example_c - Luna's fanfare, played once when she is chosen
+;
+; The same shape as Maiya's call, but night to her day: a bell phrase
+; that starts in A minor and resolves up to a bright A. About two
+; seconds, FM only, no loop mark.
+
+T110
+I1
+V13
+O4
+L16
+
+A > C E A
+L8
+> C < B > E
+L16
+D C
+L4
+< B
+L2
+> A

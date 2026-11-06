@@ -23,22 +23,37 @@
 #include "ng_depthfx.h"
 #include "macro.h"
 #include "neogeo.h"
+#include "ng_rand.h"
 
 static uint8_t ng_df_fog_near;
 static uint8_t ng_df_fog_mid;
 static uint8_t ng_df_fog_far;
 static uint8_t ng_df_fog_very_far;
 
-/* Cheap xorshift16 for starfield — no stdlib rand */
-static uint16_t ng_df_noise = 0xACE1;
+/* The starfield's noise is drawn from the engine's one generator, so a
+ * game's ng_rand_seed() replays the stars too. An alias, not a wrapper
+ * function: every game links this module, and it stays no larger. */
+#define ng_df_xorshift() ng_rand()
 
-static uint16_t NEOGEO_USER ng_df_xorshift(void)
+#ifdef NG_SHOOTER
+NGShooterProjection NEOGEO_USER ng_depthfx_shooter_project(const NGShooterCamera *camera,
+                           int16_t x,int16_t y,uint8_t band)
 {
-    ng_df_noise ^= (uint16_t)(ng_df_noise << 7);
-    ng_df_noise ^= (uint16_t)(ng_df_noise >> 9);
-    ng_df_noise ^= (uint16_t)(ng_df_noise << 8);
-    return ng_df_noise;
+    /* Q8 lateral/parallax weights and deliberate stable shrink presets.
+     * The ten semantic bands map to the existing six actor sort bands. */
+    static const uint16_t weight[NG_SHOOTER_DEPTH_BANDS]={32,64,256,256,128,64,0,0,384,0};
+    static const uint8_t scale[NG_SHOOTER_DEPTH_BANDS]={255,255,255,255,159,255,255,223,255,255};
+    static const uint8_t render[NG_SHOOTER_DEPTH_BANDS]={0,0,0,1,0,2,3,4,4,5};
+    NGShooterProjection out;int32_t dx,dy;
+    if(band>=NG_SHOOTER_DEPTH_BANDS) band=NG_SHOOTER_PLAYER_AIR;
+    dx=camera ? camera->x_q8*weight[band] : 0;
+    dy=camera ? camera->y_q8*weight[band] : 0;
+    /* Keep both directions symmetric around the fixed camera pivot. */
+    out.x=(int16_t)(x-(dx<0 ? -((-dx)>>16) : dx>>16));
+    out.y=(int16_t)(y-(dy<0 ? -((-dy)>>16) : dy>>16));
+    out.scale=scale[band];out.render_band=render[band];return out;
 }
+#endif
 
 void NEOGEO_USER ng_depthfx_init(void)
 {

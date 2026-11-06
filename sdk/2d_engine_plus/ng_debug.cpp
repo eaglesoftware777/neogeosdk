@@ -6,6 +6,7 @@
  */
 
 #include "ng_debug.hpp"
+#include "ng_perf_impl.h"
 
 /* Prevent the header's static stubs from being seen here */
 #undef ng_debug_init

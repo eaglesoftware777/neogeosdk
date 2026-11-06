@@ -158,6 +158,15 @@ extern "C" {
  
 //RAM locations:
 #define BIOS_SYSTEM_MODE   0x10FD80
+/*
+ * BIOS_MVS_FLAG and BIOS_COUNTRY_CODE (read by sdk/cabinet/ng_sys.c):
+ *   NeoGeoDev wiki, page "BIOS RAM locations": $10FD82 BIOS_MVS_FLAG, byte,
+ *   "System type. 0:AES, 0x80:MVS"; $10FD83 BIOS_COUNTRY_CODE, byte,
+ *   "0:Japan, 1:USA, 2:Europe".
+ *   MAME, src/mame/snk/neogeo.cpp: the hardware bit the system ROM takes
+ *   the type from, bit 15 of the word at 0x380000 (port SYSTEM on the
+ *   arcade driver, IN2 on the console one), "Hardware type (AES=0, MVS=1)".
+ */
 #define BIOS_MVS_FLAG      0x10FD82
 #define BIOS_COUNTRY_CODE  0x10FD83
 #define BIOS_GAME_DIP      0x10FD84   //Start of soft DIPs settings (up to 10FD93);

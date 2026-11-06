@@ -22,7 +22,15 @@ the BIOS/demo flow, and diagnostic tools.
 - Each cell is one 8x8 S1 tile.
 - Palette is limited to 0..15.
 - Blank cells use tile `$00FF` by default, matching the BIOS clear pattern.
-- Cached writes avoid rewriting unchanged FIX cells every frame.
+- Cached writes avoid rewriting unchanged FIX cells every frame. The engine's
+  `ng_fix` (`sdk/2d_engine/ng_fix.h`) keeps every cell's full map word, so a
+  cell is written only when its word changes. Under `NG_VRAM_DEFER` the changed
+  cells queue as runs along a row and are written in the vertical blank.
+- The cache only knows what went through it. After a direct `clearFix()` or
+  `fixtext_out()`, call `ng_fix_clear()` or `ng_fix_invalidate_all()`;
+  `ng_scene_clean()` does.
+- To redraw a line, build it whole and write it once: clearing it first and
+  then writing rewrites every cell.
 
 ## Basic text
 

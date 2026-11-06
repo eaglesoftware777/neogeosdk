@@ -1,7 +1,7 @@
 #ifndef DRIVER_DEFS_H
 #define DRIVER_DEFS_H
 
-#define DRIVER_READY_VALUE             0x01
+#define DRIVER_READY_VALUE             0x80
 
 #define DRIVER_FIFO_MASK               0x1F
 #define DRIVER_ADPCMA_CHANNEL_COUNT    6

@@ -1,0 +1,734 @@
+{
+  "passed": true,
+  "frames": [
+    {
+      "model": "f16",
+      "pose": "bank_01",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "bank_02",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "bank_03",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "bank_04",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "bank_05",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "bank_06",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "bank_07",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "recovery_08",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "recovery_09",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "recovery_10",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "boost_11",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "boost_12",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "damage_13",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "damage_14",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "damage_15",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "damage_16",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "damage_17",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "damage_18",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "damage_19",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "destruction_20",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "destruction_21",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "destruction_22",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "destruction_23",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "aerobatics_24",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "aerobatics_25",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "aerobatics_26",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f16",
+      "pose": "aerobatics_27",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "bank_01",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "bank_02",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "bank_03",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "bank_04",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "bank_05",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "bank_06",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "bank_07",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "recovery_08",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "recovery_09",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "recovery_10",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "boost_11",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "boost_12",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "damage_13",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "damage_14",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "damage_15",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "damage_16",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "damage_17",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "damage_18",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "damage_19",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "destruction_20",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "destruction_21",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "destruction_22",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "destruction_23",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "aerobatics_24",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "aerobatics_25",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "aerobatics_26",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f35",
+      "pose": "aerobatics_27",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "bank_01",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "bank_02",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "bank_03",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "bank_04",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "bank_05",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "bank_06",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "bank_07",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "recovery_08",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "recovery_09",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "recovery_10",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "boost_11",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "boost_12",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "damage_13",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "damage_14",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "damage_15",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "damage_16",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "damage_17",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "damage_18",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "damage_19",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "destruction_20",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "destruction_21",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "destruction_22",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "destruction_23",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "aerobatics_24",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "aerobatics_25",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "aerobatics_26",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    },
+    {
+      "model": "f15",
+      "pose": "aerobatics_27",
+      "indexed_roundtrip": true,
+      "pivot": [
+        24,
+        24
+      ]
+    }
+  ]
+}

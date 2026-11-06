@@ -1,0 +1,20 @@
+; 5_fm_example_f - Fur Elise (Beethoven, A minor) on the warm bell patch
+; The opening theme and its answer; the bell decay carries the rests.
+
+T100
+I1
+V12
+O5
+L16
+
+; theme
+e d+ e d+ e < b > d c < a8 r16 c e a b8 r16 e g+ b > c8 r16 < e > e d+
+e d+ e < b > d c < a8 r16 c e a b8 r16 e > c < b a8 r16
+; answer
+b > c d e8 r16 < g > f e d8 r16 < f > e d c8 r16 < e > d c < b8 r16 e > e r16
+e > e < d+ e r16 d+
+; theme again, closing on the tonic
+e d+ e < b > d c < a8 r16 c e a b8 r16 e g+ b > c8 r16 < e > e d+
+e d+ e < b > d c < a8 r16 c e a b8 r16 e > c < b a4 r8
+
+~

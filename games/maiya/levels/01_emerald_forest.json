@@ -1,0 +1,410 @@
+{
+  "name": "EMERALD FOREST",
+  "width": 3840,
+  "background": 0,
+  "music": 1,
+  "mechanic": "none",
+  "pit": "water",
+  "blocks": "grass",
+  "climb": "vine",
+  "posted": "none",
+  "gate_x": 3200,
+  "landmark": "forest",
+  "key": {
+    "x": 1224,
+    "y": 60
+  },
+  "hideout": {
+    "x": 2624,
+    "y": 80,
+    "hint": "KNEEL ON THE ARCH PAST LOG CAMP"
+  },
+  "guardian": {
+    "name": "CHAINSAW BEETLE",
+    "style": "beetle",
+    "hp": 4,
+    "hint": "STRIKE THE BEETLE WHEN IT LANDS",
+    "taunt": "I FELLED WHAT TOOK AGES TO GROW!",
+    "reply": "THE FOREST OUTLIVES YOUR BLADES!"
+  },
+  "art": {
+    "kind": "blossom",
+    "name": "ROSE BLOSSOM STORM",
+    "words": "MAIYA: ROSE WIND, CARRY ME!"
+  },
+  "secret_hint": "A ROSE SLEEPS ABOVE THE ARCH",
+  "sunboy": [
+    "MAIYA! THE FOREST BREATHES AGAIN",
+    "THE MARSH FALLS ARE NEXT. HURRY"
+  ],
+  "healed": [
+    "THE OLD TREES BREATHE FREELY AGAIN",
+    "THE LOGGERS' SAWS FALL SILENT"
+  ],
+  "briefing": [
+    "FIND THE SUN KEY IN HIGH BOUGHS",
+    "OPEN THE GATE. FACE THE BEETLE."
+  ],
+  "platforms": [
+    {
+      "x": 448,
+      "y": 144,
+      "w": 64
+    },
+    {
+      "x": 608,
+      "y": 112,
+      "w": 64
+    },
+    {
+      "x": 736,
+      "y": 88,
+      "w": 96
+    },
+    {
+      "x": 944,
+      "y": 120,
+      "w": 64
+    },
+    {
+      "x": 1008,
+      "y": 112,
+      "w": 64
+    },
+    {
+      "x": 1184,
+      "y": 88,
+      "w": 112
+    },
+    {
+      "x": 1504,
+      "y": 136,
+      "w": 48
+    },
+    {
+      "x": 1632,
+      "y": 104,
+      "w": 64
+    },
+    {
+      "x": 1792,
+      "y": 72,
+      "w": 96
+    },
+    {
+      "x": 2160,
+      "y": 128,
+      "w": 112
+    },
+    {
+      "x": 2336,
+      "y": 96,
+      "w": 80
+    },
+    {
+      "x": 2576,
+      "y": 80,
+      "w": 112
+    },
+    {
+      "x": 2768,
+      "y": 120,
+      "w": 48
+    }
+  ],
+  "encounters": [
+    {
+      "x": 360,
+      "enemy": "slime"
+    },
+    {
+      "x": 640,
+      "enemy": "beetle"
+    },
+    {
+      "x": 760,
+      "enemy": "slime"
+    },
+    {
+      "x": 1360,
+      "enemy": "dartfrog"
+    },
+    {
+      "x": 1540,
+      "enemy": "beetle"
+    },
+    {
+      "x": 1720,
+      "enemy": "acidmoth"
+    },
+    {
+      "x": 1980,
+      "enemy": "sawbot"
+    },
+    {
+      "x": 2160,
+      "enemy": "beetle"
+    },
+    {
+      "x": 2340,
+      "enemy": "sawbot"
+    },
+    {
+      "x": 2520,
+      "enemy": "dartfrog"
+    },
+    {
+      "x": 2720,
+      "enemy": "crow"
+    },
+    {
+      "x": 2920,
+      "enemy": "sawbot"
+    },
+    {
+      "x": 3040,
+      "enemy": "beetle"
+    }
+  ],
+  "archers": [],
+  "hazards": [
+    {
+      "x": 960,
+      "w": 48,
+      "type": "spikes"
+    },
+    {
+      "x": 1152,
+      "w": 48,
+      "type": "pit"
+    },
+    {
+      "x": 1584,
+      "w": 48,
+      "type": "spikes"
+    },
+    {
+      "x": 2080,
+      "w": 48,
+      "type": "spikes"
+    },
+    {
+      "x": 2512,
+      "w": 48,
+      "type": "pit"
+    },
+    {
+      "x": 2912,
+      "w": 48,
+      "type": "spikes"
+    }
+  ],
+  "rescues": [
+    {
+      "x": 600,
+      "who": "elder"
+    },
+    {
+      "x": 1680,
+      "who": "maiden"
+    },
+    {
+      "x": 2380,
+      "who": "spirit"
+    },
+    {
+      "x": 2980,
+      "who": "sunboy"
+    }
+  ],
+  "secrets": [
+    {
+      "x": 480,
+      "y": 104,
+      "type": "chest"
+    },
+    {
+      "x": 640,
+      "y": 72,
+      "type": "rose"
+    },
+    {
+      "x": 1824,
+      "y": 32,
+      "type": "gem"
+    },
+    {
+      "x": 1856,
+      "y": 32,
+      "type": "chest"
+    },
+    {
+      "x": 2608,
+      "y": 40,
+      "type": "rose"
+    },
+    {
+      "x": 2640,
+      "y": 40,
+      "type": "gem"
+    }
+  ],
+  "pickups": [
+    {
+      "x": 700,
+      "y": 168,
+      "kind": "spring"
+    },
+    {
+      "x": 800,
+      "y": 56,
+      "kind": "silver"
+    },
+    {
+      "x": 1216,
+      "y": 48,
+      "kind": "gold"
+    },
+    {
+      "x": 1520,
+      "y": 96,
+      "kind": "flower"
+    },
+    {
+      "x": 1664,
+      "y": 64,
+      "kind": "life"
+    },
+    {
+      "x": 1720,
+      "y": 168,
+      "kind": "veil"
+    },
+    {
+      "x": 1792,
+      "y": 48,
+      "kind": "silver"
+    },
+    {
+      "x": 2176,
+      "y": 88,
+      "kind": "gold"
+    },
+    {
+      "x": 2368,
+      "y": 56,
+      "kind": "lily"
+    },
+    {
+      "x": 2780,
+      "y": 80,
+      "kind": "charm"
+    },
+    {
+      "x": 2840,
+      "y": 164,
+      "kind": "critter"
+    }
+  ],
+  "decor": [
+    {
+      "x": 150,
+      "y": 160,
+      "kind": "grass"
+    },
+    {
+      "x": 487,
+      "y": 160,
+      "kind": "flowers"
+    },
+    {
+      "x": 825,
+      "y": 160,
+      "kind": "bush"
+    },
+    {
+      "x": 1162,
+      "y": 160,
+      "kind": "mushroom"
+    },
+    {
+      "x": 1500,
+      "y": 160,
+      "kind": "sapling"
+    },
+    {
+      "x": 1837,
+      "y": 160,
+      "kind": "lantern"
+    },
+    {
+      "x": 2175,
+      "y": 160,
+      "kind": "sign"
+    },
+    {
+      "x": 2512,
+      "y": 160,
+      "kind": "rock"
+    },
+    {
+      "x": 2850,
+      "y": 160,
+      "kind": "grass"
+    },
+    {
+      "x": 488,
+      "y": 112,
+      "kind": "mushroom"
+    },
+    {
+      "x": 1052,
+      "y": 80,
+      "kind": "sapling"
+    },
+    {
+      "x": 1796,
+      "y": 104,
+      "kind": "lantern"
+    },
+    {
+      "x": 3080,
+      "y": 160,
+      "kind": "lantern"
+    }
+  ],
+  "vines": [
+    {
+      "x": 640,
+      "top": 112,
+      "bottom": 192
+    },
+    {
+      "x": 1216,
+      "top": 88,
+      "bottom": 192
+    },
+    {
+      "x": 2608,
+      "top": 80,
+      "bottom": 192
+    }
+  ],
+  "npcs": [
+    {
+      "x": 444,
+      "who": "elder",
+      "line": "UP: VINES LEAD TO THE SUN KEY"
+    },
+    {
+      "x": 1472,
+      "who": "maiden",
+      "line": "CLIMB THE VINES TO THE CANOPY"
+    },
+    {
+      "x": 2680,
+      "who": "spirit",
+      "line": "HOLD DOWN TO KNEEL AND REST"
+    }
+  ]
+}

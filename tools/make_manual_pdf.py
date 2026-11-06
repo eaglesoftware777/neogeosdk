@@ -2,7 +2,7 @@
 """
 Build the printable Neo Geo SDK manual.
 
-    python3 tools/make_manual_pdf.py [-o docs/neogeosdk_v1.7.0_manual.pdf]
+    python3 tools/make_manual_pdf.py [-o docs/neogeosdk_v1.7.7_manual.pdf]
 
 Renders the programmer's manual, the bare-metal SDK library reference, and
 the C and C++ 2D engine references into a single PDF with a cover, a table
@@ -31,34 +31,94 @@ from reportlab.platypus import (BaseDocTemplate, CondPageBreak, Frame,
                                 TableStyle)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION = 'v1.7.0'
+VERSION = 'v1.7.7'
 TITLE = 'Neo Geo SDK'
 SUBTITLE = 'Programmer’s Manual and Library Reference'
 PUBLISHER = 'Eagle Software'
 
 # (file, part title, blurb shown on the part divider)
 SECTIONS = [
+    ('docs/releases/ANNOUNCEMENT_v1.7.7.md', 'What Is New in v1.7.7',
+     'Everything since v1.7.0: the games, the engine from Framework 1.0 to '
+     '1.5, EagleBIOS, Neo Geo CD and the release tooling.'),
     ('docs/INTRODUCTION.md', 'Introduction',
      'What the SDK is, the machine it targets, and how to read the rest.'),
-    ('docs/PROGRAMMERS_MANUAL.md', 'Programmer’s Manual',
+    ('docs/PROGRAMMERS_MANUAL.md', 'Programmer\u2019s Manual',
      'The build system, the project layout, the game contract, the engine '
      'tick, the asset pipelines, and the frame budget.'),
+    ('docs/TOOLCHAIN.md', 'Toolchain 3.0',
+     'The 68000 cross-compiler, the Z80 assembler and how the build finds them.'),
+    ('docs/DEPENDENCIES.md', 'Dependencies',
+     'What to install on Linux, WSL and Windows.'),
     ('docs/HELLO_WORLD.md', 'Tutorial: Hello World',
      'From a clean checkout to a running ROM, then into a game of your own.'),
+    ('docs/ADDING_A_GAME.md', 'Adding a New Game',
+     'A game folder, its game.mk, its art and sound, and its ROM identity.'),
+    ('docs/GAMES.md', 'The Games',
+     'The games that build from this repository and what each one shows.'),
+    ('docs/DEMO_CHAPTERS.md', 'The Demo Chapter Map',
+     'The 25 chapters of the showcase ROM.'),
+    ('docs/MAKEFILE_INTEGRATION.md', 'Makefile Integration',
+     'Targets, variables and the per-game hooks.'),
+    ('docs/GDB_GUIDE.md', 'Debugging with GDB',
+     'Symbols, MAME\u2019s debugger and remote debugging.'),
+    ('docs/BANKSWITCH.md', 'ROM Bank Switching',
+     'Program ROMs past 1 MiB.'),
     ('SDK_API_GUIDE.md', 'SDK Library Reference',
      'The bare-metal 68000 helpers declared in sdk/neogeo.h - sprite control '
      'blocks, palettes, VRAM, the FIX layer, timing, input, and sound.'),
-    ('docs/API_2D_ENGINE_C.md', '2D Engine Reference — C',
+    ('docs/GAME_ENGINE_LAYER.md', '2D Engine Layer Guide',
+     'How the engine\u2019s modules fit together and run each frame.'),
+    ('docs/FRAMEWORK_V1.md', 'Framework Stability',
+     'The frozen public calls, how they grow by additions only, and the '
+     'version macros.'),
+    ('docs/NG_FIX_SDK.md', 'The FIX SDK Module',
+     'Text and tiles on the FIX layer.'),
+    ('docs/NEOUNIVERSAL_VIDEO_MODEL.md', 'Scene and Video Ownership',
+     'Who writes video memory, when, and how scenes hand it over.'),
+    ('docs/API_2D_ENGINE_C.md', '2D Engine Reference \u2014 C',
      'Every public call in the plain-C 2D engine, grouped by module.'),
-    ('docs/API_2D_ENGINE_CPP.md', '2D Engine Reference — C++',
+    ('docs/API_2D_ENGINE_CPP.md', '2D Engine Reference \u2014 C++',
      'The C++14 build of the same engine: classes, methods, and how it '
      'relates to the C API.'),
+    ('docs/sprite_groups.md', 'Module Guide: Sprite Groups', ''),
+    ('docs/render_queue.md', 'Module Guide: Render Queue', ''),
+    ('docs/frame_sync.md', 'Module Guide: Frame Sync', ''),
+    ('docs/camera.md', 'Module Guide: Camera', ''),
+    ('docs/depthfx.md', 'Module Guide: Depth FX', ''),
+    ('docs/palette_fx.md', 'Module Guide: Palette FX', ''),
+    ('docs/particles.md', 'Module Guide: Particles', ''),
+    ('docs/raster.md', 'Module Guide: Raster Bands', ''),
+    ('docs/movement.md', 'Module Guide: Swimming and Flight', ''),
+    ('docs/levels.md', 'Module Guide: Level Data', ''),
+    ('docs/game_time.md', 'Module Guide: Game Time', ''),
+    ('docs/saves.md', 'Module Guide: Saves', ''),
+    ('docs/cabinet.md', 'Module Guide: Cabinet', ''),
+    ('docs/ng_rand.md', 'Module Guide: Random Numbers', ''),
+    ('docs/ng_trig.md', 'Module Guide: Trigonometry', ''),
+    ('docs/performance_rules.md', 'Performance Rules', ''),
+    ('docs/GENRE_ENGINES_V1.7.7.md', 'Genre Engines',
+     'Puzzle, mahjong, RPG and beat\u2019em-up cores, chosen per game with '
+     'GAME_GENRE_ENGINE.'),
+    ('docs/fighting.md', 'Fighting Core',
+     'ng_fight: input and motions, fighters as data, cancels, teams, '
+     'strikers, CPU ranks and training.'),
+    ('docs/vertical_shooters.md', 'Vertical Shooters',
+     'ng_shooter: scroll, camera, parallax layers and the strip budget.'),
     ('docs/SOUND_DRIVER.md', 'Sound Driver Reference',
      'The Z80 driver, the YM2610, the command protocol, and the audio '
      'content pipelines.'),
+    ('docs/SOUND_STUDIO_GUIDE.md', 'Sound Studio Guide',
+     'Writing music and effects with the Sound Studio.'),
     ('docs/ARTBOX_PIPELINE.md', 'Graphics Pipeline Reference',
      'PNG to C-ROM: the quantiser, asset ordering, generated outputs, and '
      'Artbox Studio.'),
+    ('docs/DESKTOP_STUDIOS.md', 'Desktop Studios',
+     'Artbox Studio and Sound Studio: projects, workbenches and previews.'),
+    ('docs/NEOGEO_CD_PIPELINE_AND_TESTING_GUIDE.md', 'Neo Geo CD (Experimental)',
+     'Building CD programs, authoring discs and testing them.'),
+    ('docs/releases/VERSIONING_POLICY.md', 'Versioning Policy',
+     'How every released ROM gets one version and keeps it.'),
     ('docs/TOOLS.md', 'Tools and Utilities',
      'Every helper script that ships with the SDK - art conversion, sound '
      'encoding, verification, launchers, installers and the GIMP plug-ins.'),

@@ -1,6 +1,6 @@
 # Programmer's Manual
 
-**Eagle Software · Neo Geo SDK v1.7.0**
+**Eagle Software · Neo Geo SDK v1.7.7**
 
 The working manual for building Neo Geo software with this SDK: the build
 system, the project layout, the game contract, the engine tick, the asset

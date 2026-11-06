@@ -88,7 +88,7 @@ What this means in practice:
   are still direct VRAM writes**, but the engine drives them only from
   inside the per-frame pump immediately after `waitVbl()` returns, so
   the writes complete before the LSPC starts scanning the next frame.
-* A future v1.4.0 may move those big draws fully through the queue;
+* A later release may move those big draws fully through the queue;
   until then, keep custom rendering code aligned with the pump order
   (`waitVbl()` -> draws -> `ng_render_queue_flush()` -> updates).
 

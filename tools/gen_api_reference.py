@@ -21,7 +21,7 @@ C_DIR = os.path.join(ROOT, 'sdk', '2d_engine')
 CPP_DIR = os.path.join(ROOT, 'sdk', '2d_engine_plus')
 DOC_DIR = os.path.join(ROOT, 'docs')
 
-VERSION = 'v1.7.0'
+VERSION = 'v1.7.7 (Framework 1.5)'
 
 # module stem -> (section, one-line purpose, longer note or '')
 MODULES = {
@@ -128,16 +128,52 @@ MODULES = {
     'ng_debug': ('Effects', 'A FIX-layer performance overlay.',
                  'Compile with -DNG_DEBUG_PERF=1 to enable.'),
     'ng_demo_advanced': ('Effects', 'Prebuilt showcase routines used by the demo ROM.', ''),
+    # Added since Framework 1.0, by additions only.
+    'ng_frame_sync': ('Core', 'One finished frame handed from the main loop to the vertical-blank interrupt.',
+                      'Publish after every video change of the frame, then wait until the interrupt has '
+                      'taken it; the interrupt checks its write window and re-entry guard before taking.'),
+    'ng_pause': ('Core', 'Pause, and the freeze under pause, hitstop and slow motion.', ''),
+    'ng_rand': ('Math', 'The engine\'s one deterministic random generator (32-bit xorshift).',
+                'One ng_rand_seed() replays every random choice of the game and the engine in order.'),
+    'ng_trig': ('Math', 'Sine, cosine and atan2 in fixed point, without division.',
+                'Angles are one byte: 256 steps to the full turn, 64 a quarter turn.'),
+    'ng_palette_math': ('Math', 'Colour words: channels, packing, mixing, tint and scale of a 16-colour bank.',
+                        'Neo Geo colour words are not RGB555 (a dark bit and each channel\'s low bit sit '
+                        'apart). Mixing divides by 255 with shifts and adds, exactly.'),
+    'ng_spatial_grid': ('Math', 'A screen-local broad phase: 64-pixel cells, up to 16 fixed IDs.', ''),
+    'ng_sprite_hw': ('Video', 'Sizes of a sprite drawn at a hardware shrink.', ''),
+    'ng_raster': ('Video', 'Raster bands: changes part way down the screen on the line timer (-DNG_RASTER=1).',
+                  'C engine only; see docs/raster.md.'),
+    'ng_char_render': ('Characters', 'The character managers\' shared drawing step.', ''),
+    'ng_move': ('Characters', 'Movement modes: swimming and free flight, steered by the stick.', ''),
+    'ng_shooter': ('Genre engines', 'Vertical shooter core (-DNG_SHOOTER=1): scroll, camera, parallax, strip budget.',
+                   'See docs/vertical_shooters.md.'),
+    'ng_fight': ('Genre engines', 'One-on-one fighting core (-DNG_FIGHT=1).',
+                 'Buffered two-player input with motion recognition, data-driven fighters, cancels, '
+                 'super freeze, projectiles, teams, strikers, CPU ranks, training. See docs/fighting.md '
+                 'and docs/FIGHTING_V1_7_7.md.'),
+    'ng_puzzle': ('Genre engines', 'Board puzzle core (GAME_GENRE_ENGINE = puzzle).',
+                  'See docs/GENRE_ENGINES_V1.7.7.md.'),
+    'ng_mahjong': ('Genre engines', 'Mahjong core: four-seat Hong Kong Old Style and solitaire (GAME_GENRE_ENGINE = mahjong).', ''),
+    'ng_rpg': ('Genre engines', 'Top-down adventure and RPG core (GAME_GENRE_ENGINE = rpg).',
+               'Rooms, exits, party, items, dialogue, environmental puzzles and saves from ROM tables.'),
+    'ng_beatemup': ('Genre engines', 'Belt-scrolling brawler core for one player (GAME_GENRE_ENGINE = beatemup).',
+                    'Waves, a crowd director, grabs, throws, pick-ups and ridable vehicles.'),
+    'ng_engine_plus': ('Core', 'C++ umbrella include for the C++14 engine.', ''),
+    'ng_hw': ('Video', 'The hardware headers with C linkage, for C++ files (include it instead of macro.h and neogeo.h).', ''),
 }
 
-SECTION_ORDER = ['Core', 'Math', 'Video', 'Characters', 'World', 'Effects']
+SECTION_ORDER = ['Core', 'Math', 'Video', 'Characters', 'World', 'Effects', 'Genre engines']
 
 
 def protos_c(path):
     txt = open(path, encoding='utf-8', errors='replace').read()
     txt = re.sub(r'/\*.*?\*/', '', txt, flags=re.S)
     txt = re.sub(r'//[^\n]*', '', txt)
-    flat = re.sub(r'\n\s+', ' ', txt)
+    # Join a prototype's indented continuation lines (spaces and tabs only:
+    # \s would also swallow blank lines and glue the next prototype onto a
+    # preprocessor line, where the match below can't see it).
+    flat = re.sub(r'\n[ \t]+', ' ', txt)
     out = re.findall(
         r'^[A-Za-z_][A-Za-z0-9_ \*]*NEOGEO_USER\s+[A-Za-z0-9_]+\s*\([^;]*\);',
         flat, re.M)

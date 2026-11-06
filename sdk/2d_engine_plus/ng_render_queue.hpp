@@ -6,9 +6,9 @@
  * during or just after VBlank, when the screen is blanked and VRAM is
  * safe to write.
  *
- * All hardware writes are sequential VRAM_ADDR + VRAM_RW pairs, which
- * the 68000 can sustain at roughly 200 words / line of display time.
- * Keep the queue small and prioritised.
+ * Descriptor addresses are VRAM word addresses. Deferred C builds check
+ * the raster budget between commands and retain unfinished work. Other
+ * builds require the caller to provide a sufficiently long safe phase.
  */
 
 #ifndef NG_RENDER_QUEUE_HPP
@@ -21,9 +21,8 @@ extern "C" {
 #endif
 
 
-/* Maximum commands buffered per frame.
- * Each command costs 6 bytes; 128 commands = 768 bytes in RAM.
- * Tune this if RAM is tight — 64 is safe minimum, 256 is comfortable max. */
+/* Maximum commands buffered. RAM cost is capacity * sizeof(NGRenderCmd);
+ * use the target ABI when budgeting alignment. */
 #define NG_RQ_MAX_CMDS   128
 
 /* Palette upload: 16 words (32 bytes) of palette data.
@@ -50,6 +49,12 @@ typedef struct {
     const uint16_t *data;           /* pointer to 16-entry palette */
 } NGPaletteUpload;
 
+typedef struct {
+    uint32_t command_overflows, palette_overflows;
+    uint8_t command_peak, palette_peak;
+} NGRenderQueueStats;
+extern NGRenderQueueStats ng_rq_stats;
+
 void NEOGEO_USER ng_render_queue_init(void);
 
 /* Post a position update for sprite slot (SCB3 + SCB4). */
@@ -64,7 +69,8 @@ void NEOGEO_USER ng_rq_sprite_hide(uint16_t slot);
 /* Post a raw SCB234 write (address is the VRAM word offset). */
 void NEOGEO_USER ng_rq_scb234(uint16_t addr, uint16_t value);
 
-/* Queue a 16-colour palette upload.
+/* Queue a copied 16-colour palette snapshot; the source may be reused
+ * immediately. Repeated loads of the same bank keep the latest colours.
  * palette_addr: word offset into palette RAM (e.g. 0x400000 + index*32 shifted). */
 void NEOGEO_USER ng_rq_palette_upload(uint16_t palette_slot, const uint16_t *data);
 

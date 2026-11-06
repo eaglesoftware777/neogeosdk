@@ -1,0 +1,522 @@
+{
+  "passed": true,
+  "errors": [],
+  "maps": [
+    {
+      "map": "walk_contact_a__far_arm.txt",
+      "opaque_mask_sha256": "227f58f9fa1c3701ba008d7409dddad3b1f047be3f05f72d67794b33b8e99b10",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_contact_a__far_leg.txt",
+      "opaque_mask_sha256": "9f50074e2c61f0a75b45e0fe4831ce6f4cc160d3b060ca1062fb4ddcacd44cb2",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_contact_a__near_leg.txt",
+      "opaque_mask_sha256": "568c711ea9d357a98996fe9e20a5504094c8fef0bd003f447c3b893f1f9bdeae",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_contact_a__torso.txt",
+      "opaque_mask_sha256": "591cebbd09fca1039f8cb5c1f1202cbc1d167e8bd3550b7c7123610dda6e939d",
+      "body_pixels_sha256": "64e4b8a4cc039b2c87c889d0a56a67516d345ef96844ddf201e5d85a0ca5aa0b"
+    },
+    {
+      "map": "walk_contact_a__head_hair.txt",
+      "opaque_mask_sha256": "83d156bcd484c8c528b539710e2e8c748cac52c455450c758afa75e04dee16e4",
+      "body_pixels_sha256": "0b16b60e328108ebfaad8d2e76ca957c3fe6e613401d675e5eb3956c640a4596"
+    },
+    {
+      "map": "walk_contact_a__near_arm.txt",
+      "opaque_mask_sha256": "13c06a76e1b2a72d7527729c30244704f87c4f2a8735ae632c9282b901c563c0",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_down_a__far_arm.txt",
+      "opaque_mask_sha256": "66132eafef3e1a60d0f3ee119908aeb351f1a6b36428f798d8e4cf5fdea6a04d",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_down_a__far_leg.txt",
+      "opaque_mask_sha256": "4bb773084b4cb14e2a7891afe2c6e557e2a3edb180bd8ddde75fdfabe1c20610",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_down_a__near_leg.txt",
+      "opaque_mask_sha256": "cb62c83d300cff0b87d9481b8cfb20748afee50e807bae1321ab42ec8c7094e7",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_down_a__torso.txt",
+      "opaque_mask_sha256": "e5ec481710513c27bbc5dce11c0bea12cc5dc3c98056f2423ddb5eaea604e191",
+      "body_pixels_sha256": "4296902009ee5d93cbb2d1d960589dd5ed7f8ce78995ea9263b9ebdc9222f16b"
+    },
+    {
+      "map": "walk_down_a__head_hair.txt",
+      "opaque_mask_sha256": "16cd6cd67d71e35cb8239a9ef4ad0c3e0e0d38edb48123b6a8dfb516010a27c9",
+      "body_pixels_sha256": "90870b4ce3bcbeb9920121eb1a8e31272e62df99d79985fe317710245d7cdc4c"
+    },
+    {
+      "map": "walk_down_a__near_arm.txt",
+      "opaque_mask_sha256": "e490f071bfc9ead55877a6b87048cc075646611e727cd386df7b7d013ebde98b",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_passing_a__far_arm.txt",
+      "opaque_mask_sha256": "019d668a794b6490ad8f169fac2a0f9b0ca4e9cf295a317c4831ee27fea5df8d",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_passing_a__far_leg.txt",
+      "opaque_mask_sha256": "ce46b9ee6d8abbf9008f18c776e7c9c8223670eae9f47742fc1a33c1c800f62d",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_passing_a__near_leg.txt",
+      "opaque_mask_sha256": "91419f8baaa1fc597a30e132d926372622f2c542adf6e3a570f5fe117454c1d8",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_passing_a__torso.txt",
+      "opaque_mask_sha256": "591cebbd09fca1039f8cb5c1f1202cbc1d167e8bd3550b7c7123610dda6e939d",
+      "body_pixels_sha256": "64e4b8a4cc039b2c87c889d0a56a67516d345ef96844ddf201e5d85a0ca5aa0b"
+    },
+    {
+      "map": "walk_passing_a__head_hair.txt",
+      "opaque_mask_sha256": "83d156bcd484c8c528b539710e2e8c748cac52c455450c758afa75e04dee16e4",
+      "body_pixels_sha256": "0b16b60e328108ebfaad8d2e76ca957c3fe6e613401d675e5eb3956c640a4596"
+    },
+    {
+      "map": "walk_passing_a__near_arm.txt",
+      "opaque_mask_sha256": "b804c9fb627e3b4f5c13aa1dcc63f6191bc537c139abf2a584a3d65e2a123a60",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_up_a__far_arm.txt",
+      "opaque_mask_sha256": "49ad309fe76a2900df6ebc153cb975dc51804314bf6662d168067e59b03f58cb",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_up_a__far_leg.txt",
+      "opaque_mask_sha256": "e8c7dee5d02c741d53e699701c172475a3c3a178842f1c0878a0d9a9b72298b5",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_up_a__near_leg.txt",
+      "opaque_mask_sha256": "5214a5948f637508235eafb9b9ef01ed87d841c8da60a31a38fcdf40e347165f",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_up_a__torso.txt",
+      "opaque_mask_sha256": "1c1e711dcd599b0afb9251d24af1555101bd1dd91d884f5ea9dede044a7d23ad",
+      "body_pixels_sha256": "859c7282d0bebe86f20d3d226e2510a04cc2a99aa1d323910c745948073055d5"
+    },
+    {
+      "map": "walk_up_a__head_hair.txt",
+      "opaque_mask_sha256": "54c8652ca9a107f94c9b253f9115fd061fb148a210d9ab4d8b6eeed73412f62b",
+      "body_pixels_sha256": "9d7a08de366798f3ca58f5e62b99c17511bd9e8c6209c93ac2c2e4d414bf6c7e"
+    },
+    {
+      "map": "walk_up_a__near_arm.txt",
+      "opaque_mask_sha256": "ee241e4b8e207eb43bfc17d425cf7d5bc4b3ee5fafdf9624fdacda744b710652",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_contact_b__far_arm.txt",
+      "opaque_mask_sha256": "13c06a76e1b2a72d7527729c30244704f87c4f2a8735ae632c9282b901c563c0",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_contact_b__far_leg.txt",
+      "opaque_mask_sha256": "568c711ea9d357a98996fe9e20a5504094c8fef0bd003f447c3b893f1f9bdeae",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_contact_b__near_leg.txt",
+      "opaque_mask_sha256": "9f50074e2c61f0a75b45e0fe4831ce6f4cc160d3b060ca1062fb4ddcacd44cb2",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_contact_b__torso.txt",
+      "opaque_mask_sha256": "591cebbd09fca1039f8cb5c1f1202cbc1d167e8bd3550b7c7123610dda6e939d",
+      "body_pixels_sha256": "64e4b8a4cc039b2c87c889d0a56a67516d345ef96844ddf201e5d85a0ca5aa0b"
+    },
+    {
+      "map": "walk_contact_b__head_hair.txt",
+      "opaque_mask_sha256": "83d156bcd484c8c528b539710e2e8c748cac52c455450c758afa75e04dee16e4",
+      "body_pixels_sha256": "0b16b60e328108ebfaad8d2e76ca957c3fe6e613401d675e5eb3956c640a4596"
+    },
+    {
+      "map": "walk_contact_b__near_arm.txt",
+      "opaque_mask_sha256": "227f58f9fa1c3701ba008d7409dddad3b1f047be3f05f72d67794b33b8e99b10",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_down_b__far_arm.txt",
+      "opaque_mask_sha256": "e490f071bfc9ead55877a6b87048cc075646611e727cd386df7b7d013ebde98b",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_down_b__far_leg.txt",
+      "opaque_mask_sha256": "cb62c83d300cff0b87d9481b8cfb20748afee50e807bae1321ab42ec8c7094e7",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_down_b__near_leg.txt",
+      "opaque_mask_sha256": "4bb773084b4cb14e2a7891afe2c6e557e2a3edb180bd8ddde75fdfabe1c20610",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_down_b__torso.txt",
+      "opaque_mask_sha256": "e5ec481710513c27bbc5dce11c0bea12cc5dc3c98056f2423ddb5eaea604e191",
+      "body_pixels_sha256": "4296902009ee5d93cbb2d1d960589dd5ed7f8ce78995ea9263b9ebdc9222f16b"
+    },
+    {
+      "map": "walk_down_b__head_hair.txt",
+      "opaque_mask_sha256": "16cd6cd67d71e35cb8239a9ef4ad0c3e0e0d38edb48123b6a8dfb516010a27c9",
+      "body_pixels_sha256": "90870b4ce3bcbeb9920121eb1a8e31272e62df99d79985fe317710245d7cdc4c"
+    },
+    {
+      "map": "walk_down_b__near_arm.txt",
+      "opaque_mask_sha256": "66132eafef3e1a60d0f3ee119908aeb351f1a6b36428f798d8e4cf5fdea6a04d",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_passing_b__far_arm.txt",
+      "opaque_mask_sha256": "b804c9fb627e3b4f5c13aa1dcc63f6191bc537c139abf2a584a3d65e2a123a60",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_passing_b__far_leg.txt",
+      "opaque_mask_sha256": "91419f8baaa1fc597a30e132d926372622f2c542adf6e3a570f5fe117454c1d8",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_passing_b__near_leg.txt",
+      "opaque_mask_sha256": "ce46b9ee6d8abbf9008f18c776e7c9c8223670eae9f47742fc1a33c1c800f62d",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_passing_b__torso.txt",
+      "opaque_mask_sha256": "591cebbd09fca1039f8cb5c1f1202cbc1d167e8bd3550b7c7123610dda6e939d",
+      "body_pixels_sha256": "64e4b8a4cc039b2c87c889d0a56a67516d345ef96844ddf201e5d85a0ca5aa0b"
+    },
+    {
+      "map": "walk_passing_b__head_hair.txt",
+      "opaque_mask_sha256": "83d156bcd484c8c528b539710e2e8c748cac52c455450c758afa75e04dee16e4",
+      "body_pixels_sha256": "0b16b60e328108ebfaad8d2e76ca957c3fe6e613401d675e5eb3956c640a4596"
+    },
+    {
+      "map": "walk_passing_b__near_arm.txt",
+      "opaque_mask_sha256": "019d668a794b6490ad8f169fac2a0f9b0ca4e9cf295a317c4831ee27fea5df8d",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_up_b__far_arm.txt",
+      "opaque_mask_sha256": "ee241e4b8e207eb43bfc17d425cf7d5bc4b3ee5fafdf9624fdacda744b710652",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_up_b__far_leg.txt",
+      "opaque_mask_sha256": "5214a5948f637508235eafb9b9ef01ed87d841c8da60a31a38fcdf40e347165f",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_up_b__near_leg.txt",
+      "opaque_mask_sha256": "e8c7dee5d02c741d53e699701c172475a3c3a178842f1c0878a0d9a9b72298b5",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "walk_up_b__torso.txt",
+      "opaque_mask_sha256": "1c1e711dcd599b0afb9251d24af1555101bd1dd91d884f5ea9dede044a7d23ad",
+      "body_pixels_sha256": "859c7282d0bebe86f20d3d226e2510a04cc2a99aa1d323910c745948073055d5"
+    },
+    {
+      "map": "walk_up_b__head_hair.txt",
+      "opaque_mask_sha256": "54c8652ca9a107f94c9b253f9115fd061fb148a210d9ab4d8b6eeed73412f62b",
+      "body_pixels_sha256": "9d7a08de366798f3ca58f5e62b99c17511bd9e8c6209c93ac2c2e4d414bf6c7e"
+    },
+    {
+      "map": "walk_up_b__near_arm.txt",
+      "opaque_mask_sha256": "49ad309fe76a2900df6ebc153cb975dc51804314bf6662d168067e59b03f58cb",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_contact_a__far_arm.txt",
+      "opaque_mask_sha256": "227f58f9fa1c3701ba008d7409dddad3b1f047be3f05f72d67794b33b8e99b10",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_contact_a__far_leg.txt",
+      "opaque_mask_sha256": "9fd187c380d6e80ba95237558c5d514504187bee2a7cfa456aae44852fb6d9a0",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_contact_a__near_leg.txt",
+      "opaque_mask_sha256": "6db52a04d675b9b1072a0e90d0308543c3ab023e2af91a6bb7a573e430e3246c",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_contact_a__torso.txt",
+      "opaque_mask_sha256": "591cebbd09fca1039f8cb5c1f1202cbc1d167e8bd3550b7c7123610dda6e939d",
+      "body_pixels_sha256": "64e4b8a4cc039b2c87c889d0a56a67516d345ef96844ddf201e5d85a0ca5aa0b"
+    },
+    {
+      "map": "run_contact_a__head_hair.txt",
+      "opaque_mask_sha256": "83d156bcd484c8c528b539710e2e8c748cac52c455450c758afa75e04dee16e4",
+      "body_pixels_sha256": "0b16b60e328108ebfaad8d2e76ca957c3fe6e613401d675e5eb3956c640a4596"
+    },
+    {
+      "map": "run_contact_a__near_arm.txt",
+      "opaque_mask_sha256": "13c06a76e1b2a72d7527729c30244704f87c4f2a8735ae632c9282b901c563c0",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_down_a__far_arm.txt",
+      "opaque_mask_sha256": "5e21ac888ef5aca896be7f4068021773ea3f7594e41db86d3540327be7597273",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_down_a__far_leg.txt",
+      "opaque_mask_sha256": "3c18decbb8b71a887f192c762095909cd10d86890799b7bbc848b02bc0190178",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_down_a__near_leg.txt",
+      "opaque_mask_sha256": "40bd5526ef5efd65d4aa7580c3105f4ae1e9945fd2c46503e21750fd65bed342",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_down_a__torso.txt",
+      "opaque_mask_sha256": "80c4a34d8d0c03e6566863c475ab4272682eded5159c0618678738e9bcd901a5",
+      "body_pixels_sha256": "c588696f303961bfd5c88da7c251fcc9c5451d6ba9f74b43de5efa635419db9a"
+    },
+    {
+      "map": "run_down_a__head_hair.txt",
+      "opaque_mask_sha256": "37f3829555d79edfb933f4704e8f73168f597d393a3273ed9560a984283b2ef4",
+      "body_pixels_sha256": "a070e2274ce8a143d83bed63c81a71d6977a3ffc0b2c2131c1fabe64e7d69073"
+    },
+    {
+      "map": "run_down_a__near_arm.txt",
+      "opaque_mask_sha256": "af1de8586644402f69df8cac80ae2299b0fd209fa6cbfa0c48b95ddc520c8bb9",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_push_a__far_arm.txt",
+      "opaque_mask_sha256": "019d668a794b6490ad8f169fac2a0f9b0ca4e9cf295a317c4831ee27fea5df8d",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_push_a__far_leg.txt",
+      "opaque_mask_sha256": "3b33f2b348f0398294dfce759b360c5f23d56d3cb61638422910224176c28444",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_push_a__near_leg.txt",
+      "opaque_mask_sha256": "310d1b884d92e0f7e00d6a67158a523151a3fe0495dfe04c18971697735b565a",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_push_a__torso.txt",
+      "opaque_mask_sha256": "591cebbd09fca1039f8cb5c1f1202cbc1d167e8bd3550b7c7123610dda6e939d",
+      "body_pixels_sha256": "64e4b8a4cc039b2c87c889d0a56a67516d345ef96844ddf201e5d85a0ca5aa0b"
+    },
+    {
+      "map": "run_push_a__head_hair.txt",
+      "opaque_mask_sha256": "83d156bcd484c8c528b539710e2e8c748cac52c455450c758afa75e04dee16e4",
+      "body_pixels_sha256": "0b16b60e328108ebfaad8d2e76ca957c3fe6e613401d675e5eb3956c640a4596"
+    },
+    {
+      "map": "run_push_a__near_arm.txt",
+      "opaque_mask_sha256": "b804c9fb627e3b4f5c13aa1dcc63f6191bc537c139abf2a584a3d65e2a123a60",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_flight_a__far_arm.txt",
+      "opaque_mask_sha256": "73bf87772849d2b2c966113ad0e8b47ad80b2a6b4322378523be579c1367656b",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_flight_a__far_leg.txt",
+      "opaque_mask_sha256": "f0b8f15e5ced58dd4692ec9b2e2863b97762ef7f5ad22c18339d6000baf3b742",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_flight_a__near_leg.txt",
+      "opaque_mask_sha256": "7841c872db42f383a26d1f6c2c539ab7953102b72eb932b1c876d1abef697e72",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_flight_a__torso.txt",
+      "opaque_mask_sha256": "1047de436fb878c4c36499d96cf6a5289cbd5d5906692028a1669aad333afdcf",
+      "body_pixels_sha256": "d4249bbdce15b85dea2ab67e50e1cab99dcca5e922a4b6904a75b287337d37b3"
+    },
+    {
+      "map": "run_flight_a__head_hair.txt",
+      "opaque_mask_sha256": "4c8435128155bb896a03baf402bafdddb1c4565143dbff800ee1d8e1e73bf165",
+      "body_pixels_sha256": "fcfdb990272aaa62cb20c960834f484d52accfa2b70398dd5b9951dd0150ed64"
+    },
+    {
+      "map": "run_flight_a__near_arm.txt",
+      "opaque_mask_sha256": "dc2dbc132531ca99853e483e6c7ef68df072d3927e0b00d1f6c267b67dc01266",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_contact_b__far_arm.txt",
+      "opaque_mask_sha256": "13c06a76e1b2a72d7527729c30244704f87c4f2a8735ae632c9282b901c563c0",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_contact_b__far_leg.txt",
+      "opaque_mask_sha256": "6db52a04d675b9b1072a0e90d0308543c3ab023e2af91a6bb7a573e430e3246c",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_contact_b__near_leg.txt",
+      "opaque_mask_sha256": "9fd187c380d6e80ba95237558c5d514504187bee2a7cfa456aae44852fb6d9a0",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_contact_b__torso.txt",
+      "opaque_mask_sha256": "591cebbd09fca1039f8cb5c1f1202cbc1d167e8bd3550b7c7123610dda6e939d",
+      "body_pixels_sha256": "64e4b8a4cc039b2c87c889d0a56a67516d345ef96844ddf201e5d85a0ca5aa0b"
+    },
+    {
+      "map": "run_contact_b__head_hair.txt",
+      "opaque_mask_sha256": "83d156bcd484c8c528b539710e2e8c748cac52c455450c758afa75e04dee16e4",
+      "body_pixels_sha256": "0b16b60e328108ebfaad8d2e76ca957c3fe6e613401d675e5eb3956c640a4596"
+    },
+    {
+      "map": "run_contact_b__near_arm.txt",
+      "opaque_mask_sha256": "227f58f9fa1c3701ba008d7409dddad3b1f047be3f05f72d67794b33b8e99b10",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_down_b__far_arm.txt",
+      "opaque_mask_sha256": "af1de8586644402f69df8cac80ae2299b0fd209fa6cbfa0c48b95ddc520c8bb9",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_down_b__far_leg.txt",
+      "opaque_mask_sha256": "40bd5526ef5efd65d4aa7580c3105f4ae1e9945fd2c46503e21750fd65bed342",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_down_b__near_leg.txt",
+      "opaque_mask_sha256": "3c18decbb8b71a887f192c762095909cd10d86890799b7bbc848b02bc0190178",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_down_b__torso.txt",
+      "opaque_mask_sha256": "80c4a34d8d0c03e6566863c475ab4272682eded5159c0618678738e9bcd901a5",
+      "body_pixels_sha256": "c588696f303961bfd5c88da7c251fcc9c5451d6ba9f74b43de5efa635419db9a"
+    },
+    {
+      "map": "run_down_b__head_hair.txt",
+      "opaque_mask_sha256": "37f3829555d79edfb933f4704e8f73168f597d393a3273ed9560a984283b2ef4",
+      "body_pixels_sha256": "a070e2274ce8a143d83bed63c81a71d6977a3ffc0b2c2131c1fabe64e7d69073"
+    },
+    {
+      "map": "run_down_b__near_arm.txt",
+      "opaque_mask_sha256": "5e21ac888ef5aca896be7f4068021773ea3f7594e41db86d3540327be7597273",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_push_b__far_arm.txt",
+      "opaque_mask_sha256": "b804c9fb627e3b4f5c13aa1dcc63f6191bc537c139abf2a584a3d65e2a123a60",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_push_b__far_leg.txt",
+      "opaque_mask_sha256": "310d1b884d92e0f7e00d6a67158a523151a3fe0495dfe04c18971697735b565a",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_push_b__near_leg.txt",
+      "opaque_mask_sha256": "3b33f2b348f0398294dfce759b360c5f23d56d3cb61638422910224176c28444",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_push_b__torso.txt",
+      "opaque_mask_sha256": "591cebbd09fca1039f8cb5c1f1202cbc1d167e8bd3550b7c7123610dda6e939d",
+      "body_pixels_sha256": "64e4b8a4cc039b2c87c889d0a56a67516d345ef96844ddf201e5d85a0ca5aa0b"
+    },
+    {
+      "map": "run_push_b__head_hair.txt",
+      "opaque_mask_sha256": "83d156bcd484c8c528b539710e2e8c748cac52c455450c758afa75e04dee16e4",
+      "body_pixels_sha256": "0b16b60e328108ebfaad8d2e76ca957c3fe6e613401d675e5eb3956c640a4596"
+    },
+    {
+      "map": "run_push_b__near_arm.txt",
+      "opaque_mask_sha256": "019d668a794b6490ad8f169fac2a0f9b0ca4e9cf295a317c4831ee27fea5df8d",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_flight_b__far_arm.txt",
+      "opaque_mask_sha256": "dc2dbc132531ca99853e483e6c7ef68df072d3927e0b00d1f6c267b67dc01266",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_flight_b__far_leg.txt",
+      "opaque_mask_sha256": "7841c872db42f383a26d1f6c2c539ab7953102b72eb932b1c876d1abef697e72",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_flight_b__near_leg.txt",
+      "opaque_mask_sha256": "f0b8f15e5ced58dd4692ec9b2e2863b97762ef7f5ad22c18339d6000baf3b742",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "run_flight_b__torso.txt",
+      "opaque_mask_sha256": "1047de436fb878c4c36499d96cf6a5289cbd5d5906692028a1669aad333afdcf",
+      "body_pixels_sha256": "d4249bbdce15b85dea2ab67e50e1cab99dcca5e922a4b6904a75b287337d37b3"
+    },
+    {
+      "map": "run_flight_b__head_hair.txt",
+      "opaque_mask_sha256": "4c8435128155bb896a03baf402bafdddb1c4565143dbff800ee1d8e1e73bf165",
+      "body_pixels_sha256": "fcfdb990272aaa62cb20c960834f484d52accfa2b70398dd5b9951dd0150ed64"
+    },
+    {
+      "map": "run_flight_b__near_arm.txt",
+      "opaque_mask_sha256": "73bf87772849d2b2c966113ad0e8b47ad80b2a6b4322378523be579c1367656b",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "stop__far_arm.txt",
+      "opaque_mask_sha256": "019d668a794b6490ad8f169fac2a0f9b0ca4e9cf295a317c4831ee27fea5df8d",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "stop__far_leg.txt",
+      "opaque_mask_sha256": "64b7a557a7fa5dd9cbe3686732f03e387c5e682c8ca428492ce894fc6171a64e",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "stop__near_leg.txt",
+      "opaque_mask_sha256": "21846c040f78d760aca7a00837d3e08a06c97e8cf400839b2b6c9a36276c24cb",
+      "body_pixels_sha256": null
+    },
+    {
+      "map": "stop__torso.txt",
+      "opaque_mask_sha256": "591cebbd09fca1039f8cb5c1f1202cbc1d167e8bd3550b7c7123610dda6e939d",
+      "body_pixels_sha256": "64e4b8a4cc039b2c87c889d0a56a67516d345ef96844ddf201e5d85a0ca5aa0b"
+    },
+    {
+      "map": "stop__head_hair.txt",
+      "opaque_mask_sha256": "83d156bcd484c8c528b539710e2e8c748cac52c455450c758afa75e04dee16e4",
+      "body_pixels_sha256": "0b16b60e328108ebfaad8d2e76ca957c3fe6e613401d675e5eb3956c640a4596"
+    },
+    {
+      "map": "stop__near_arm.txt",
+      "opaque_mask_sha256": "b804c9fb627e3b4f5c13aa1dcc63f6191bc537c139abf2a584a3d65e2a123a60",
+      "body_pixels_sha256": null
+    }
+  ],
+  "checks": [
+    "all 17 silhouettes unchanged",
+    "head and tunic pixels unchanged",
+    "palette, root, pose order, timing unchanged",
+    "only existing skin shade 9 -> highlight 6 changed"
+  ]
+}

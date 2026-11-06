@@ -1,0 +1,21 @@
+{
+  "bust_canvas": [
+    96,
+    160
+  ],
+  "portrait_canvas": [
+    80,
+    96
+  ],
+  "portrait_crop": [
+    8,
+    16,
+    88,
+    112
+  ],
+  "title_canvas": [
+    352,
+    224
+  ],
+  "method": "Native contour and pixel-cluster drawings; integer placements and crops only"
+}

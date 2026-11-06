@@ -2,6 +2,10 @@
 #include "ng_actions.hpp"
 #include "ng_level.hpp"
 #include "ng_sprite_pool.hpp"
+#include "../2d_engine/ng_char_render.h"
+
+static NGSpriteGroup ng_char_groups[NG_MAX_CHARS];
+static uint8_t ng_char_depth_sort = 1u;
 
 static void NEOGEO_USER ng_char_reset_fields(NGCharacter *c);
 static uint8_t ng_palette_owner[64];
@@ -105,8 +109,9 @@ int16_t CharManager::sortY(const NGCharacter *c) const
 uint8_t CharManager::drawsBefore(const NGCharacter *a, const NGCharacter *b) const
 {
     if (a->priority_band != b->priority_band)
-        return (uint8_t)(a->priority_band > b->priority_band);
-    return (uint8_t)(sortY(a) > sortY(b));
+        return (uint8_t)(a->priority_band < b->priority_band);
+    if (!ng_char_depth_sort) return 1u;
+    return (uint8_t)(sortY(a) <= sortY(b));
 }
 
 uint8_t CharManager::depthSort(uint8_t *order, int16_t cam_x, int16_t cam_y) const
@@ -136,6 +141,7 @@ uint8_t CharManager::depthSort(uint8_t *order, int16_t cam_x, int16_t cam_y) con
 void CharManager::init()
 {
     uint8_t i;
+    ng_char_depth_sort = 1u;
 
     for (i = 0; i < NG_MAX_CHARS; i++) {
         pool[i].active        = 0;
@@ -465,7 +471,7 @@ void CharManager::draw()
             break;
         }
 
-        if (c->sprite_first != next_slot) {
+        if (c->sprite_first != next_slot || uploaded_strips[idx] != vis_strips) {
             if (uploaded_first[idx] != 0xffff) {
                 hideUploaded(idx);
                 uploaded_strips[idx] = 0;
@@ -492,46 +498,15 @@ void CharManager::draw()
     for (i = 0; i < count; i++) {
         uint8_t idx = order[i];
         NGCharacter *c = &pool[idx];
-        NGSpriteGroup g;
         uint8_t vis_strips;
 
         vis_strips = c->sprite_strips ? c->sprite_strips : 1;
         if (vis_strips > NG_SPRITE_MAX_STRIPS) vis_strips = NG_SPRITE_MAX_STRIPS;
 
-        g.init(c->sprite_first,
-               vis_strips,
-               c->sprite_height ? c->sprite_height : 1,
-               c->sprite_tile,
-               c->palette);
-        g.setTileStride(c->sprite_stride ? c->sprite_stride : vis_strips);
-        g.setPaletteMap(c->sprite_palette_map);
-        g.setActiveRows(c->sprite_active_rows ? c->sprite_active_rows : g.heightTiles);
-        g.setPos((int16_t)(c->x + c->sprite_offset_x - cam_x),
-                 (int16_t)(c->y + c->sprite_offset_y - cam_y));
-        g.setScale(c->scale_x, c->scale_y);
-        g.setFlip(c->flip_x, c->flip_y);
-
-        /* Tail clear bounded by the slots this char actually used
-         * last frame.  See the C engine companion for the budget
-         * rationale — wiping 32 slots every frame overruns vblank. */
-        if (c->sprite_dirty) {
-            uint8_t prev = uploaded_strips[idx];
-            if (prev > vis_strips) {
-                NGSpriteGroup::hideRange((uint16_t)(c->sprite_first + vis_strips),
-                                        (uint16_t)(prev - vis_strips));
-            }
-            g.upload();
-            uploaded_strips[idx] = vis_strips;
-            uploaded_first[idx]  = c->sprite_first;
-            c->sprite_dirty      = 0;
-        } else {
-            uint8_t prev = uploaded_strips[idx];
-            g.updateTransform();
-            if (prev > vis_strips) {
-                NGSpriteGroup::hideRange((uint16_t)(c->sprite_first + vis_strips),
-                                        (uint16_t)(prev - vis_strips));
-            }
-        }
+        ng_char_sync_group(&ng_char_groups[idx], c, vis_strips,
+                           (uint8_t)(uploaded_first[idx] == 0xffffu), cam_x, cam_y);
+        uploaded_strips[idx] = vis_strips;
+        uploaded_first[idx] = c->sprite_first;
     }
 }
 
@@ -760,6 +735,11 @@ uint8_t NEOGEO_USER ng_char_validate_asset_window(uint16_t tileBase,
 void NEOGEO_USER ng_chars_init(void)
 {
     CharManager::instance().init();
+}
+
+void NEOGEO_USER ng_chars_set_depth_sort(uint8_t enabled)
+{
+    ng_char_depth_sort = enabled ? 1u : 0u;
 }
 
 NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y)

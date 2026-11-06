@@ -3,15 +3,51 @@
 Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
-- Current release: `v1.7.0`
+- Current release: `v1.7.7` — the games release: seven games built on the
+  SDK (Maiya: Super Nature Girl, Sky Lance, Shadow League Fighting, No Signal
+  Z Alpha, Maiya & Luna, Seven Wonders Puzzles, Mahjong Demo), four genre
+  engines, the fighting core, EagleBIOS and an experimental Neo Geo CD
+  backend. Everything since v1.7.0:
+  [`docs/releases/ANNOUNCEMENT_v1.7.7.md`](docs/releases/ANNOUNCEMENT_v1.7.7.md)
+- Previous release: `v1.7.0` — the 2D engine release (below); pre-releases
+  in between: `v1.7.1` (Maiya and EagleBIOS), `v1.7.2` (frames written only
+  in the vertical blank), `v1.7.3` (Sky Lance and an opt-in vertical shooter
+  module), `v1.7.5` (the `ng_fight` fighting core and Shadow League)
+- Vertical shooter API: [`docs/vertical_shooters.md`](docs/vertical_shooters.md)
+- Fighting-game API: [`docs/fighting.md`](docs/fighting.md) and [`docs/FIGHTING_V1_7_7.md`](docs/FIGHTING_V1_7_7.md)
+- Genre engines: [`docs/GENRE_ENGINES_V1.7.7.md`](docs/GENRE_ENGINES_V1.7.7.md)
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
+- Manuals: [`docs/neogeosdk_v1.7.7_manual.pdf`](docs/neogeosdk_v1.7.7_manual.pdf)
+  (programmer's manual and library reference) and
+  [`docs/neogeosdk_v1.7.7_overview.pdf`](docs/neogeosdk_v1.7.7_overview.pdf)
+  (technical overview)
 
-**NeoGeoSDK v1.7.0 is released.** Download the
-[release assets](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.0),
-including the [ready-to-run demo ROM package (777)](https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/neogeosdk_v1.7.0_demo_777.zip).
-See [release and demo installation notes](docs/RELEASE_v1.7.0.md) for the
-matching MAME manifest, BIOS requirements, and checksum verification.
+**NeoGeoSDK v1.7.7 is released.** Download the
+[release assets](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.7):
+every game's MAME sets with EagleBIOS, NeoSD images and Darksoft folders.
+See [release notes](docs/RELEASE_v1.7.7.md) for installation, BIOS
+requirements and checksum verification. The v1.7.0 demo package stays
+available on [its release](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.0).
+
+## AI/SI transparency
+
+NeoGeoSDK's main kernel and original foundations, including Artbox, the original
+sound tools and first driver implementations, were traditionally programmed.
+Selective AI/SI assistance was introduced later, notably for test automation
+and work on the 2D engine, prototype games and their artwork; involvement varies
+by component and revision.
+
+The **v1.7.7 pre-release** policy makes an acknowledgement of the SDK's
+AI/SI development history **optional unless requested or required by applicable
+rules**. **AI/SI used in a game's own development must be clearly disclosed.**
+Provide further details when requested or required by applicable rules.
+Developers can also use traditional code and manually created assets without
+AI/SI tools in their own workflow, and retain control over their creative
+choices and quality standards. This policy may evolve with applicable AI/SI
+regulations and publication requirements.
+
+Read the [AI/SI Transparency and Disclosure policy](AI_SI_TRANSPARENCY.md).
 
 ## What's new in v1.7.0 — the 2D engine release
 
@@ -243,18 +279,49 @@ with `GAME=<name>`.
 | `games/demo` | 777 | `777-*` | C | The 25-chapter engine reel — every subsystem, in order |
 | `games/demo_plus` | 778 | `778-*` | C/C++ | The same shared demo scenes and assets, with the C++ engine linked (`USE_2D_PLUS=1`) |
 | `games/skylance` | 779 | `779-*` | C | Sky Lance — a complete vertical shooter |
+| `games/maiya` | 780 | `780-*` | C | Maiya: Super Nature Girl, a twelve-stage platform adventure with guarded arenas, vaults and bonus rounds |
+| `games/shadowleague` | 781 | `781-*` | C, `ng_fight` | Shadow League Fighting: 44 fighters, team battles, a referee's ceremony, score and bonus counts |
+| `games/sevenwonders` | 782 | `782-*` | C, `ng_puzzle` | Seven Wonders Puzzles: match, bubble and picture-logic boards |
+| `games/maiyaluna` | 783 | `783-*` | C, `ng_rpg` | Maiya & Luna: two solo journeys through seven chapters |
+| `games/nosignal` | 784 | `784-*` | C, `ng_beatemup` | No Signal Z Alpha: an eight-street beat'em-up for one player |
+| `games/mahjong_demo` | 785 | `785-*` | C, `ng_mahjong` | Mahjong Demo: Hong Kong Old Style against three CPU players, and solitaire |
 | `games/helloworld` | 772 | `772-*` | — | Minimal FIX-text and one sample; the tutorial target |
 | `games/tutorial` | 555 | `555-*` | C | The minimal engine loop, nothing else |
 | `games/neogeogame` | 775 | `775-*` | C | Sprite-based formation shooter |
 
-Every game carries its own `game.cfg`, so all six build the same way:
+Every game carries its own `game.cfg`. An explicit `GAME=<name>` now selects
+that configuration automatically; the default remains `demo`:
 
 ```bash
-make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg all
-make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg test
+make GAME=<name> all
+make GAME=<name> test
 ```
 
 What each one demonstrates: [`docs/GAMES.md`](./docs/GAMES.md).
+
+Maiya's controls, art layout and regression checks are in
+[`games/maiya/README.md`](./games/maiya/README.md).
+
+### System Firmware
+
+Builds and tests run on EagleBIOS, the open system firmware built in `bios/`:
+no SNK BIOS takes part. On Linux/WSL:
+
+```sh
+make GAME=maiya all
+make GAME=maiya test
+make GAME=maiya bios-package
+make GAME=maiya test BIOS=unibios40      # another system ROM, by name
+make GAME=maiya test USE_EAGLE_BIOS=0    # the installed stock firmware
+```
+
+On Windows CMD, add `-f MakefileWin32.mak` to each command. These targets use
+the already selected cross compiler, Python and WLA-DX. `eagle-bios` builds
+the firmware alone; `bios-package` creates `dist/<game>-eagle-bios.zip` with
+the cartridge, generated firmware, license and MAME software list. Original
+system ROMs are not replaced. Use `PLATFORM=aes` for both compilation and
+testing on the console machine. Read the [firmware manual](./bios/README.md)
+for supported services and limitations before distributing a game with it.
 
 ### Building a specific game
 
@@ -325,6 +392,13 @@ extension, no path prefix). Files that are `#include`-d from other scene files
 should be omitted to avoid multiple-definition errors.
 
 If the game has no scene files (e.g. `helloworld`), omit `GAME_SCENES` entirely.
+
+Optional keys: `GAME_ENGINE_EXCLUDE` (engine modules linked as do-nothing
+stand-ins), `GAME_ENGINE_DEFINES` (-D switches for optional engine code) and
+`GAME_OPTIMIZE` (a GCC level such as `-O2` for the engine, the SDK library
+and the game's scenes; see `docs/performance_rules.md`) and
+`GAME_LEVEL_BUILDER` (a script that turns stage files into C before the
+build; see `docs/levels.md`).  The makefile comments describe each.
 
 ### Art and sound pipelines
 
@@ -407,9 +481,83 @@ This builds the ROM set, regenerates `hash_eagle/<game>/neogeo.xml`, creates `di
 Distribute `dist/` as-is. End users place their `neogeo.zip` BIOS inside `dist/roms/` and
 run `dist/run_neogeosdk.bat`.
 
+## Building, packaging, and testing games
+
+Everything below works for every game under `games/` — current ones and any
+you add later — because it discovers games from `games/*/game.mk` instead of
+naming them.
+
+**Build every game:**
+
+```bash
+make all-games                                # Linux / WSL
+make -f MakefileWin32.mak all-games            # Windows
+```
+
+**Package every game as a MAME-ready zip** (`dist/<game>-eagle-bios.zip`,
+same layout as `make bios-package GAME=<name>` for one game — cartridge ROMs,
+firmware, MAME software list, and a `RUN.txt`):
+
+```bash
+make dist-all                                  # Linux / WSL
+make -f MakefileWin32.mak dist-all             # Windows
+```
+
+**Install a packaged game into your own MAME copy.** The first run asks for
+your MAME installation folder and remembers it; everything lands in a
+self-contained `neogeosdk/` folder inside that install, so your own rom
+collection and MAME's ini files are never touched:
+
+```bash
+make install-mame GAME=maiya                   # or: ./install/install-mame.sh --game maiya
+make install-mame-all                          # install every packaged game
+make run-mame GAME=maiya PLATFORM=mvs          # launch it
+```
+
+On Windows, use `make -f MakefileWin32.mak install-mame GAME=maiya` or
+`install\install-mame.bat --game maiya`.
+
+**Interactive text menu** for the same build/package/install/run steps,
+without remembering flags:
+
+```bash
+make test-menu                                 # Linux / WSL
+make -f MakefileWin32.mak test-menu            # Windows
+```
+
+**Desktop control panel** — one window with a game picker, platform choice,
+and buttons for build/package/install/run/full-pipeline/clean, with a live
+build log:
+
+```bash
+make gui                                       # Linux / WSL
+make -f MakefileWin32.mak gui                  # Windows
+```
+
+**Customizing Maiya's art palettes.** `games/maiya/tools/build_commercial_assets.py`
+reads its per-valley enemy recolours and boss-recolour tints from
+`games/maiya/artbox/palette_config.json` (auto-created with the shipped
+values on first build). Edit the JSON directly, or use the small editor that
+also rebuilds the art for you:
+
+```bash
+make maiya-palette-studio                      # Linux / WSL
+make -f MakefileWin32.mak maiya-palette-studio # Windows
+```
+
+See also `install/README.md` for `install-mame.sh` / `install-mame.bat`
+details, and `tools/mame_launcher.py --help` for scripting the same install
+and run steps directly.
+
 ## Release Assets
 
-The `v1.7.0` release publishes these attached assets:
+The `v1.7.7` release publishes, for each of the seven games and each of its
+versions, the MAME sets with EagleBIOS (MVS and AES), NeoSD images, Darksoft
+and BackBit folders, a README, a CHANGELOG and a MANIFEST of checksums, plus
+`neogeosdk_v1.7.7_manual.pdf` and `neogeosdk_v1.7.7_overview.pdf`. See
+[`docs/RELEASE_v1.7.7.md`](docs/RELEASE_v1.7.7.md).
+
+The `v1.7.0` release keeps these attached assets:
 
 - `neogeosdk_v1.7.0_demo_777.zip`: the six demo ROMs, matching MAME software
   list, checksums, and installation instructions. No BIOS or emulator is included.
@@ -435,11 +583,15 @@ Current release page:
 
 | Document | For |
 |---|---|
+| [`AI_SI_TRANSPARENCY.md`](./AI_SI_TRANSPARENCY.md) | Component provenance, optional SDK acknowledgement and the game-development disclosure policy for v1.7.7 |
+| [`docs/releases/ANNOUNCEMENT_v1.7.7.md`](./docs/releases/ANNOUNCEMENT_v1.7.7.md) | What v1.7.7 brings, everything since v1.7.0 |
 | [`docs/INTRODUCTION.md`](./docs/INTRODUCTION.md) | What the SDK is, what the machine is, and the reading order |
 | [`docs/HELLO_WORLD.md`](./docs/HELLO_WORLD.md) | Your first ROM, in ten minutes |
 | [`docs/PROGRAMMERS_MANUAL.md`](./docs/PROGRAMMERS_MANUAL.md) | The working manual — build, layout, engine tick, assets, frame budget |
-| [`NEOGEOSDK_v1.7.0.md`](./NEOGEOSDK_v1.7.0.md) | The single-file release overview |
-| [`docs/neogeosdk_v1.7.0_manual.pdf`](./docs/neogeosdk_v1.7.0_manual.pdf) | The printable manual and API reference |
+| [`docs/neogeosdk_v1.7.7_manual.pdf`](./docs/neogeosdk_v1.7.7_manual.pdf) | The printable manual and API reference (`tools/make_manual_pdf.py`) |
+| [`docs/neogeosdk_v1.7.7_overview.pdf`](./docs/neogeosdk_v1.7.7_overview.pdf) | The illustrated technical overview (`tools/make_overview_pdf.py`) |
+| [`NEOGEOSDK_v1.7.0.md`](./NEOGEOSDK_v1.7.0.md) | The v1.7.0 single-file release overview |
+| [`docs/neogeosdk_v1.7.0_manual.pdf`](./docs/neogeosdk_v1.7.0_manual.pdf), [`docs/neogeosdk_v1.7.0_overview.pdf`](./docs/neogeosdk_v1.7.0_overview.pdf) | The v1.7.0 manual and overview, as published with that release |
 
 **Reference**
 
@@ -450,7 +602,7 @@ Current release page:
 | [`docs/API_2D_ENGINE_CPP.md`](./docs/API_2D_ENGINE_CPP.md) | The C++14 build of the same engine |
 | [`docs/SOUND_DRIVER.md`](./docs/SOUND_DRIVER.md) | The Z80 driver, the YM2610, and the audio pipelines |
 | [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md) | PNG to C-ROM, the quantiser, and Artbox Studio |
-| [`docs/GAMES.md`](./docs/GAMES.md) | What each of the six shipped games demonstrates |
+| [`docs/GAMES.md`](./docs/GAMES.md) | What each game demonstrates: the seven released games, the showcase and the examples |
 | [`docs/DEMO_CHAPTERS.md`](./docs/DEMO_CHAPTERS.md) | The 25 demo chapters |
 | [`docs/TOOLS.md`](./docs/TOOLS.md) | Every helper script — art, sound, verification, launchers, GIMP plug-ins |
 
@@ -1070,6 +1222,11 @@ make unit-tests      : host-side sprite renderer tests (no emulator, no cross
                        `make test`: launching a ROM must not depend on a host
                        C++ compiler being installed.
 make check           : unit tests plus a complete ROM set for this GAME
+make level-check     : the game's level tables against placement rules
+                       (tools/level_check.py); make test runs it first
+make budget          : bytes each ROM (P, C, S, M, V) uses against the optional
+                       BUDGET_* keys in games/<game>/game.cfg; with a budget
+                       declared, every P build fails if a ROM outgrows it
 make debug           : run MAME with debugger
 make debug-build     : build P1 with debug symbols and linker map
 make debug-artifacts : write size, symbols, readelf, map, and disassembly files
@@ -1960,3 +2117,11 @@ The project is intended only for lawful homebrew development, technical research
 
 All copyrights, trademarks, and intellectual property rights must be respected. Any commercial or consulting use should be performed only in accordance with applicable law and with proper authorization or acceptance from the relevant rights holders.
 ```
+
+## Experimental Neo Geo CD development
+
+An opt-in native CD hello-world image pipeline and separate original
+EagleBIOS-CD diagnostic firmware are under development for 1.7.7. Stock BIOS
+boot, runtime reloads, CDDA, saves and physical compatibility are not complete.
+Existing cartridge builds remain independent. See [CD status and build guide](docs/NEOGEO_CD.md)
+and [measured validation](docs/roadmap/NEOGEO_CD_VALIDATION_REPORT.md).

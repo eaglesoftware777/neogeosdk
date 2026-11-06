@@ -1,0 +1,15 @@
+; 0_ssg_example_a - Rondo alla Turca (Mozart, A minor), the opening phrase
+; The SSG sounds an octave above these octave marks.
+
+T126
+P0
+V11
+O3
+L16
+
+b a g+ a > c8 r8 d c < b > c e8 r8 f e d+ e
+< b a g+ a b a g+ a > c4 r8
+< b a g+ a > c8 r8 d c < b > c e8 r8 f e d+ e
+< b a g+ a b a g+ a > c8 < a8 r4
+
+~

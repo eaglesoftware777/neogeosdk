@@ -1,0 +1,177 @@
+{
+  "passed": true,
+  "errors": [],
+  "hands": [
+    {
+      "pose": "walk_contact_a",
+      "layer": "far_arm",
+      "visible_palm_pixels": 0
+    },
+    {
+      "pose": "walk_contact_a",
+      "layer": "near_arm",
+      "visible_palm_pixels": 13
+    },
+    {
+      "pose": "walk_down_a",
+      "layer": "far_arm",
+      "visible_palm_pixels": 0
+    },
+    {
+      "pose": "walk_down_a",
+      "layer": "near_arm",
+      "visible_palm_pixels": 14
+    },
+    {
+      "pose": "walk_passing_a",
+      "layer": "far_arm",
+      "visible_palm_pixels": 0
+    },
+    {
+      "pose": "walk_passing_a",
+      "layer": "near_arm",
+      "visible_palm_pixels": 14
+    },
+    {
+      "pose": "walk_up_a",
+      "layer": "far_arm",
+      "visible_palm_pixels": 13
+    },
+    {
+      "pose": "walk_up_a",
+      "layer": "near_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "walk_contact_b",
+      "layer": "far_arm",
+      "visible_palm_pixels": 13
+    },
+    {
+      "pose": "walk_contact_b",
+      "layer": "near_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "walk_down_b",
+      "layer": "far_arm",
+      "visible_palm_pixels": 13
+    },
+    {
+      "pose": "walk_down_b",
+      "layer": "near_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "walk_passing_b",
+      "layer": "far_arm",
+      "visible_palm_pixels": 0
+    },
+    {
+      "pose": "walk_passing_b",
+      "layer": "near_arm",
+      "visible_palm_pixels": 14
+    },
+    {
+      "pose": "walk_up_b",
+      "layer": "far_arm",
+      "visible_palm_pixels": 0
+    },
+    {
+      "pose": "walk_up_b",
+      "layer": "near_arm",
+      "visible_palm_pixels": 14
+    },
+    {
+      "pose": "run_contact_a",
+      "layer": "far_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "run_contact_a",
+      "layer": "near_arm",
+      "visible_palm_pixels": 14
+    },
+    {
+      "pose": "run_down_a",
+      "layer": "far_arm",
+      "visible_palm_pixels": 0
+    },
+    {
+      "pose": "run_down_a",
+      "layer": "near_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "run_push_a",
+      "layer": "far_arm",
+      "visible_palm_pixels": 0
+    },
+    {
+      "pose": "run_push_a",
+      "layer": "near_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "run_flight_a",
+      "layer": "far_arm",
+      "visible_palm_pixels": 6
+    },
+    {
+      "pose": "run_flight_a",
+      "layer": "near_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "run_contact_b",
+      "layer": "far_arm",
+      "visible_palm_pixels": 13
+    },
+    {
+      "pose": "run_contact_b",
+      "layer": "near_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "run_down_b",
+      "layer": "far_arm",
+      "visible_palm_pixels": 6
+    },
+    {
+      "pose": "run_down_b",
+      "layer": "near_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "run_push_b",
+      "layer": "far_arm",
+      "visible_palm_pixels": 0
+    },
+    {
+      "pose": "run_push_b",
+      "layer": "near_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "run_flight_b",
+      "layer": "far_arm",
+      "visible_palm_pixels": 0
+    },
+    {
+      "pose": "run_flight_b",
+      "layer": "near_arm",
+      "visible_palm_pixels": 12
+    },
+    {
+      "pose": "stop",
+      "layer": "far_arm",
+      "visible_palm_pixels": 0
+    },
+    {
+      "pose": "stop",
+      "layer": "near_arm",
+      "visible_palm_pixels": 14
+    }
+  ],
+  "accepted_head_torso_leg_shapes_preserved": null
+}

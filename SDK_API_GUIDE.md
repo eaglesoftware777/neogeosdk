@@ -1,6 +1,6 @@
 # SDK API Guide
 
-> **v1.7.0 quick reference**
+> **v1.7.7 quick reference**
 >
 > - Sprite slot priority: **HIGHER slot number = drawn IN FRONT.** This is
 >   the observed hardware direction; earlier revisions of this guide and of
@@ -130,7 +130,7 @@ High-level sound control categories:
 | --- | --- |
 | Core control | `soundInit`, `soundReset`, `soundStopAll`, `soundStopMusic`, `soundCancelFade`, `soundSceneReset` |
 | Raw command path | `playSoundtest`, `soundCommand`, `isZ80Ready` |
-| Music and samples | `playMusic`, `playSFX`, `playSFXB` |
+| Music and samples | `playMusic`, `playSFX`, `playSFXWide` (ADPCM-A samples 0..511), `playSFXB` |
 | FM | `playFMDebug`, `playFMTrack`, `soundSetFMVolume` |
 | SSG | `playSSGTrack`, `soundSetSSGPreset`, `playInsertCoinSSG` |
 | Voice cues | `playVoiceCue`, `playGetReadyVoice`, `playAttackVoice`, `playCoinThenReady` |
