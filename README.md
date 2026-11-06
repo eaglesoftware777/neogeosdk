@@ -31,25 +31,6 @@ See [release notes](docs/RELEASE_v1.7.7.md) for installation, BIOS
 requirements and checksum verification. The v1.7.0 demo package stays
 available on [its release](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.0).
 
-## AI/SI transparency
-
-NeoGeoSDK's main kernel and original foundations, including Artbox, the original
-sound tools and first driver implementations, were traditionally programmed.
-Selective AI/SI assistance was introduced later, notably for test automation
-and work on the 2D engine, prototype games and their artwork; involvement varies
-by component and revision.
-
-The **v1.7.7** policy makes an acknowledgement of the SDK's
-AI/SI development history **optional unless requested or required by applicable
-rules**. **AI/SI used in a game's own development must be clearly disclosed.**
-Provide further details when requested or required by applicable rules.
-Developers can also use traditional code and manually created assets without
-AI/SI tools in their own workflow, and retain control over their creative
-choices and quality standards. This policy may evolve with applicable AI/SI
-regulations and publication requirements.
-
-Read the [AI/SI Transparency and Disclosure policy](AI_SI_TRANSPARENCY.md).
-
 ## What's new in v1.7.7
 
 Version 1.7.7 expands the C and C++14 2D framework with reusable gameplay
@@ -2190,3 +2171,22 @@ EagleBIOS-CD diagnostic firmware are under development for 1.7.7. Stock BIOS
 boot, runtime reloads, CDDA, saves and physical compatibility are not complete.
 Existing cartridge builds remain independent. See [CD status and build guide](docs/NEOGEO_CD.md)
 and [measured validation](docs/roadmap/NEOGEO_CD_VALIDATION_REPORT.md).
+
+## AI/SI transparency
+
+NeoGeoSDK's main kernel and original foundations, including Artbox, the original
+sound tools and first driver implementations, were traditionally programmed.
+Selective AI/SI assistance was introduced later, notably for test automation
+and work on the 2D engine, prototype games and their artwork; involvement varies
+by component and revision.
+
+The **v1.7.7** policy makes an acknowledgement of the SDK's
+AI/SI development history **optional unless requested or required by applicable
+rules**. **AI/SI used in a game's own development must be clearly disclosed.**
+Provide further details when requested or required by applicable rules.
+Developers can also use traditional code and manually created assets without
+AI/SI tools in their own workflow, and retain control over their creative
+choices and quality standards. This policy may evolve with applicable AI/SI
+regulations and publication requirements.
+
+Read the [AI/SI Transparency and Disclosure policy](AI_SI_TRANSPARENCY.md).
