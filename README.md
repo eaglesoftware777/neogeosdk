@@ -25,7 +25,8 @@ Neo Geo development SDK for SNK hardware.
 
 **NeoGeoSDK v1.7.7 is released.** Download the
 [release assets](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.7):
-every game's MAME sets with EagleBIOS, NeoSD images and Darksoft folders.
+MAME sets with EagleBIOS, NeoSD images, Darksoft and BackBit packages, and
+Neo Geo CD images for supported ports.
 See [release notes](docs/RELEASE_v1.7.7.md) for installation, BIOS
 requirements and checksum verification. The v1.7.0 demo package stays
 available on [its release](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.0).
@@ -38,7 +39,7 @@ Selective AI/SI assistance was introduced later, notably for test automation
 and work on the 2D engine, prototype games and their artwork; involvement varies
 by component and revision.
 
-The **v1.7.7 pre-release** policy makes an acknowledgement of the SDK's
+The **v1.7.7** policy makes an acknowledgement of the SDK's
 AI/SI development history **optional unless requested or required by applicable
 rules**. **AI/SI used in a game's own development must be clearly disclosed.**
 Provide further details when requested or required by applicable rules.
@@ -49,7 +50,65 @@ regulations and publication requirements.
 
 Read the [AI/SI Transparency and Disclosure policy](AI_SI_TRANSPARENCY.md).
 
-## What's new in v1.7.0 — the 2D engine release
+## What's new in v1.7.7
+
+Version 1.7.7 expands the C and C++14 2D framework with reusable gameplay
+engines, original playable examples, cartridge packaging and an experimental
+native CD backend. The included games are works in progress: they demonstrate
+SDK features and provide test cases, with remaining limitations documented in
+their own READMEs and changelogs.
+
+| Component | Capabilities and example |
+|---|---|
+| Vertical shooter | Waves, projectiles, bosses and sprite-load budgeting; Sky Lance |
+| Fighting core (`ng_fight`) | Buffered motion commands, fighter states, collision, cancels, throws, seven CPU ranks, training, team battles and strikers; Shadow League Fighting |
+| Puzzle (`ng_puzzle`) | Match-three and bubble boards; Seven Wonders Puzzles also demonstrates picture-logic gameplay |
+| Adventure (`ng_rpg`) | Rooms, party switching, dialogue, inventory, environmental puzzles and save state; Maiya & Luna |
+| Beat'em-up (`ng_beatemup`) | Crowd direction, attack phases, hitstop, grabs, throws and pickups; No Signal Z Alpha |
+| Mahjong (`ng_mahjong`) | Four-seat Hong Kong Old Style and solitaire; Mahjong Demo |
+| Platforming example | Camera, collisions, character actions, stage progression and effects; Maiya: Super Nature Girl |
+
+Choose one of the four genre engines with `GAME_GENRE_ENGINE = puzzle`,
+`mahjong`, `rpg` or `beatemup` in a game's `game.mk`. The genre engines keep
+simulation state separate from drawing and sound, and their C interfaces can
+also be used from C++14. See the [genre engine guide](docs/GENRE_ENGINES_V1.7.7.md)
+and [fighting integration guide](docs/FIGHTING_V1_7_7.md).
+
+Rendering additions include deferred VRAM updates with deadlines and priority
+handling, staged sprite maps, movement updates while content waits, 20-bit
+C-ROM tile addressing, faster palette mixing and cached FIX-row clearing.
+Large ROMs still require the correct program banking, tile addresses and
+per-format alignment; larger assets do not increase the hardware's sprite
+capacity. Use the [art pipeline](docs/ARTBOX_PIPELINE.md) and
+[hardware baseline](docs/platforms/CLASSIC_BASELINE.md) when budgeting a scene.
+
+The default Z80 assembly driver uses the NGP2 command protocol, per-sample
+ADPCM-B rate metadata and up to 512 ADPCM-A samples. Deploy matching P, M
+and V data together; the [MVS sound protocol](docs/MVS_SOUND_PROTOCOL.md)
+documents BIOS handoff, readiness and parameter encoding.
+
+Cartridge targets are AES and MVS, with separate program builds. Native CD
+ports exist for Maiya, Sky Lance, Maiya & Luna and No Signal Z Alpha, with
+CD-DA music and CD memory uploads. CD support remains experimental; emulator
+results do not certify burnt discs, drive emulators or physical consoles.
+See the [CD build and testing guide](docs/NEOGEO_CD_PIPELINE_AND_TESTING_GUIDE.md).
+
+```bash
+make GAME=sevenwonders genre-info       # inspect the selected genre module
+make GAME=sevenwonders all              # build the cartridge
+make GAME=sevenwonders test             # run the configured game tests
+make GAME=sevenwonders budget           # check configured ROM budgets
+make neo GAME=sevenwonders              # package separate AES and MVS sets
+python3 tools/neocd/build.py --game skylance --out out/neocd/skylance-test
+```
+
+Games have their own versions, independent of SDK 1.7.7. A newer source
+candidate is not necessarily included in the downloadable ROMs. Consult the
+[release page](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.7),
+the asset's versioned README and checksum manifest before testing. Published
+versions are immutable; see the [versioning policy](docs/releases/VERSIONING_POLICY.md).
+
+## Earlier foundation: v1.7.0
 
 v1.7.0 consolidates the `neo_universal_2d` line of work, including the
 2D engine, game-specific asset pipelines, desktop studios, and demo reel.
@@ -114,9 +173,10 @@ Corrections worth knowing about if you have code on an earlier revision:
   shrink register says; the two shrink axes are read differently (X from the
   top nibble, Y from the whole byte), so use `NG_SCALE()` for a byte whose
   axes agree.
-- **A sound byte is acknowledged by the reply port dropping to 0 and rising
-  to 1**; the port idles at 1, so waiting for 1 alone is not enough.
-  `soundCommand()` handles it — send through the SDK wrappers.
+- **Use the current sound wrappers with the matching M1 driver.** NGP2's
+  ordinary ready reply is `$80`; `$01` belongs to the BIOS handoff protocol.
+  The older 0-to-1 acknowledgement description does not apply to that driver.
+  See [MVS sound protocol](docs/MVS_SOUND_PROTOCOL.md).
 - **`REG_PALBANK0` / `REG_PALBANK1`** had their addresses swapped.
 - **A minimal game can link again** — `ng_bg.c` / `ng_bg.cpp` now carry weak
   fallbacks for `ng_screen_table[]` / `ng_screen_count`.
@@ -142,7 +202,12 @@ real Neo Geo development practical on current Linux, WSL, and Windows setups.
 
 The repository includes a reusable 2D game engine layer under `sdk/2d_engine/ng_*`.
 
-It is a plain-C engine targeting **NeoGeo Deluxe 2D**: huge animated characters, large bosses, smooth camera movement, parallax depth, sprite-scaling depth effects, palette lighting, hit sparks, particles, cinematic transitions, and stable 60 FPS — no float, no malloc during gameplay, no division in the frame loop.
+It is a plain-C engine supporting large animated characters, bosses, camera
+movement, parallax, hardware shrinking, palette effects, hit sparks, particles
+and cinematic transitions. Core gameplay uses fixed-point arithmetic and fixed
+pools. Frame rate depends on the game, scene and transfer budget; measure busy
+scenes in the emulator and on the target hardware rather than assuming a
+sustained rate. See the [performance report](docs/qa/PERFORMANCE_REPORT.md).
 
 ### Core engine modules
 
@@ -278,7 +343,7 @@ with `GAME=<name>`.
 |--------|---------|------------|--------|-------------|
 | `games/demo` | 777 | `777-*` | C | The 25-chapter engine reel — every subsystem, in order |
 | `games/demo_plus` | 778 | `778-*` | C/C++ | The same shared demo scenes and assets, with the C++ engine linked (`USE_2D_PLUS=1`) |
-| `games/skylance` | 779 | `779-*` | C | Sky Lance — a complete vertical shooter |
+| `games/skylance` | 779 | `779-*` | C, `ng_shooter` | Sky Lance — seven-sector vertical shooter with three pilots, bosses and aircraft-specific weapons |
 | `games/maiya` | 780 | `780-*` | C | Maiya: Super Nature Girl, a twelve-stage platform adventure with guarded arenas, vaults and bonus rounds |
 | `games/shadowleague` | 781 | `781-*` | C, `ng_fight` | Shadow League Fighting: 44 fighters, team battles, a referee's ceremony, score and bonus counts |
 | `games/sevenwonders` | 782 | `782-*` | C, `ng_puzzle` | Seven Wonders Puzzles: match, bubble and picture-logic boards |
