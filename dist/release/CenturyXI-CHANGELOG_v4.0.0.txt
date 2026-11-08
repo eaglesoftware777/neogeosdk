@@ -1,0 +1,35 @@
+# Century XI: Road to 2030 — changes
+
+## 4.0.0 (2026-11-08)
+
+The first release of the Road to 2030 edition: an original, cute parody of 1990s international football for Neo Geo MVS and AES.
+
+**Nations and the championship**
+- 48 parody nations, each with its own flag, kits, a roster of joke names called by the commentator, a chant and a way of playing. No real names, crests or likenesses.
+- Road to 2030: 32 of the 48 qualify (the player's side always does), an animated group draw, group tables with top scorers, the knock-out bracket, line-ups before every match, bookings carried from match to match with suspensions, and a trophy ceremony with the golden boot.
+- Quick Cup, Exhibition, two-player Versus with join-in, Penalty Challenge, Training Ground; eight CPU levels; Classic and Modern controls; match length, golden goal, retro or modern rules, VAR.
+
+**Playing**
+- Weighted passes that find a man the way the stick points, long balls taken on the chest, first-time passes and shots, one-twos, through balls, crosses that the man under them attacks by himself (headers, volleys, overhead kicks), the chip, shots wound up by holding B.
+- The keeper is the player's when a shot comes: move him, dive the stick's way, or leave him to save on his own. Penalties with a keeper who moves and chooses high or low. Throws, rolls and long kicks from his hands.
+- Defending: standing and sliding tackles, jockeying, team-mates who mark the other side's forwards.
+- A CPU that varies its attack: cut-backs, crosses, one-twos, through balls, shots placed away from the keeper.
+
+**Presentation**
+- A pseudo-3D stadium and pitch with a broadcast summer look, eight grounds, stands that wear the day's two sides' colours and wave their flags.
+- Goal scenes with celebrations that change from goal to goal, a replay of the goal, commentary that names the players, a coach on the bench, a referee with something to say.
+- Runs at 60 frames a second, with the match keeping its speed when the screen is busiest.
+
+**Coins, Start and the second player** (checked under the US, Europe, Japan, Asia, UniBIOS and EagleBIOS system ROMs)
+- Start begins a game on every system ROM. On the US arcade one it took a credit and left the title on screen (a second credit got in): the Start flag was kept in backup RAM, which that system ROM write-protects during play.
+- A Start between matches (skipping a scene, in a menu) no longer takes another credit. After a game ends, Start pays for the next one as before.
+- Player 2 pays exactly one credit for Versus, from his own coins where the system keeps them apart (the US system ROM). It took two, and a second try could restart the board.
+- A paying player 2 is let into a match under way. He was charged and turned away.
+- Player 2's cursor reads 2P.
+- The system ROM's start-up shows the game's own logo, and a console starts without the system's eye-catcher, as the other games do.
+
+**Under the bonnet**
+- The ball, the lines, offside and the championship are the SDK's new football engine, `ng_soccer` (NeoGeoSDK 1.7.8); the game plays exactly as it did before the move.
+
+**Saves**
+- Options, records and a Road in progress, kept in the arcade board's backup memory or on an AES memory card.

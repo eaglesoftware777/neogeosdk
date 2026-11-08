@@ -1,0 +1,12 @@
+# CenturyXI v4.0.0: dist/release, made by tools/make_release.py
+# size  crc32     sha256  file
+ 17567744  d7ab79ec  0cafbb77125ce8e648c8b8e100672936ed728e3bbfda34963f22647d82f99132  CenturyXI-WIP-NeoSD_MVS_v4.0.0.neo
+ 17567744  f067afae  5a2f01aa171d325d9e431a081e2a0493658310ddc316045a07daee1496cf1da4  CenturyXI-WIP-NeoSD_AES_v4.0.0.neo
+  8124573  a0144984  7ac37744eba751c78f839e3126bbc3280a371042a788891ba3a8f470f9ee411e  CenturyXI-Darksoft-MVS_v4.0.0.zip
+  8124466  163b1ea6  be55cd7f6ef3e93ce55f3eb68d7130928ad4cb57a0edb1cb75e15014a59bb633  CenturyXI-Darksoft-AES_v4.0.0.zip
+  8174524  40012e28  6c8e79beb1427ebb47878d0bee4b2a717c89f016135a07acce885457c8c6f686  CenturyXI-BackBit-MVS_v4.0.0.zip
+  8174505  f9e19ef7  ea60438675f160a26b546b905cc426b2e91a0a378290bc93c11430ec635d702b  CenturyXI-BackBit-AES_v4.0.0.zip
+  8224868  3b9229fb  1499032c14b4a44edf2f94e18e36332e35325e42f6b260cdf417350f09f49646  CenturyXI-WIP-EagleBIOS_v4.0.0.zip
+  8203240  d273406d  427717ff9b2c82ddfaf86e7f7281c4da2ef6fe869d962a4d3003dc3dbad171a9  CenturyXI-WIP-AES-EagleBIOS_v4.0.0.zip
+     5196  a7e90ae5  f94cc9eec2ac0395cd54e59f90b3b9610a58be5fd83a77328a0f08a888f26bb2  CenturyXI-README_v4.0.0.txt
+     3266  9e8d9f35  bc6dbf6d77dc4d76ca29428a5ca27b8af979dabc75fddcb52981d39c6e63d5fc  CenturyXI-CHANGELOG_v4.0.0.txt

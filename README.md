@@ -9,6 +9,12 @@ Neo Geo development SDK for SNK hardware.
   engines, the fighting core, EagleBIOS and an experimental Neo Geo CD
   backend. Everything since v1.7.0:
   [`docs/releases/ANNOUNCEMENT_v1.7.7.md`](docs/releases/ANNOUNCEMENT_v1.7.7.md)
+- Pre-release: `v1.7.8` — the football engine (`ng_soccer`, a fifth genre
+  engine), five small SDK modules (`ng_tune`, `ng_task`, `ng_fixscript`,
+  `ng_devmenu`, `ng_join`) and Century XI: Road to 2030, the football game
+  built on them:
+  [`docs/releases/ANNOUNCEMENT_v1.7.8.md`](docs/releases/ANNOUNCEMENT_v1.7.8.md).
+  v1.7.7 stays the current release.
 - Previous release: `v1.7.0` — the 2D engine release (below); pre-releases
   in between: `v1.7.1` (Maiya and EagleBIOS), `v1.7.2` (frames written only
   in the vertical blank), `v1.7.3` (Sky Lance and an opt-in vertical shooter
@@ -47,10 +53,11 @@ their own READMEs and changelogs.
 | Adventure (`ng_rpg`) | Rooms, party switching, dialogue, inventory, environmental puzzles and save state; Maiya & Luna |
 | Beat'em-up (`ng_beatemup`) | Crowd direction, attack phases, hitstop, grabs, throws and pickups; No Signal Z Alpha |
 | Mahjong (`ng_mahjong`) | Four-seat Hong Kong Old Style and solitaire; Mahjong Demo |
+| Football (`ng_soccer`, v1.7.8 pre-release) | Ball flight, swerve and grass, weighted passes, the lines, offside, and a 32-side championship with tables, bracket, scorers and suspensions; Century XI: Road to 2030 |
 | Platforming example | Camera, collisions, character actions, stage progression and effects; Maiya: Super Nature Girl |
 
-Choose one of the four genre engines with `GAME_GENRE_ENGINE = puzzle`,
-`mahjong`, `rpg` or `beatemup` in a game's `game.mk`. The genre engines keep
+Choose one of the genre engines with `GAME_GENRE_ENGINE = puzzle`,
+`mahjong`, `rpg`, `beatemup` or (from v1.7.8) `soccer` in a game's `game.mk`. The genre engines keep
 simulation state separate from drawing and sound, and their C interfaces can
 also be used from C++14. See the [genre engine guide](docs/GENRE_ENGINES_V1.7.7.md)
 and [fighting integration guide](docs/FIGHTING_V1_7_7.md).
