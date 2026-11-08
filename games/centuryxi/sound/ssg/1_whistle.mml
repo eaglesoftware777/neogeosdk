@@ -1,0 +1,10 @@
+; 1_whistle.mml - Referee pea-whistle trill (one-shot)
+
+T190
+P1
+V14
+O6
+L32
+B > C < B > C < B > C < B > C8
+R16
+B > C < B > C < B > C4

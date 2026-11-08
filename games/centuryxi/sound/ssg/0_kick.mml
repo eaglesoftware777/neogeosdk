@@ -1,0 +1,8 @@
+; 0_kick.mml - Crisp arcade ball kick impact (one-shot)
+
+T180
+P0
+V15
+O3
+L32
+G D < B G D

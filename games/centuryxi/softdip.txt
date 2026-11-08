@@ -1,0 +1,6 @@
+# Century XI: the operator's settings on an arcade board (tools/softdip.py).
+# A console has no settings menu and plays the defaults (marked *).
+name: CENTURY XI
+option: CPU LEVEL | LEVEL 1, LEVEL 2, LEVEL 3, *LEVEL 4, LEVEL 5, LEVEL 6, LEVEL 7, LEVEL 8
+option: MATCH TIME | 3 MINUTES, *5 MINUTES, 7 MINUTES, 10 MINUTES, 14 MINUTES
+option: JOIN IN | *YES, NO

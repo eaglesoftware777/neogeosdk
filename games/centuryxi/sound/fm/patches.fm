@@ -1,0 +1,45 @@
+; Century XI YM2610 FM patch bank (4 arcade patches)
+
+[patch 0]
+name=Stadium Brass Lead
+alg=4
+fb=5
+stereo=C0
+lfo=00
+op1=01,1A,1F,08,04,2F,00
+op2=01,00,1F,06,02,2F,00
+op3=02,16,1F,09,04,3F,00
+op4=01,02,1F,05,02,1F,00
+
+[patch 1]
+name=Goal Fanfare Trumpet
+alg=5
+fb=6
+stereo=C0
+lfo=00
+op1=01,14,1F,07,03,2F,00
+op2=01,02,1F,05,02,1F,00
+op3=02,04,1F,06,02,2F,00
+op4=01,00,1F,04,02,1F,00
+
+[patch 2]
+name=Arcade Rhythm Synth
+alg=4
+fb=4
+stereo=C0
+lfo=00
+op1=02,1E,1F,0A,06,4F,00
+op2=01,04,1F,08,04,3F,00
+op3=04,24,1F,0C,06,5F,00
+op4=01,02,1F,07,03,2F,00
+
+[patch 3]
+name=Trophy Ceremony Organ
+alg=7
+fb=3
+stereo=C0
+lfo=00
+op1=01,08,1B,04,02,2F,00
+op2=02,0C,1B,04,02,2F,00
+op3=04,12,1B,05,02,3F,00
+op4=01,04,1D,03,01,1F,00
