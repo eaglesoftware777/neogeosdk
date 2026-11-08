@@ -29,6 +29,39 @@ ask `ng_sys_is_mvs()`. Maiya does: on an arcade board a coin and Start
 begin or continue a game; on a console Start alone does, and the continue
 card offers CONTINUE / EXIT.
 
+## Taking a Credit From Game Code
+
+```c
+void ng_sys_credit_check(void);   /* SYS_CREDIT_CHECK, registers kept */
+void ng_sys_credit_down(void);    /* SYS_CREDIT_DOWN, registers kept */
+```
+
+The system ROM's two credit routines change registers that compiled C
+expects a call to keep (D2, D4 and A3 to A5; the check clears D2 as it
+counts). Called through `CALLNEOGEOF` from game code, a value the compiler
+kept in D2 comes back wrong, and a function pointer kept in A4 sends the
+CPU into backup RAM, which resets the board. These two save those
+registers around the call.
+
+Set the decrements first: one BCD byte per player from `BIOS_CREDIT_DEC`
+($10FDB0). The check clears the ones a player cannot pay for; the down call
+takes the rest. The system ROM decides where a player's credits are kept:
+the US arcade one keeps player 2's apart (at $D00035, his own coin chute),
+the others count one pool. So ask the check rather than reading
+`P1_CREDITS` yourself:
+
+```c
+volatile uint8_t *dec = (volatile uint8_t *)BIOS_CREDIT_DEC;
+dec[0] = 0; dec[1] = 1; dec[2] = 0; dec[3] = 0;   /* player 2, one credit */
+ng_sys_credit_check();
+if (dec[1]) ng_sys_credit_down();                 /* he could pay: take it */
+```
+
+Do it with interrupts masked, so the system's own Start handling cannot
+run between the check and the take. From the cartridge's `PLAYER_START`
+the system has set the decrements already. `ng_join` uses these calls,
+and so does Century XI's versus screen. Arcade board only.
+
 ## Only What a Game Uses
 
 The files in `sdk/cabinet/` are built into `out/libng_sdk.a` (with the
@@ -41,3 +74,8 @@ never asks carries none of this code.
 In MAME, on the arcade driver (`neogeo`) with the Europe, USA, Japan and
 Asia system ROMs and on the console driver (`aes`), the two calls report
 the machine and the region the system ROM was set for.
+
+The credit calls: in MAME, Century XI's `tests/test_boot_flow.py` takes
+exactly one credit for a second player joining, from the shared count on the
+Europe, Japan and Asia system ROMs and from his own on the US one and on
+EagleBIOS, with no reset; a paid join in the middle of a match is accepted.

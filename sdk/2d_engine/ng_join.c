@@ -4,8 +4,9 @@
  * The credit is the system's: the newcomer's bit stays in BIOS_START_FLAG, the
  * credit check clears it if he cannot pay, and the credit-down call takes one
  * from each player still flagged (a system that takes it itself after the call
- * does not take it twice). The value kept here starts at 0: RAM is zeroed and
- * initialised data is not loaded.
+ * does not take it twice). Both calls go through ng_sys, which keeps the
+ * registers the routines change: "want" lives in one of them. The value kept
+ * here starts at 0: RAM is zeroed and initialised data is not loaded.
  */
 
 #include "ng_join.h"
@@ -21,10 +22,10 @@ uint8_t NEOGEO_USER ng_join_bios_start(uint8_t playing)
     *flag = want;
     if (!want) return 0;
     if (ng_sys_is_mvs()) {                   /* a console has no credits */
-        CALLNEOGEOF(SYS_CREDIT_CHECK);
+        ng_sys_credit_check();
         want = (uint8_t)(want & *flag);
         if (!want) return 0;
-        CALLNEOGEOF(SYS_CREDIT_DOWN);
+        ng_sys_credit_down();
     }
     if (want & 1u) *(volatile uint8_t *)BIOS_PLAYER1_MODE = 1;
     if (want & 2u) *(volatile uint8_t *)BIOS_PLAYER2_MODE = 1;
