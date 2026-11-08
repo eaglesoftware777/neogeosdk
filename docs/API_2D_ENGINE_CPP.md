@@ -1,6 +1,6 @@
 # 2D Engine — C++ API Reference
 
-**Eagle Software · Neo Geo SDK v1.7.7 (Framework 1.5) · `sdk/2d_engine_plus/`**
+**Eagle Software · Neo Geo SDK v1.7.8 (Framework 1.6) · `sdk/2d_engine_plus/`**
 
 The C++14 build of the 2D engine. This is not a different engine — it is
 the same design with the same public ABI, so a C game can link against

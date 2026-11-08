@@ -1,7 +1,7 @@
 /*
  * The minimal programs quoted in docs/GENRE_ENGINES_V1.7.7.md, one per
  * genre engine, kept compiling and running here (tests/test_genre_engines.py
- * builds this with all four engines and -Werror). On the console each
+ * builds this with every engine and -Werror). On the console each
  * example's loop would be the game's frame loop: draw from the context,
  * turn the events into sounds, wait for the vertical blank.
  */
@@ -10,6 +10,7 @@
 #include "ng_mahjong.h"
 #include "ng_rpg.h"
 #include "ng_beatemup.h"
+#include "ng_soccer.h"
 
 /* ---- puzzle: one match-3 level ----------------------------------------- */
 static const NGPuzzleLevel k_level = {
@@ -177,9 +178,52 @@ static int beatemup_example(void)
     return kos > 0u;
 }
 
+/* ---- football: a cross that comes down for a header, and a championship - */
+static const NGSPitch k_pitch = { 1536, 704, 88, 40, 3 };     /* units; the goal is 176 wide, 40 high */
+static NGSBall s_ball;
+static NGSCup s_cup;
+
+static uint8_t k_power(uint8_t nation) { return (uint8_t)(10u + nation % 5u); }
+static void k_result(uint8_t home, uint8_t away, uint32_t *seed, uint8_t *hg, uint8_t *ag)
+{
+    *seed = *seed * 1103515245u + 12345u;                         /* the game's own odds */
+    *hg = (uint8_t)((*seed >> 16) % 3u + (k_power(home) > k_power(away)));
+    *ag = (uint8_t)((*seed >> 20) % 3u);
+}
+
+static int soccer_example(void)
+{
+    int16_t mx, my, n;
+    uint8_t t, right, frame, line = NGS_LINE_NONE, a, b;
+    /* a cross from the right wing toward the far post */
+    s_ball.owner = NGS_NOBODY;
+    s_ball.x = 1400 * NGS_Q; s_ball.y = 60 * NGS_Q;
+    ngs_ball_strike(&s_ball, 7, 1450, 360, 90, 34);              /* man 7 crosses it, lofted */
+    s_ball.curve = ngs_bend_y(&s_ball, 2);
+    t = ngs_ball_meet(&s_ball, 24 * NGS_Q, k_pitch.gravity, &mx, &my);
+    for (frame = 0; frame < t; frame++) ngs_ball_fly(&s_ball, k_pitch.gravity, frame);
+    /* frame t: head height at (mx, my); the game sends its striker there and heads it */
+    ngs_ball_strike(&s_ball, 9, 1540, 352, 160, 4);
+    for (frame = 0; frame < 60u && line == NGS_LINE_NONE; frame++) {
+        ngs_ball_fly(&s_ball, k_pitch.gravity, frame);
+        line = ngs_ball_line(&s_ball, &k_pitch, &right);       /* NGS_LINE_GOAL: kick-off */
+    }
+    if (t == 0u || line != NGS_LINE_GOAL || !right) return 0;
+    /* a championship for nation 3 of 40: the computer's matches play themselves */
+    ngs_cup_init(&s_cup, 3, 2026u, 40, k_power);
+    while ((n = ngs_cup_next(&s_cup, k_result)) >= 0) {
+        const NGSFixture *f = &s_cup.fixture[n];
+        a = f->home == 3u ? 2u : 1u;                              /* the human side's match: won 2-1 */
+        b = (uint8_t)(3u - a);
+        ngs_cup_result(&s_cup, (uint8_t)n, a, b, 3u);
+    }
+    return s_cup.champion == 3u;
+}
+
 int main(void)
 {
-    int ok = puzzle_example() && picture_example() && mahjong_example() && solitaire_example() && rpg_example() && beatemup_example();
+    int ok = puzzle_example() && picture_example() && mahjong_example() && solitaire_example() && rpg_example() && beatemup_example()
+             && soccer_example();
     printf("genre examples: %s\n", ok ? "all tests passed" : "FAILED");
     return ok ? 0 : 1;
 }

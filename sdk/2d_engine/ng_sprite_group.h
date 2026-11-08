@@ -70,6 +70,9 @@ typedef struct {
     uint8_t readyRows;  /* NG_VRAM_DEFER: the rows its last full write left, when a
                          * move is then only the driving strip's two words (0: not so) */
     uint8_t tileHigh;   /* tile address bits 16..19; zero for legacy assets */
+    uint8_t exactWidth; /* 1: when shrunk, the strips' widths differ by up to a pixel so
+                         * together they make the exact scaled width (a zooming caption
+                         * then grows a pixel at a time); 0: every strip the same */
 } NGSpriteGroup;
 
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette);
@@ -126,6 +129,8 @@ uint8_t NEOGEO_USER ng_sprite_group_commit_small(NGSpriteGroup *g);
 /* Lines left before the deadline (0 while the picture is being drawn), and
  * whether a commit could start now. */
 uint8_t NEOGEO_USER ng_vram_lines_left(void);
+uint8_t NEOGEO_USER ng_vram_strips_waiting(void);
+void NEOGEO_USER ng_vram_commit_strips_first(void);
 uint8_t NEOGEO_USER ng_vram_window_open(void);
 /* Non-zero while the engine is writing video memory (the commit, a full
  * list's flush, a hide, an upload): raster bands (ng_raster.h) leave their
@@ -180,6 +185,11 @@ void NEOGEO_USER ng_sprite_group_set_active_rows(NGSpriteGroup *g, uint8_t activ
 void NEOGEO_USER ng_sprite_group_set_pos(NGSpriteGroup *g, int16_t x, int16_t y);
 void NEOGEO_USER ng_sprite_group_move(NGSpriteGroup *g, int16_t dx, int16_t dy);
 void NEOGEO_USER ng_sprite_group_set_scale(NGSpriteGroup *g, uint8_t xScale, uint8_t yScale);
+/* The exact-width shrink (see exactWidth): on (1) or off (0). */
+void NEOGEO_USER ng_sprite_group_set_exact_width(NGSpriteGroup *g, uint8_t on);
+/* The width in pixels a group of `strips` strips has at horizontal scale xScale,
+ * shrunk the exact-width way (0xFF: full size, strips * 16). */
+uint16_t NEOGEO_USER ng_sprite_group_exact_width(uint8_t strips, uint8_t xScale);
 void NEOGEO_USER ng_sprite_group_set_flip(NGSpriteGroup *g, uint8_t hflip, uint8_t vflip);
 void NEOGEO_USER ng_sprite_group_set_auto_anim(NGSpriteGroup *g, uint8_t autoAnim4, uint8_t autoAnim8);
 void NEOGEO_USER ng_sprite_group_set_visible(NGSpriteGroup *g, uint8_t visible);

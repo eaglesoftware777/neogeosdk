@@ -1,6 +1,6 @@
 # 2D Engine — C API Reference
 
-**Eagle Software · Neo Geo SDK v1.7.7 (Framework 1.5) · `sdk/2d_engine/`**
+**Eagle Software · Neo Geo SDK v1.7.8 (Framework 1.6) · `sdk/2d_engine/`**
 
 Every public call in the plain-C 2D engine, grouped by module. This file
 is generated from the headers by `tools/gen_api_reference.py` — the
@@ -35,7 +35,9 @@ below for readability.
 
 **Effects** — [ng_debug](#ng_debug) · [ng_demo_advanced](#ng_demo_advanced) · [ng_feedback](#ng_feedback) · [ng_particles](#ng_particles)
 
-**Genre engines** — [ng_beatemup](#ng_beatemup) · [ng_fight](#ng_fight) · [ng_mahjong](#ng_mahjong) · [ng_puzzle](#ng_puzzle) · [ng_rpg](#ng_rpg) · [ng_shooter](#ng_shooter)
+**Gameplay helpers** — [ng_devmenu](#ng_devmenu) · [ng_fixscript](#ng_fixscript) · [ng_join](#ng_join) · [ng_task](#ng_task) · [ng_tune](#ng_tune)
+
+**Genre engines** — [ng_beatemup](#ng_beatemup) · [ng_fight](#ng_fight) · [ng_mahjong](#ng_mahjong) · [ng_puzzle](#ng_puzzle) · [ng_rpg](#ng_rpg) · [ng_shooter](#ng_shooter) · [ng_soccer](#ng_soccer)
 
 ---
 
@@ -54,10 +56,10 @@ uint16_t ng_abs16(int16_t v);
 |---|---|
 | `NG_SDK_VERSION_MAJOR` | `1` |
 | `NG_SDK_VERSION_MINOR` | `7` |
-| `NG_SDK_VERSION_PATCH` | `7` |
+| `NG_SDK_VERSION_PATCH` | `8` |
 | `NG_SDK_VERSION` | `((NG_SDK_VERSION_MAJOR << 16) | (NG_SDK_VERSION_MINOR << 8) | NG_SDK_VERSION_PATCH)` |
 | `NG_FRAMEWORK_VERSION_MAJOR` | `1` |
-| `NG_FRAMEWORK_VERSION_MINOR` | `5` |
+| `NG_FRAMEWORK_VERSION_MINOR` | `6` |
 | `NG_FRAMEWORK_VERSION` | `((NG_FRAMEWORK_VERSION_MAJOR << 8) | NG_FRAMEWORK_VERSION_MINOR)` |
 | `NG_TRUE` | `1` |
 | `NG_FALSE` | `0` |
@@ -542,6 +544,8 @@ void ng_sprite_group_set_move_first(NGSpriteGroup *g, uint8_t on);
 void ng_vram_commit(void);
 uint8_t ng_sprite_group_commit_small(NGSpriteGroup *g);
 uint8_t ng_vram_lines_left(void);
+uint8_t ng_vram_strips_waiting(void);
+void ng_vram_commit_strips_first(void);
 uint8_t ng_vram_window_open(void);
 void ng_sprite_group_cancel(NGSpriteGroup *g);
 void ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t count);
@@ -561,6 +565,8 @@ void ng_sprite_group_set_active_rows(NGSpriteGroup *g, uint8_t activeRows);
 void ng_sprite_group_set_pos(NGSpriteGroup *g, int16_t x, int16_t y);
 void ng_sprite_group_move(NGSpriteGroup *g, int16_t dx, int16_t dy);
 void ng_sprite_group_set_scale(NGSpriteGroup *g, uint8_t xScale, uint8_t yScale);
+void ng_sprite_group_set_exact_width(NGSpriteGroup *g, uint8_t on);
+uint16_t ng_sprite_group_exact_width(uint8_t strips, uint8_t xScale);
 void ng_sprite_group_set_flip(NGSpriteGroup *g, uint8_t hflip, uint8_t vflip);
 void ng_sprite_group_set_auto_anim(NGSpriteGroup *g, uint8_t autoAnim4, uint8_t autoAnim8);
 void ng_sprite_group_set_visible(NGSpriteGroup *g, uint8_t visible);
@@ -1021,6 +1027,77 @@ uint8_t ng_particles_count_priority(uint8_t priority);
 
 ---
 
+# Gameplay helpers
+
+## ng_devmenu
+
+`sdk/2d_engine/ng_devmenu.h` — A developer's test menu over the running game (v1.7.8).
+
+Speed down to a frame at a time, timer stop, free camera, hit boxes, a RAM watch and a sound test.
+
+```c
+void ng_dev_init(const NGDevConfig *cfg);
+uint8_t ng_dev_frame(uint16_t held, uint16_t pressed);
+```
+
+## ng_fixscript
+
+`sdk/2d_engine/ng_fixscript.h` — FIX-layer text screens as short scripts (v1.7.8).
+
+Cursor, palette, typewriter, waits, centring and boxes; stepped a frame at a time or played from a task.
+
+```c
+void ng_fixscript_start(NGFixScript *s, const char *script);
+uint8_t ng_fixscript_step(NGFixScript *s, uint16_t pressed);
+void ng_fixscript_play(const char *script, uint16_t (*read_pressed)(void));
+```
+
+## ng_join
+
+`sdk/2d_engine/ng_join.h` — A second player joining a game already under way (v1.7.8).
+
+```c
+uint8_t ng_join_bios_start(uint8_t playing);
+uint8_t ng_join_poll(void);
+void ng_join_leave(uint8_t p);
+```
+
+## ng_task
+
+`sdk/2d_engine/ng_task.h` — Cooperative tasks on their own stacks: code that waits N frames (v1.7.8).
+
+```c
+uint8_t ng_task_spawn(NGTaskFn fn, void *arg, uint16_t *stack, uint16_t stack_bytes);
+void ng_task_run(void);
+void ng_task_sleep(uint16_t frames);
+void ng_task_exit(void);
+void ng_task_kill(uint8_t id);
+void ng_task_pause(uint8_t id, uint8_t paused);
+uint8_t ng_task_alive(uint8_t id);
+uint8_t ng_task_current(void);
+uint16_t ng_task_stack_left(uint8_t id);
+void ng_task_reset(void);
+```
+
+| Constant | Value |
+|---|---|
+| `NG_TASK_MAX` | `8` |
+| `NG_TASK_NONE` | `0xFFu` |
+
+## ng_tune
+
+`sdk/2d_engine/ng_tune.h` — Ratings into game numbers by difficulty level and situation (v1.7.8).
+
+Per-level curves from a rating of 0 to 31, plus a nudge by score gap, time left and cup round; one MULS a value.
+
+| Constant | Value |
+|---|---|
+| `NG_TUNE_CODE` | `__attribute__((section("neogeo_user")))` |
+| `NG_TUNE_RATING_MAX` | `31` |
+| `NG_TUNE_GAPS` | `7` |
+
+---
+
 # Genre engines
 
 ## ng_beatemup
@@ -1225,6 +1302,37 @@ void ng_shooter_camera_step(NGShooterCamera *camera, int16_t target_x, int16_t t
 uint8_t ng_vertical_layer_init(NGVerticalLayer *layer, uint16_t first_slot, uint8_t strips, uint8_t rows, uint16_t tile_base, uint8_t palette, const uint8_t *bank_map, int16_t origin_x);
 void ng_vertical_layer_draw(NGVerticalLayer *layer, const NGShooterCamera *camera, uint16_t ratio_q8);
 void ng_vertical_layer_hide(NGVerticalLayer *layer);
+```
+
+## ng_soccer
+
+`sdk/2d_engine/ng_soccer.h` — Association football: ball, lines, offside and a 32-side championship (GAME_GENRE_ENGINE = soccer, v1.7.8).
+
+Ball flight, swerve and grass, weighted passes, the meet point of a high ball, goal and touch lines, the offside line, qualifying, draw, tables, bracket, scorers and suspensions. See docs/GENRE_ENGINES_V1.7.7.md section 7.
+
+```c
+uint16_t ngs_isqrt32(int32_t v);
+uint8_t ngs_ball_fly(NGSBall *b, int16_t gravity, uint16_t frame);
+int16_t ngs_grip(int16_t v);
+void ngs_ball_strike(NGSBall *b, uint8_t from, int16_t tx, int16_t ty, int16_t speed, int16_t vh);
+int16_t ngs_bend_toward(const NGSBall *b, int16_t dx, int16_t dy, int16_t amount);
+int16_t ngs_pass_speed(int16_t d);
+uint8_t ngs_ball_meet(const NGSBall *b, int16_t meet_h, int16_t gravity, int16_t *mx, int16_t *my);
+uint8_t ngs_ball_line(const NGSBall *b, const NGSPitch *p, uint8_t *right);
+uint8_t ngs_frame_test(const NGSBall *b, const NGSPitch *p, int16_t off);
+void ngs_frame_rebound(NGSBall *b, const NGSPitch *p, uint8_t right, uint16_t rnd);
+int16_t ngs_offside_line(const int16_t *def, uint8_t n, int16_t ball, int16_t halfway);
+uint16_t ngs_offside_mask(const int16_t *att, uint8_t n, int16_t line, int16_t margin, uint8_t *close, int16_t *by);
+int8_t ngs_cup_init(NGSCup *c, uint8_t human, uint32_t seed, uint8_t nations, NGSPowerFn power);
+int16_t ngs_cup_next(NGSCup *c, NGSResultFn result);
+uint8_t ngs_cup_result(NGSCup *c, uint8_t index, uint8_t home_goals, uint8_t away_goals, uint8_t winner);
+void ngs_cup_ranking(const NGSCup *c, uint8_t group, uint8_t out[4]);
+uint8_t ngs_cup_slot(const NGSCup *c, uint8_t nation);
+uint8_t ngs_cup_round(uint8_t index);
+void ngs_cup_scorer(NGSCup *c, uint8_t team, uint8_t squad);
+uint8_t ngs_cup_top(const NGSCup *c, NGSScorer *out, uint8_t n);
+void ngs_cup_discipline(NGSCup *c, const uint8_t cards[NGS_CUP_SQUAD]);
+uint32_t ngs_cup_roll(NGSCup *c);
 ```
 
 ---

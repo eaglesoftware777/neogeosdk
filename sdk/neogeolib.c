@@ -1495,6 +1495,13 @@ void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
 	isZ80Ready(); playSFXB(TRACK);
 }
 
+#ifdef NG_SOUND_QUEUE
+/* With the queue the bytes wait for the driver, not the 68000: the senders' calls here
+ * only move the queue on. Waiting instead cost a game up to a whole frame whenever the
+ * driver was slow to answer (a crowd's volume step every few frames was enough to hold
+ * a football match at 30 frames a second). */
+void NEOGEO_USER isZ80Ready(void) { sound_queue_try(); }
+#else
 void NEOGEO_USER  isZ80Ready() {
 	ASM_START
 	ASM_L(.isready)
@@ -1505,6 +1512,7 @@ void NEOGEO_USER  isZ80Ready() {
 	: : : "d0"
 	ASM_END
 }
+#endif
 
 void NEOGEO_USER kickWatchDog(void) { ASM_START ASM_MVB(%%d0, REG_DIPSW) : : : "d0" ASM_END }
 void NEOGEO_USER sleep1FFF(void) { ASM_START ASM_MVW(#0x1FFF,%%d0) ASM_L(.slp) ASM_NOP ASM_DBRA(%%d0,.slp) : : : "d0" ASM_END }

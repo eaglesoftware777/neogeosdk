@@ -17,10 +17,11 @@ extern "C" {
  * on they change by additions only (tools/api_freeze.py checks it). */
 #define NG_SDK_VERSION_MAJOR        1
 #define NG_SDK_VERSION_MINOR        7
-#define NG_SDK_VERSION_PATCH        7
+#define NG_SDK_VERSION_PATCH        8
 #define NG_SDK_VERSION              ((NG_SDK_VERSION_MAJOR << 16) | (NG_SDK_VERSION_MINOR << 8) | NG_SDK_VERSION_PATCH)
 #define NG_FRAMEWORK_VERSION_MAJOR  1
-#define NG_FRAMEWORK_VERSION_MINOR  5   /* 1.4: opt-in fighting core (ng_fight); 1.5: genre engines, 20-bit tile addresses */
+#define NG_FRAMEWORK_VERSION_MINOR  6   /* 1.4: opt-in fighting core (ng_fight); 1.5: genre engines, 20-bit tile addresses;
+                                            * 1.6: ng_soccer, ng_tune, ng_task, ng_fixscript, ng_devmenu, ng_join */
 #define NG_FRAMEWORK_VERSION        ((NG_FRAMEWORK_VERSION_MAJOR << 8) | NG_FRAMEWORK_VERSION_MINOR)
 
 /* Boolean */

@@ -31,7 +31,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-GENRES = ("puzzle", "mahjong", "rpg", "beatemup")
+GENRES = ("puzzle", "mahjong", "rpg", "beatemup", "soccer")
 FLAGS = ["-c", "-fomit-frame-pointer", "-Wall", "-Wextra", "-fno-zero-initialized-in-bss",
          "-march=68000", "-mcpu=68000", "-mtune=68000", "-m68000", "-ffreestanding", "-std=gnu99",
          "-I" + ROOT, "-I" + os.path.join(ROOT, "sdk"), "-I" + os.path.join(ROOT, "sdk", "2d_engine")]

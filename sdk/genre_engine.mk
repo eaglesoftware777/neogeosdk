@@ -1,4 +1,4 @@
-# Genre engine selector (v1.7.7), read by Makefile and MakefileWin32.mak.
+# Genre engine selector (v1.7.7, soccer since v1.7.8), read by Makefile and MakefileWin32.mak.
 #
 # A game picks at most one genre engine with one line in its game.mk:
 #
@@ -6,16 +6,18 @@
 #     GAME_GENRE_ENGINE = mahjong     # sdk/2d_engine/ng_mahjong.c
 #     GAME_GENRE_ENGINE = rpg         # sdk/2d_engine/ng_rpg.c
 #     GAME_GENRE_ENGINE = beatemup    # sdk/2d_engine/ng_beatemup.c
+#     GAME_GENRE_ENGINE = soccer      # sdk/2d_engine/ng_soccer.c
 #
 # The chosen engine is compiled as C (also for a USE_2D_PLUS game, whose own
 # sources go through g++ and reach it through the header's extern "C") and
 # linked after the core engine objects, which every game keeps as before.
 # Left empty, the default, nothing is compiled or linked and the build is the
 # one it always was. The game's code and the engine both see
-# -DNG_GENRE_ENGINE_<NAME>=1. See docs/GENRE_ENGINES_V1.7.7.md.
+# -DNG_GENRE_ENGINE_<NAME>=1. See docs/GENRE_ENGINES_V1.7.7.md (soccer: its
+# section 7).
 
 GAME_GENRE_ENGINE ?=
-NG_GENRE_ALLOWED := puzzle mahjong rpg beatemup
+NG_GENRE_ALLOWED := puzzle mahjong rpg beatemup soccer
 NG_GENRE := $(strip $(GAME_GENRE_ENGINE))
 
 ifneq ($(NG_GENRE),)
@@ -33,4 +35,5 @@ NG_GENRE_DEFINE_puzzle   := -DNG_GENRE_ENGINE_PUZZLE=1
 NG_GENRE_DEFINE_mahjong  := -DNG_GENRE_ENGINE_MAHJONG=1
 NG_GENRE_DEFINE_rpg      := -DNG_GENRE_ENGINE_RPG=1
 NG_GENRE_DEFINE_beatemup := -DNG_GENRE_ENGINE_BEATEMUP=1
+NG_GENRE_DEFINE_soccer   := -DNG_GENRE_ENGINE_SOCCER=1
 NG_GENRE_DEFINE := $(if $(NG_GENRE),$(NG_GENRE_DEFINE_$(NG_GENRE)))

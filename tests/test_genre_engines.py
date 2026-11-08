@@ -15,6 +15,7 @@ TESTS = {
     "mahjong": ["tests/mahjong_test.c", "sdk/2d_engine/ng_mahjong.c"],
     "rpg": ["tests/rpg_test.c", "sdk/2d_engine/ng_rpg.c"],
     "beatemup": ["tests/beatemup_test.c", "sdk/2d_engine/ng_beatemup.c"],
+    "soccer": ["tests/soccer_test.c", "sdk/2d_engine/ng_soccer.c"],
 }
 
 
@@ -47,8 +48,11 @@ class GenreEngineTests(unittest.TestCase):
     def test_beatemup(self):
         self.run_host("beatemup")
 
+    def test_soccer(self):
+        self.run_host("soccer")
+
     def test_doc_examples(self):
-        """The four minimal programs quoted in docs/GENRE_ENGINES_V1.7.7.md."""
+        """The minimal programs quoted in docs/GENRE_ENGINES_V1.7.7.md."""
         with tempfile.TemporaryDirectory(prefix="ng-genre-doc-") as d:
             binary = Path(d) / "genre_examples"
             sources = ["tests/genre_examples.c"] + [s for name in TESTS for s in TESTS[name][1:]]
@@ -62,7 +66,7 @@ class GenreEngineTests(unittest.TestCase):
             self.skipTest("no host C++ compiler")
         with tempfile.TemporaryDirectory(prefix="ng-genre-cpp-") as d:
             objs = []
-            for src in ("ng_puzzle", "ng_mahjong", "ng_rpg", "ng_beatemup", "ng_trig", "ng_trig_table"):
+            for src in ("ng_puzzle", "ng_mahjong", "ng_rpg", "ng_beatemup", "ng_soccer", "ng_trig", "ng_trig_table"):
                 obj = Path(d) / (src + ".o")
                 subprocess.run(["cc", "-c", "-std=c99", "-I" + str(ROOT / "sdk"), "-I" + str(ENGINE),
                                 str(ENGINE / (src + ".c")), "-o", str(obj)], check=True)
@@ -90,7 +94,7 @@ class GenreEngineTests(unittest.TestCase):
         r = info("")
         self.assertEqual(r.returncode, 0)
         self.assertIn("genre=none", r.stdout)
-        for g in ("puzzle", "mahjong", "rpg", "beatemup"):
+        for g in ("puzzle", "mahjong", "rpg", "beatemup", "soccer"):
             r = info(g)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertIn(f"source=sdk/2d_engine/ng_{g}.c", r.stdout)

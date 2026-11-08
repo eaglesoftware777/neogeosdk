@@ -21,7 +21,7 @@ C_DIR = os.path.join(ROOT, 'sdk', '2d_engine')
 CPP_DIR = os.path.join(ROOT, 'sdk', '2d_engine_plus')
 DOC_DIR = os.path.join(ROOT, 'docs')
 
-VERSION = 'v1.7.7 (Framework 1.5)'
+VERSION = 'v1.7.8 (Framework 1.6)'
 
 # module stem -> (section, one-line purpose, longer note or '')
 MODULES = {
@@ -159,11 +159,22 @@ MODULES = {
                'Rooms, exits, party, items, dialogue, environmental puzzles and saves from ROM tables.'),
     'ng_beatemup': ('Genre engines', 'Belt-scrolling brawler core for one player (GAME_GENRE_ENGINE = beatemup).',
                     'Waves, a crowd director, grabs, throws, pick-ups and ridable vehicles.'),
+    'ng_soccer': ('Genre engines', 'Association football: ball, lines, offside and a 32-side championship (GAME_GENRE_ENGINE = soccer, v1.7.8).',
+                  'Ball flight, swerve and grass, weighted passes, the meet point of a high ball, goal and touch lines, '
+                  'the offside line, qualifying, draw, tables, bracket, scorers and suspensions. See docs/GENRE_ENGINES_V1.7.7.md section 7.'),
+    'ng_tune': ('Gameplay helpers', 'Ratings into game numbers by difficulty level and situation (v1.7.8).',
+                'Per-level curves from a rating of 0 to 31, plus a nudge by score gap, time left and cup round; one MULS a value.'),
+    'ng_task': ('Gameplay helpers', 'Cooperative tasks on their own stacks: code that waits N frames (v1.7.8).', ''),
+    'ng_fixscript': ('Gameplay helpers', 'FIX-layer text screens as short scripts (v1.7.8).',
+                     'Cursor, palette, typewriter, waits, centring and boxes; stepped a frame at a time or played from a task.'),
+    'ng_devmenu': ('Gameplay helpers', "A developer's test menu over the running game (v1.7.8).",
+                   'Speed down to a frame at a time, timer stop, free camera, hit boxes, a RAM watch and a sound test.'),
+    'ng_join': ('Gameplay helpers', 'A second player joining a game already under way (v1.7.8).', ''),
     'ng_engine_plus': ('Core', 'C++ umbrella include for the C++14 engine.', ''),
     'ng_hw': ('Video', 'The hardware headers with C linkage, for C++ files (include it instead of macro.h and neogeo.h).', ''),
 }
 
-SECTION_ORDER = ['Core', 'Math', 'Video', 'Characters', 'World', 'Effects', 'Genre engines']
+SECTION_ORDER = ['Core', 'Math', 'Video', 'Characters', 'World', 'Effects', 'Gameplay helpers', 'Genre engines']
 
 
 def protos_c(path):
