@@ -8,6 +8,7 @@
 #include "ng_mahjong.h"
 #include "ng_rpg.h"
 #include "ng_beatemup.h"
+#include "ng_soccer.h"
 
 static NGPuzzle puzzle;
 static NGMahjong table;
@@ -73,8 +74,21 @@ int main()
     for (int i = 0; i < 20; i++) { ng_beatemup_input(&brawl, NGB_IN_RIGHT, 0); ng_beatemup_update(&brawl); }
     if (brawl.f[NGB_PLAYER].x <= (64 << 8)) return 13;
 
-    std::printf("genre engines from C++14: puzzle %lu, mahjong %u, rpg %u, beat-'em-up %u bytes: OK\n",
+    // football: a pass rolls out and stops, and a championship starts
+    NGSBall ball;
+    std::memset(&ball, 0, sizeof(ball));
+    ball.owner = NGS_NOBODY;
+    ball.x = 100 * NGS_Q; ball.y = 352 * NGS_Q;
+    ngs_ball_strike(&ball, 1, 300, 352, ngs_pass_speed(200), 0);
+    ball.h = 0;
+    for (int i = 0; i < 400; i++) ngs_ball_fly(&ball, 3, (uint16_t)i);
+    if (ball.vx || (ball.x >> 4) < 300) return 14;
+    static NGSCup cup;
+    if (ngs_cup_init(&cup, 0, 7, 32, [](uint8_t n) -> uint8_t { return (uint8_t)(10 + n % 5); }) != NGS_OK) return 15;
+    if (cup.generated != 48 || cup.groups[0] == cup.groups[1]) return 16;
+
+    std::printf("genre engines from C++14: puzzle %lu, mahjong %u, rpg %u, beat-'em-up %u, soccer cup %u bytes: OK\n",
                 (unsigned long)sizeof(NGPuzzle), (unsigned)sizeof(NGMahjong), (unsigned)sizeof(NGRpg),
-                (unsigned)sizeof(NGBeatEmUp));
+                (unsigned)sizeof(NGBeatEmUp), (unsigned)sizeof(NGSCup));
     return 0;
 }

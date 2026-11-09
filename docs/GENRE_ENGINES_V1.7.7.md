@@ -1,7 +1,7 @@
 # Genre engines (NeoGeoSDK v1.7.7)
 
-v1.7.7 adds four optional engines, one C source and one header each, for
-games the SDK's 2D engine did not cover on its own:
+v1.7.7 added four optional engines and v1.7.8 a fifth, one C source and one
+header each, for games the SDK's 2D engine did not cover on its own:
 
 | `GAME_GENRE_ENGINE` | Source | What it runs |
 |---|---|---|
@@ -9,6 +9,7 @@ games the SDK's 2D engine did not cover on its own:
 | `mahjong` | `sdk/2d_engine/ng_mahjong.c` / `.h` | four-seat Mahjong (Hong Kong Old Style) and Mahjong solitaire |
 | `rpg` | `sdk/2d_engine/ng_rpg.c` / `.h` | top-down adventure: rooms, party, items, dialogue, environmental puzzles |
 | `beatemup` | `sdk/2d_engine/ng_beatemup.c` / `.h` | belt-scrolling 2.5D brawler for one player against a crowd |
+| `soccer` (v1.7.8) | `sdk/2d_engine/ng_soccer.c` / `.h` | association football: the ball, the lines, offside and a 32-side championship |
 
 Each one is game logic only. None of them touches video RAM, the palette or
 the sound driver: a game draws with the SDK's sprite groups and FIX layer
@@ -17,8 +18,8 @@ Nothing is compulsory: a game that leaves the selector empty builds and
 links exactly as it did before.
 
 Example games built on them: `games/sevenwonders` (puzzle),
-`games/maiyaluna` (rpg), `games/nosignal` (beatemup) and
-`games/mahjong_demo` (mahjong). The code below is sketched for reading;
+`games/maiyaluna` (rpg), `games/nosignal` (beatemup),
+`games/mahjong_demo` (mahjong) and `games/centuryxi` (soccer). The code below is sketched for reading;
 the complete minimal programs are in `tests/genre_examples.c`, which
 `tests/test_genre_engines.py` compiles (with `-Werror`) and runs.
 
@@ -33,12 +34,12 @@ GAME_GENRE_ENGINE = puzzle
 The build then compiles that one engine as C into `out/ng_puzzle0.o`, links
 it after the core engine objects, and passes `-DNG_GENRE_ENGINE_PUZZLE=1` to
 the game's sources and the engine (likewise `_MAHJONG`, `_RPG`,
-`_BEATEMUP`). Both `Makefile` and `MakefileWin32.mak` read the selector
+`_BEATEMUP`, `_SOCCER`). Both `Makefile` and `MakefileWin32.mak` read the selector
 from `sdk/genre_engine.mk`.
 
 - Empty (the default): no genre source is compiled, no object linked.
 - A typo stops the build: `GAME_GENRE_ENGINE='puzle' is not a genre engine;
-  use one of: puzzle mahjong rpg beatemup, or leave it empty`.
+  use one of: puzzle mahjong rpg beatemup soccer, or leave it empty`.
 - Two values stop it too: `a game links one genre engine, not 2`.
 - `make GAME=mygame genre-info` prints what the selector resolved to:
   `game=mygame genre=puzzle source=sdk/2d_engine/ng_puzzle.c object=out/ng_puzzle0.o define=-DNG_GENRE_ENGINE_PUZZLE=1`.
@@ -59,13 +60,14 @@ from a game source, or `ng_puzzle.h` with the SDK's include paths).
 | mahjong | nothing | |
 | rpg | nothing | |
 | beatemup | nothing | |
+| soccer | nothing | |
 
 ### C++14 games
 
 The engines are C. A `USE_2D_PLUS=1` game, whose own sources are built with
 `g++`, still gets the engine compiled with the C compiler; the headers wrap
 their declarations in `extern "C"`. `tests/genre_cpp_test.cpp` builds a
-C++14 program against all four engines on the host. Designated initializers
+C++14 program against all five engines on the host. Designated initializers
 in the examples below are C99; a C++14 game writes its tables positionally.
 
 ## 2. What every engine has in common
@@ -90,7 +92,13 @@ in the examples below are C99; a C++14 game writes its tables positionally.
   the puzzle engine replays action lists, and the puzzle, Mahjong and
   adventure engines save and load their state (big-endian, versioned).
 - **Return codes.** Calls that can fail return `0` (`NGP_OK`, `NGM_OK`,
-  `NGR_OK`, `NGB_OK`) or a negative error from the header.
+  `NGR_OK`, `NGB_OK`, `NGS_OK`) or a negative error from the header.
+
+The football engine is the exception in two ways: a match's players, tactics
+and referee are the game's, so it has no update of its own and no event queue
+(each call answers what it did: `ngs_ball_fly()` returns `NGS_FLY_BOUNCE`,
+`ngs_ball_line()` the line the ball crossed); and the championship takes two
+callbacks from the game, a nation's strength and a computer match's result.
 
 ## 3. Puzzle (`ng_puzzle`)
 
@@ -394,7 +402,87 @@ Limits: one player (`NGB_PLAYER`), 10 enemies out at once, 12 props, 8
 shots, 64 queued events. No save: a stage is short; a game keeps its own
 progress between stages.
 
-## 7. Costs
+## 7. Football (`ng_soccer`, v1.7.8)
+
+The part of a football game that has no look of its own, taken from Century
+XI: Road to 2030 once its matches and championship were tested, so the game
+now runs on it. Units are a pitch's: x from the left goal line (0) to the
+right (`len`), y from the far touchline (0) to the near one (`wid`), the goal
+mouth centred on `wid / 2`. Ball positions and speeds are Q4 (16 to a unit).
+
+- **Arithmetic.** `ngs_mul` (16 x 16 to 32 bits, one MULS) and `ngs_div`
+  (one DIVS), always inlined: written as plain C, `a * b` or `a / b` on two
+  16-bit values is promoted to `int` and becomes a library call of several
+  hundred cycles. `ngs_isqrt32`, a bit at a time.
+- **The ball** (`NGSBall`, 26 bytes): `ngs_ball_fly()` is one frame of a free
+  ball: gravity and air drag (the same both ways, so shots at either goal fly
+  alike), bounces that take a quarter of its pace, the grass's grip (a ball
+  struck hard, `fast`, skims until it slows), and a swerve (`curve`) that
+  turns the flight whichever way it goes, with the fractions of each frame's
+  push kept so a small bend adds up. `ngs_ball_strike()` sends it toward a
+  spot at a speed and lift; `ngs_bend_y()` and `ngs_bend_toward()` pick the
+  sign of a swerve.
+- **Passes.** `ngs_pass_speed(d)`: the speed that leaves a ground ball rolling
+  to rest about 40 units past a spot d units away under that grip, so a pass
+  arrives firm.
+- **High balls.** `ngs_ball_meet()`: the frames until a ball in the air drops
+  to a height (head height, say) and where it will be then, for keepers and
+  the men who go up for it.
+- **The lines.** `ngs_ball_line()`: in play, a goal, the frame (posts or
+  bar: `ngs_frame_rebound()` sends it back, half its pace, a little sideways),
+  wide of the goal (a corner or a goal kick, the game's call), or over a
+  touchline.
+- **Offside.** `ngs_offside_line()`: the second-last defender, or the ball, or
+  halfway, whichever is furthest; `ngs_offside_mask()`: the attackers past it
+  by more than a margin (flagged) and the closest call inside it (for a
+  review).
+- **The championship** (`NGSCup`): up to 64 nations; the human side always
+  plays, 31 others qualify by strength (the game's callback) times four plus
+  up to 27 of luck; a seeded draw into eight groups of four; 48 group matches,
+  round of 16 (A1-B2, B1-A2, ...), quarter-finals, semi-finals, third place and
+  the final, 64 in all. Tables at 3/1/0 points, ranked by points, goal
+  difference, goals scored, then the draw's order. `ngs_cup_next()` plays
+  every computer match before the human side's next one through the game's
+  result callback (no finalist is ever picked), `ngs_cup_result()` refuses
+  an unknown, repeated or inconsistent result, `ngs_cup_scorer()` /
+  `ngs_cup_top()` keep the golden boot, and `ngs_cup_discipline()` carries
+  the human side's bookings: two, or a red, and a man sits out the next match.
+
+```c
+static const NGSPitch k_pitch = { 1536, 704, 88, 40, 3 };   /* len, wid, half goal, bar, gravity */
+static NGSBall s_ball;
+static NGSCup s_cup;
+
+/* a frame of the match: the game moves its men and an owned ball itself */
+if (s_ball.owner == NGS_NOBODY) {
+    if (ngs_ball_fly(&s_ball, k_pitch.gravity, frame) & NGS_FLY_BOUNCE) play_bounce();
+    meet_t = ngs_ball_meet(&s_ball, 24 * NGS_Q, k_pitch.gravity, &meet_x, &meet_y);
+    switch (ngs_ball_line(&s_ball, &k_pitch, &right)) {
+    case NGS_LINE_GOAL:  goal(right); break;
+    case NGS_LINE_FRAME: ngs_frame_rebound(&s_ball, &k_pitch, right, rnd()); break;
+    case NGS_LINE_WIDE:  corner_or_goal_kick(right); break;
+    case NGS_LINE_TOUCH: throw_in(); break;
+    }
+}
+
+/* the championship: the computer's matches play themselves */
+ngs_cup_init(&s_cup, my_nation, seed, 48, nation_power);
+while ((n = ngs_cup_next(&s_cup, quick_result)) >= 0) {
+    play_match(s_cup.fixture[n].home, s_cup.fixture[n].away, &goals_home, &goals_away, &winner);
+    ngs_cup_result(&s_cup, n, goals_home, goals_away, winner);
+}
+```
+
+`NGSCup` is 810 bytes on the 68000 and is a save format: Century XI keeps it
+in backup RAM and on the memory card as it is; change its layout only with a
+new save version. Players, formations, the computer's thinking, the
+referee's manner, cameras, drawing and sound stay the game's
+(`games/centuryxi/scenes`). `tests/soccer_test.c` checks the passes against
+the grass, flights, the meet point against the flight it predicts, the lines,
+offside, 1000 championships (entrants, fixtures, tables, bracket, the same
+seed giving the same championship) and the bookings.
+
+## 8. Costs
 
 Measured on 2026-10-26 with the SDK's m68k GCC (`tools/check_genre_codegen.py`,
 `-O2`) and the host tests:
@@ -405,15 +493,16 @@ Measured on 2026-10-26 with the SDK's m68k GCC (`tools/check_genre_codegen.py`,
 | mahjong | 748 B (table), 1016 B (solitaire) | 553 B used of 1024 | 27,422 B | 248 B (`lay`) |
 | rpg | 3568 B | 320 B | 35,338 B | 192 B (`find_path`) |
 | beatemup | 1816 B | - | 23,726 B | 188 B (`ng_beatemup_update`) |
+| soccer (2026-11-08) | 26 B (ball), 810 B (cup) | the cup, 810 B | 6,002 B | 164 B (`ngs_cup_init`) |
 
-None of the four uses 32-bit multiply or divide library calls at `-O2`, and
+None of the five uses 32-bit multiply or divide library calls at `-O2`, and
 none contains the post-increment copy pattern GCC miscompiles for the
 68000 (`tests/test_genre_engines.py` fails if the check finds one). A game that
 selects no engine carries none of this; one that selects an engine carries
 only that one (see `docs/roadmap/V1.7.7_TEST_REPORT.md` for the per-game
 link check).
 
-## 8. Tools that came with v1.7.7
+## 9. Tools that came with v1.7.7
 
 - `tools/check_genre_codegen.py`: compiles each engine for the 68000 and
   reports code size, library calls, the largest frames and the known
@@ -432,11 +521,11 @@ link check).
   sequencer that render original effects and music to WAV for the sound
   build.
 
-## 9. What these engines are not
+## 10. What these engines are not
 
 They are rules and simulation, not games: art, music, text, level design,
 menus, saves to the memory card or backup RAM and every screen are the
 game's. They do not draw, so a game keeps full control of sprite budgets
 and scanline limits (see `docs/performance_rules.md`). Their maturity is
-that of their tests and the four example games: MAME on AES and MVS with
+that of their tests and the five example games: MAME on AES and MVS with
 EagleBIOS; physical hardware is unverified.

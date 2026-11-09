@@ -44,6 +44,8 @@ tests/test_rpg
 tests/test_rpg.exe
 tests/test_beatemup
 tests/test_beatemup.exe
+tests/test_soccer
+tests/test_soccer.exe
 tests/test_genre_cpp
 tests/test_genre_cpp.exe
 tests/genre_*.o

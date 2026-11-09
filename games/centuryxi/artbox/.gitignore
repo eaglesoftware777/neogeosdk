@@ -1,0 +1,4 @@
+*.c1
+*.c2
+*.s1
+generated/

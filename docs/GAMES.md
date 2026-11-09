@@ -1,11 +1,11 @@
 # The Shipped Games
 
-**Eagle Software · Neo Geo SDK v1.7.7**
+**Eagle Software · Neo Geo SDK v1.7.8 (pre-release)**
 
-Twelve projects are listed here: seven released games (a platformer, a
-shooter, a fighting game, a beat'em-up, an adventure RPG, a puzzle game and
-a mahjong table), the showcase and its C++ counterpart, a formation shooter
-and two minimal examples. Use their source as reference implementations for
+Thirteen projects are listed here: eight games (a platformer, a shooter, a
+fighting game, a beat'em-up, an adventure RPG, a puzzle game, a mahjong table
+and, from the v1.7.8 pre-release, a football game), the showcase and its C++
+counterpart, a formation shooter and two minimal examples. Use their source as reference implementations for
 the SDK features they demonstrate.
 
 | Game | Id | Engine | What it is |
@@ -19,6 +19,7 @@ the SDK features they demonstrate.
 | `maiyaluna` | 783 | C, `ng_rpg` | Maiya & Luna: two solo journeys, seven chapters |
 | `nosignal` | 784 | C, `ng_beatemup` | No Signal Z Alpha: eight streets for one player |
 | `mahjong_demo` | 785 | C, `ng_mahjong` | Mahjong Demo: four-seat Hong Kong Old Style and solitaire |
+| `centuryxi` | 787 | C, `ng_soccer` | Century XI: Road to 2030, parody international football, a 64-match championship |
 | `helloworld` | 772 | — | FIX text and one sample. The tutorial target. |
 | `tutorial` | 555 | C | The minimal engine loop, nothing else |
 | `neogeogame` | 775 | C | A sprite-based formation shooter |
@@ -176,6 +177,24 @@ chosen with `GAME_GENRE_ENGINE` in its `game.mk`:
   CPU players, and solitaire.
 
 Each has its own `README.md` and `CHANGELOG.md`; `make GAME=<name> all` builds it.
+
+## centuryxi — Century XI: Road to 2030 (id 787)
+
+Original arcade football on the v1.7.8 football engine (`GAME_GENRE_ENGINE =
+soccer`, `docs/GENRE_ENGINES_V1.7.7.md` section 7): eleven a side in a
+pseudo-3D stadium, a cute parody of 1994 with 48 made-up nations (32 reach
+each championship's finals), chibi figurines whose kits, skin and hair come
+from palette roles at run time, and the whole championship: qualifying, an
+animated draw, eight groups, the knock-out bracket, line-ups, top scorers,
+suspensions and a trophy ceremony. Quick Cup, exhibition, two-player versus
+with join-in, penalty challenge and a training ground; Classic and Modern
+controls; eight CPU levels (`ng_tune`); video review; a 3D penalty view;
+speech for the announcer, the chants and every shirt name. The match, the
+men and the CPU are in `games/centuryxi/scenes`; the ball, the lines,
+offside and the championship are the engine's. Build with
+`make GAME=centuryxi all`; host tests `python3 games/centuryxi/tests/run.py`;
+play-test logging `games/centuryxi/tools/live_debug.py`. Details, controls and
+measurements: `games/centuryxi/README.md` and `games/centuryxi/docs/STATUS.md`.
 
 ## helloworld (id 772)
 

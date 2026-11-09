@@ -1,0 +1,8 @@
+; 3_cheer.mml - Goal roar & stadiumhorn burst (one-shot)
+
+T160
+P3
+V14
+O5
+L16
+C E G > C < G > C E4

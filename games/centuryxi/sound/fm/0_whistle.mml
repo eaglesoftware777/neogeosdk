@@ -1,0 +1,21 @@
+; Century XI match BGM (Track 0) - Upbeat 8-bar international arcade soccer theme
+
+T136
+I0
+V13
+O4
+L8
+
+C E G > C < B G E G
+F A > C D C < A G4
+E G B > D C < B A G
+F+ A > D < A B4 G4
+
+I2
+O4
+C G E G C G E G
+D A F A D A G B
+I0
+> C < B A G F E D C
+D G B > D C4 < G4
+~

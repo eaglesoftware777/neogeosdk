@@ -1,0 +1,33 @@
+; Century XI YM2610 SSG SFX preset bank
+
+[preset 0]
+name=Ball Kick Thump
+tone_mask=0x36
+vol_a=0F
+vol_b=08
+vol_c=00
+noise_freq=0C
+
+[preset 1]
+name=Referee Whistle Trill
+tone_mask=0x38
+vol_a=0E
+vol_b=0A
+vol_c=00
+noise_freq=02
+
+[preset 2]
+name=Keeper Glove Parry
+tone_mask=0x36
+vol_a=0E
+vol_b=09
+vol_c=04
+noise_freq=08
+
+[preset 3]
+name=Stadium Crowd Roar
+tone_mask=0x36
+vol_a=0D
+vol_b=09
+vol_c=06
+noise_freq=06

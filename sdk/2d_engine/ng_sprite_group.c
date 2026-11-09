@@ -181,6 +181,32 @@ static uint8_t NEOGEO_USER ngsg_rows(const NGSpriteGroup *g)
     return ng_sprite_display_rows(rows, g->yScale);
 }
 
+/* Every strip's SCB2. Shrunk with exactWidth set, the total scaled width is
+ * shared out: each strip gets the whole pixels it can, and the pixels left over
+ * go one each to strips spread evenly along the group (a running remainder, as
+ * a line is drawn), so the strips add up to the exact width with no gap. The
+ * hardware places each chained strip just after the last at its shrunk width. */
+static uint16_t NEOGEO_USER ngsg_scb2(const NGSpriteGroup *g);
+static void NEOGEO_USER ngsg_put_scb2(const NGSpriteGroup *g, uint16_t n)
+{
+    uint16_t total, q, r, err = 0, k;
+    if (!g->exactWidth || g->xScale >= NG_SPRITE_FULL_XSCALE || !n) {
+        ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite), ngsg_scb2(g), ngsg_scb2(g), n);
+        return;
+    }
+    total = ng_sprite_group_exact_width((uint8_t)n, g->xScale);
+    if (total < n) total = n;                  /* a strip is at least one pixel */
+    q = (uint16_t)(total / n);
+    r = (uint16_t)(total - q * n);
+    for (k = 0; k < n; k++) {
+        uint16_t w = q;
+        err = (uint16_t)(err + r);
+        if (err >= n) { err = (uint16_t)(err - n); w++; }
+        if (w > 16u) w = 16u;
+        ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite + k), (uint16_t)(((w - 1u) << 8) | g->yScale), 0u, 1u);
+    }
+}
+
 /* The SCB words, as setSCB2/3/4 and setSCB1_2 build them. */
 static uint16_t NEOGEO_USER ngsg_scb2(const NGSpriteGroup *g)
 {
@@ -480,6 +506,7 @@ void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, ui
     g->y = 0;
     g->xScale = NG_SPRITE_FULL_XSCALE;
     g->yScale = NG_SPRITE_FULL_YSCALE;
+    g->exactWidth = 0;
     g->hflip = 0;
     g->vflip = 0;
     g->autoAnim4 = 0;
@@ -583,6 +610,20 @@ void NEOGEO_USER ng_sprite_group_move(NGSpriteGroup *g, int16_t dx, int16_t dy)
         g->x += dx;
         g->y += dy;
         g->dirty |= NG_SGF_DIRTY_POS;
+    }
+}
+
+uint16_t NEOGEO_USER ng_sprite_group_exact_width(uint8_t strips, uint8_t xScale)
+{
+    if (xScale >= NG_SPRITE_FULL_XSCALE) return (uint16_t)(strips * 16u);
+    return (uint16_t)(((uint32_t)strips * 16u * ((uint16_t)xScale + 1u)) >> 8);
+}
+
+void NEOGEO_USER ng_sprite_group_set_exact_width(NGSpriteGroup *g, uint8_t on)
+{
+    if (g && g->exactWidth != (uint8_t)(on != 0u)) {
+        g->exactWidth = (uint8_t)(on != 0u);
+        g->dirty |= NG_SGF_DIRTY_SHRINK;
     }
 }
 
@@ -691,7 +732,7 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
      * chained (sticky) strips carry the chain bit (0x40) and a copy of the
      * height, which hardware ignores on them but emulators may read.
      */
-    ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite), ngsg_scb2(g), ngsg_scb2(g), n);
+    ngsg_put_scb2(g, n);
     ngsg_fill((uint16_t)(SCB3_ADDR + g->firstSprite), ngsg_scb3(g, rows), (uint16_t)(0x0040u | rows), n);
     ngsg_fill((uint16_t)(SCB4_ADDR + g->firstSprite), ngsg_scb4(g), 0u, n);
     /* Written, but a listed group stays listed: dropping the mark lets a
@@ -717,7 +758,7 @@ void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g)
     rows = ngsg_rows(g);
     /* Horizontal shrink on every strip, for a consistent width; the
      * driver's Y and height, and the chain bit on the rest; the driver's X. */
-    ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite), ngsg_scb2(g), ngsg_scb2(g), g->strips);
+    ngsg_put_scb2(g, g->strips);
     ngsg_fill((uint16_t)(SCB3_ADDR + g->firstSprite), ngsg_scb3(g, rows), (uint16_t)(0x0040u | rows), g->strips);
     ngsg_put((uint16_t)(SCB4_ADDR + g->firstSprite), ngsg_scb4(g));
 }
@@ -801,7 +842,7 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
     /* SCB2 shrink upload */
     if ((dirty & NG_SGF_DIRTY_SHRINK) ||
         g->xScale != NG_SPRITE_FULL_XSCALE || g->yScale != NG_SPRITE_FULL_YSCALE)
-        ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite), ngsg_scb2(g), ngsg_scb2(g), g->strips);
+        ngsg_put_scb2(g, g->strips);
 
     /*
      * SCB3/4.  The driver strip carries X, Y and the active-character count,
@@ -868,6 +909,21 @@ static uint16_t NEOGEO_USER ngsg_line(void)
     uint16_t c = (uint16_t)(*(volatile uint16_t *)0x3C0006u >> 7);
     return (uint16_t)(c >= 0x100u ? c - 0x100u : c + 8u);
 #endif
+}
+
+static void NEOGEO_USER ngsg_commit_strips(void);
+
+/* Streamed strip columns still waiting for a blank (a scrolling layer behind the camera). */
+uint8_t NEOGEO_USER ng_vram_strips_waiting(void) { return ngsg_strips_n; }
+
+/* The streamed strip columns first, before a game's own writer takes the blank: a
+ * scrolling background a column behind shows the wrong picture at the screen's edge. */
+void NEOGEO_USER ng_vram_commit_strips_first(void)
+{
+    if (!ngsg_strips_n || !ng_vram_window_open()) return;
+    ng_vram_busy++;
+    ngsg_commit_strips();
+    ng_vram_busy--;
 }
 
 uint8_t NEOGEO_USER ng_vram_lines_left(void)
@@ -1174,7 +1230,7 @@ static uint8_t NEOGEO_USER ngsg_flush_rescaled(NGSpriteGroup *g)
         return 0u;
     rows = ngsg_rows(g);
     if (!rows || g->mapRows < ng_sprite_map_rows(rows)) return 0u;
-    ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite), ngsg_scb2(g), ngsg_scb2(g), g->strips);
+    ngsg_put_scb2(g, g->strips);
     ngsg_fill((uint16_t)(SCB3_ADDR + g->firstSprite), ngsg_scb3(g, rows), (uint16_t)(0x0040u | rows), g->strips);
     ngsg_put((uint16_t)(SCB4_ADDR + g->firstSprite), ngsg_scb4(g));
     g->dirty = (uint8_t)(g->dirty & NG_SGF_QUEUED);
@@ -1275,6 +1331,7 @@ static void NEOGEO_USER ngsg_commit_list(NGSpriteGroup **q, uint16_t *count)
  * running goes first in the next, before any other content.
  */
 #define NGSG_AGED 3u
+#define NGSG_STARVED 12u      /* frames at the head of its list: then no margin, at 4x a few lines late */
 
 static void NEOGEO_USER ngsg_note_head(uint8_t list, NGSpriteGroup **q, uint16_t n)
 {
@@ -1306,11 +1363,21 @@ static void NEOGEO_USER ngsg_commit_aged(void)
         ngsg_head[best] = 0;
         return;
     }
-    /* Age changes priority, never the safe writing window. Hides and
+    /* Age changes priority; a long wait also eats into the safety margin.
+     * A big first write (a wide caption with its column padding) can cost
+     * more than a short blank ever has once a game's own writer has run, and
+     * with the full margin it would wait for ever: after NGSG_STARVED frames
+     * it goes without the half-again margin, and after four times that it
+     * goes even if it runs a few lines into the top of the picture. One
+     * frame written late beats a picture that never appears. Hides and
      * movement earlier in this commit may already have spent the blank. */
     cost = ngsg_cost(g);
-    if (ngsg_waiting_hide(g) ||
-        ng_vram_lines_left() < (uint8_t)(cost + (cost >> 1))) return;
+    {
+        uint8_t need = (uint8_t)(cost + (cost >> 1));
+        if (age >= NGSG_STARVED) need = cost;
+        if (age >= (uint8_t)(NGSG_STARVED * 4u)) need = (uint8_t)((cost >> 1) + 1u);
+        if (ngsg_waiting_hide(g) || ng_vram_lines_left() < need) return;
+    }
     ngsg_head[best] = 0;
     if (!ngsg_flush_moved(g) && !ngsg_flush_rescaled(g)) ngsg_flush_now(g);
     /* A full write clears dirty flags, but this pointer is still in its

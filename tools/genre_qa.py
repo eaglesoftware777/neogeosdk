@@ -7,8 +7,8 @@ Drive a built game in MAME from a timeline and keep pictures and RAM traces.
         --step 15:snap:board --watch s_p:16 --out /tmp/sw-qa
 
 Timeline steps are TIME:ACTION, TIME in emulated seconds:
-    coin | start | press:BUTTON (a tenth of a second) | hold:BUTTON | release:BUTTON | snap:NAME
-BUTTON is A B C D UP DOWN LEFT RIGHT START. Snapshots are also taken every --every seconds.
+    coin | start | coin2 | start2 | press:BUTTON (a tenth of a second) | hold:BUTTON | release:BUTTON | snap:NAME
+BUTTON is A B C D UP DOWN LEFT RIGHT START. coin2 and start2 are player 2's (arcade board). Snapshots are also taken every --every seconds.
 --watch SYMBOL[+OFFSET][:BYTES] logs that many bytes at the symbol (from out/game, the last
 build), OFFSET bytes in, once a frame into watch.csv, so a test can check what the game did.
 --lua FILE adds a script of one's own (a probe of video memory, say) after the runner's.
@@ -56,7 +56,8 @@ else
             C = {':edge:joy:JOY1', 'P1 C'}, D = {':edge:joy:JOY1', 'P1 D'},
             UP = {':edge:joy:JOY1', 'P1 Up'}, DOWN = {':edge:joy:JOY1', 'P1 Down'},
             LEFT = {':edge:joy:JOY1', 'P1 Left'}, RIGHT = {':edge:joy:JOY1', 'P1 Right'},
-            START = {':edge:joy:START', '1 Player Start'}, COIN = {':AUDIO_COIN', 'Coin 1'} }
+            START = {':edge:joy:START', '1 Player Start'}, COIN = {':AUDIO_COIN', 'Coin 1'},
+            START2 = {':edge:joy:START', '2 Players Start'}, COIN2 = {':AUDIO_COIN', 'Coin 2'} }
 end
 local function set(name, v)
     local m = MAP[name]
@@ -82,6 +83,8 @@ emu.register_frame_done(function()
         if not done[i] and now >= s.t then
             done[i] = true
             if s.a == 'coin' then set('COIN', 1); releases['COIN'] = now + 0.15
+            elseif s.a == 'coin2' then set('COIN2', 1); releases['COIN2'] = now + 0.15
+            elseif s.a == 'start2' then set('START2', 1); releases['START2'] = now + 0.15
             elseif s.a == 'start' then set('START', 1); releases['START'] = now + 0.15
             elseif s.a == 'press' then set(s.b, 1); releases[s.b] = now + 0.1
             elseif s.a == 'hold' then set(s.b, 1); releases[s.b] = nil

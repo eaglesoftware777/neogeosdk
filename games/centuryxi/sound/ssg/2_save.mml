@@ -1,0 +1,8 @@
+; 2_save.mml - Goalkeeper diving parry (one-shot)
+
+T180
+P2
+V15
+O4
+L32
+C G > C E < G C

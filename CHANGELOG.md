@@ -1,5 +1,91 @@
 # Changelog
 
+## v1.7.8 - pre-release: the football engine
+
+A work-in-progress pre-release after v1.7.7, which stays the current release.
+SDK 1.7.8, Framework 1.6 (additions only: games written for v1.7.0 and v1.7.7
+build unchanged). It brings a fifth genre engine, for association football,
+five small SDK modules that came with it, and Century XI: Road to 2030, the
+game built on them (cartridge ID 787, game version 4.0.0). Announcement:
+[docs/releases/ANNOUNCEMENT_v1.7.8.md](docs/releases/ANNOUNCEMENT_v1.7.8.md).
+
+### Engine
+
+- `ng_soccer` (`GAME_GENRE_ENGINE = soccer`, `sdk/2d_engine/ng_soccer.c`):
+  the ball in world space (gravity, air drag the same both ways, bounces,
+  the grass's grip, a struck ball that skims, a swerve that turns the flight
+  with its remainders kept), weighted passes, where a high ball comes down,
+  goal, posts, bar, goal lines and touchlines, the offside line and flags, and
+  a 32-side championship from up to 64 nations (qualifying, the draw, 48 group
+  matches, round of 16 to the final, tables with a fixed tie-break, scorers,
+  bookings and suspensions). No 32-bit divide, 6,002 bytes at `-O2`; host
+  tests in `tests/soccer_test.c`; guide in `docs/GENRE_ENGINES_V1.7.7.md`
+  section 7.
+- `ng_tune`: ratings (0-31) into game numbers through per-level curves, plus
+  a nudge by score gap, time left and cup round, one MULS a value.
+- `ng_task`: cooperative tasks on their own stacks (`ng_task_sleep(n)` waits n
+  frames), so a cut-scene or a caption is straight-line code.
+- `ng_fixscript`: FIX-layer text screens as short scripts (cursor, palette,
+  typewriter, waits, centring, boxes), stepped a frame at a time or played
+  from a task.
+- `ng_devmenu`: a developer's test menu over a running game (speed down to a
+  frame at a time, timer stop, free camera, hit boxes, a RAM watch, a sound
+  test).
+- `ng_join`: a second player joining a game already under way from the system
+  ROM's PLAYER_START, with the credit taken by the system.
+- `ng_sys_credit_check()` and `ng_sys_credit_down()` (`sdk/cabinet/ng_sys.h`):
+  the system ROM's credit routines, safe to call from game code. The routines
+  change registers compiled C expects a call to keep (D2, D4, A3 to A5), which
+  `CALLNEOGEOF` does not save: a value kept in D2 came back cleared (`ng_join`
+  refused a player who had paid) and a function pointer kept in A4 sent the
+  CPU into backup RAM. `ng_join` uses them; `BIOS_CREDIT_DEC` names the
+  per-player decrements at $10FDB0. See `docs/cabinet.md`.
+- The five are in the SDK library (`out/libng_sdk.a`): a game that calls none
+  of them links none of their code.
+- `ng_sprite_group`: `exactWidth` / `ng_sprite_group_set_exact_width()`
+  (shrunk strips share out the exact scaled width a pixel at a time, so a
+  zooming caption grows smoothly), `ng_sprite_group_exact_width()`,
+  `ng_vram_commit_strips_first()` and `ng_vram_strips_waiting()` (streamed
+  background columns go up before a game's own blank-time writer).
+- Deferred VRAM: a group waiting at the head of its list for 12 frames goes
+  without the safety margin, and after 48 frames even if it runs a few lines
+  into the picture; a wide first write that could never fit a short blank
+  used to wait for ever.
+- `NG_SOUND_QUEUE`: `isZ80Ready()` moves the queue on instead of waiting for
+  the driver (the wait could hold a frame for up to a whole frame). The bytes
+  and their order are unchanged, but a game's frames now fall differently:
+  rebuilt on 1.7.8, Shadow League's first CPU opponent can differ from its
+  v1.7.7 ROM on the same inputs; the other v1.7.7 games played the same in a
+  60-second MAME comparison.
+
+### Build and tools
+
+- `sdk/neogeo.ld`: code and read-only data from SDK library members are
+  placed by a catch-all, so a library module's tables are always in ROM.
+- Sound build: `enc_wave16le_a.sh` and `adpcm_enc_a.sh` skip samples whose
+  output is newer than the source and the encoder (a game with hundreds of
+  voice samples no longer re-encodes them all on every build).
+- `tools/softdip.py`: a game's soft DIP table (the arcade operator's
+  settings) from a short text spec, read back with `ng_dip_*`.
+- `tools/genre_qa.py`: `coin2` and `start2` timeline steps (player two).
+- `tools/check_genre_codegen.py`, `tests/test_genre_engines.py`,
+  `tests/Makefile` and the C++14 consumer test cover `ng_soccer`.
+
+### Century XI: Road to 2030, 4.0.0 (`games/centuryxi`, ID 787)
+
+An original, cute parody of 1994 international football: 48 parody nations
+(32 reach each championship's finals), chibi figurines in three depth sizes,
+a pseudo-3D stadium, a full 64-match championship with the draw, tables,
+bracket, line-ups, top scorers, suspensions and a trophy ceremony, Classic
+and Modern controls, eight CPU levels, video review, penalties in a low 3D
+view, commentary that names the men, and two players with join-in. Details:
+`games/centuryxi/README.md`, `games/centuryxi/CHANGELOG.md` and
+`games/centuryxi/docs/STATUS.md` (what was measured, and what is not built).
+Tested in MAME on MVS and AES with EagleBIOS; Start, credits, versus and
+join-in also under the US, Europe, Japan, Asia and UniBIOS arcade system ROMs
+and the Asia and Japan console ones (`games/centuryxi/tests/test_boot_flow.py`).
+Not tested on real hardware.
+
 ## v1.7.7 - the games release
 
 Seven games on the SDK, four genre engines, the fighting core, EagleBIOS and
