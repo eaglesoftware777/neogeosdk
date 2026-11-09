@@ -56,6 +56,7 @@ GAMES = {
     "SevenWonders": ("sevenwonders", "Seven Wonders Puzzles", {"hbmame": "7wonders"}),
     "MahjongDemo": ("mahjong_demo", "Mahjong Demo", {"hbmame": "mahjongd"}),
     "SkyLance": ("skylance", "Sky Lance", {"hbmame": "skylance", "fbneo": "skylance"}),
+    "CenturyXI": ("centuryxi", "Century XI: Road to 2030", {}),
     "EagleBIOS": ("bios", "EagleBIOS", {}),
 }
 # The SDK demo has no dist/release files; it is checked against the

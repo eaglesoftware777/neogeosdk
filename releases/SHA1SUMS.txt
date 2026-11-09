@@ -1,3 +1,14 @@
+55855cc7b0e3a6201b337d691f57b10b79917447  dist/release/CenturyXI-BackBit-AES_v4.0.0.zip
+56ffd559affe4d51cd39fd8113e2340d5ac0c0d8  dist/release/CenturyXI-BackBit-MVS_v4.0.0.zip
+11435b04ece1a25f3ee4130cb25e882003dc6411  dist/release/CenturyXI-CHANGELOG_v4.0.0.txt
+826e7d067419a3ab82554a54f965735c7e750057  dist/release/CenturyXI-Darksoft-AES_v4.0.0.zip
+f1fee48ba43cafb3ad76c3a76a8c33a94934667a  dist/release/CenturyXI-Darksoft-MVS_v4.0.0.zip
+750c8ddad9252fcfd4d809aaa36a4786a3e7d161  dist/release/CenturyXI-MANIFEST_v4.0.0.txt
+fcaf0d3d2c53391a4aeb7d7a0e24a6212b3276dd  dist/release/CenturyXI-README_v4.0.0.txt
+e0cec20b98c44ac8fc596d36a4a169979634a679  dist/release/CenturyXI-WIP-AES-EagleBIOS_v4.0.0.zip
+4f6a924965f88e36a48c07aad5bd1e0cc8d3cfe8  dist/release/CenturyXI-WIP-EagleBIOS_v4.0.0.zip
+a717c697c6c0b89caf5768621ac4ec867d073ade  dist/release/CenturyXI-WIP-NeoSD_AES_v4.0.0.neo
+d6cae07c5a34a678adff405e83e7c06acabe581a  dist/release/CenturyXI-WIP-NeoSD_MVS_v4.0.0.neo
 1397abbf70ed545e48e6e473c175c0dffc4f3be3  dist/release/EagleBIOS-AES_v1.7.7.zip
 10acd07947b73c6be60887717af353635d2a7eb7  dist/release/EagleBIOS-CD_v1.7.7.zip
 f50f8722c8547fb91b05639d1a0ed5991a4b1dfc  dist/release/EagleBIOS-MVS_v1.7.7.zip

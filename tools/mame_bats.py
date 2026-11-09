@@ -60,6 +60,7 @@ GAMES = {
     "shadowleague": {"title": "Shadow League Fighting"},
     "skylance": {"title": "Sky Lance", "levels": "sector"},
     "mahjong_demo": {"title": "Mahjong Demo"},
+    "centuryxi": {"title": "Century XI: Road to 2030"},
 }
 
 # What --describe looks up. symbols: (source file or None, name); consts: C
